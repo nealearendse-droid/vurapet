@@ -16,8 +16,15 @@ export default function Signup() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
-    setLoading(false);
+
+// ADD THIS CHECK HERE:
+if (!supabase) { 
+  alert("Connection error. Please try again."); 
+  setLoading(false); 
+  return; 
+}
+
+const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       alert(error.message);

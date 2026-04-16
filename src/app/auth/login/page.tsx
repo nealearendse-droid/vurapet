@@ -16,7 +16,16 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+// ADD THIS CHECK HERE:
+if (!supabase) { 
+  alert("Connection error. Please try again."); 
+  setLoading(false); 
+  return; 
+}
+
+const { error } = await supabase.auth.signInWithPassword({ email, password });
+  
     setLoading(false);
     if (error) alert(error.message);
     else router.push('/dashboard');
