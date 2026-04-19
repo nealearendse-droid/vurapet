@@ -1,18 +1,14 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-export const createClient = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// 1. Get the values directly from the environment
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  if (!url || !key) {
-    console.warn("Supabase keys are missing. This is normal during build time.");
-    return null as any; 
-  }
+// 2. Export a simple, single client
+export const supabase = createBrowserClient(
+  supabaseUrl,
+  supabaseAnonKey
+);
 
-  return createBrowserClient(url, key);
-};
-
-export const supabase = createClient();
-
-// This keeps the old name working so other pages don't break
+// 3. Keep this for your other pages so they don't break
 export const createSupabaseBrowserClient = () => supabase;
