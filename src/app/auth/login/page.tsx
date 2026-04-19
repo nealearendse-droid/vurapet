@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -15,14 +15,17 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     
-    // We removed the "if (!supabase)" block that was causing the popup error
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    setLoading(false);
-    if (error) {
-      alert(error.message);
-    } else {
+    try {
+      // WE START THE CONNECTION HERE (only when clicked)
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
       router.push('/dashboard');
+    } catch (error: any) {
+      alert(error.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,7 +37,7 @@ export default function LoginPage() {
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg text-black"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -42,7 +45,7 @@ export default function LoginPage() {
           <input
             type="password"
             placeholder="Password"
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg text-black"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -55,7 +58,7 @@ export default function LoginPage() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        <p className="text-center text-sm">
+        <p className="text-center text-sm text-gray-600">
           Don't have an account? <Link href="/auth/signup" className="text-orange-600 hover:underline">Sign Up</Link>
         </p>
       </div>

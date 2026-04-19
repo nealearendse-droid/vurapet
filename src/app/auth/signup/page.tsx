@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -15,20 +15,24 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     
-    const { error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      }
-    });
-    
-    setLoading(false);
-    if (error) {
-      alert(error.message);
-    } else {
+    try {
+      // WE START THE CONNECTION HERE (only when clicked)
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+      });
+      
+      if (error) throw error;
       alert('Check your email for the confirmation link!');
       router.push('/auth/login');
+    } catch (error: any) {
+      alert(error.message || 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,7 +44,7 @@ export default function SignupPage() {
           <input
             type="email"
             placeholder="Email"
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg text-black"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -48,7 +52,7 @@ export default function SignupPage() {
           <input
             type="password"
             placeholder="Password"
-            className="w-full p-3 border rounded-lg"
+            className="w-full p-3 border rounded-lg text-black"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -61,7 +65,7 @@ export default function SignupPage() {
             {loading ? 'Creating account...' : 'Sign Up Free'}
           </button>
         </form>
-        <p className="text-center text-sm">
+        <p className="text-center text-sm text-gray-600">
           Already have an account? <Link href="/auth/login" className="text-orange-600 hover:underline">Login</Link>
         </p>
       </div>
