@@ -1,8 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   typescript: {
-    // !! WARN !!
-    // Dangerously ignore all errors during build
     ignoreBuildErrors: true,
   },
 };
