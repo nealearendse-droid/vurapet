@@ -2,132 +2,97 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 export default function Navbar() {
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  const handleLogout = () => {
-    // You can add Supabase logout here later
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    
+    // Check if someone is logged in
+    const getUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      setUser(data.session?.user || null);
+    };
+    
+    getUser();
+
+    // Listen for logins and logouts
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    const supabase = getSupabaseClient();
+    await supabase.auth.signOut();
     router.push('/');
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          
-          {/* Logo */}
-          <Link href="/dashboard" className="flex items-center space-x-2">
-            <span className="text-2xl">🐾</span>
-            <span className="text-xl font-bold text-orange-600">VuraPet</span>
-          </Link>
+    <nav className="bg-white shadow-md p-4 sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
+        
+        {/* LEFT SIDE: Logo */}
+        <Link href="/" className="text-2xl font-bold text-orange-600 flex items-center gap-2">
+          🐾 VuraPet
+        </Link>
 
-          {/* Desktop Menu (bigger screens) */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link 
-              href="/dashboard" 
-              className="text-gray-700 hover:text-orange-600 px-3 py-2"
-            >
-              Dashboard
-            </Link>
-            
-            <Link 
-              href="/pets/new" 
-              className="text-gray-700 hover:text-orange-600 px-3 py-2"
-            >
-              Add Pet
-            </Link>
-            
-            {/* The NEW Food Checker link */}
-            <Link 
-              href="/pets/safe-food" 
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-1"
-            >
-              <span>🍖</span>
-              <span>Food Checker</span>
-            </Link>
-            
+        {/* MIDDLE: App Links */}
+        <div className="flex gap-4 items-center flex-wrap justify-center">
+          {user && (
+            <>
+              <Link href="/dashboard" className="text-gray-600 hover:text-orange-600 font-medium">
+                🏠 Dashboard
+              </Link>
+              
+              {/* NEW: Nutrition Plan Link */}
+              <Link 
+                href="/dashboard/nutrition" 
+                className="bg-orange-50 text-orange-700 px-4 py-2 rounded-lg font-bold hover:bg-orange-100 border-2 border-orange-200 transition shadow-sm"
+              >
+                🥗 Nutrition Plan
+              </Link>
+
+              {/* NEW: Food Checker Link */}
+              <Link 
+                href="/pets/safe-food" 
+                className="bg-green-50 text-green-700 px-4 py-2 rounded-lg font-bold hover:bg-green-100 border-2 border-green-200 transition shadow-sm"
+              >
+                🍖 Food Checker
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* RIGHT SIDE: Login / Logout */}
+        <div className="flex gap-3 items-center">
+          {user ? (
             <button 
               onClick={handleLogout}
-              className="text-gray-500 hover:text-red-600 px-3 py-2"
+              className="px-4 py-2 text-red-600 font-medium hover:bg-red-50 rounded-md transition"
             >
               Logout
             </button>
-          </div>
-
-          {/* Mobile Menu Button (hamburger icon) */}
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-2 text-gray-600 hover:text-orange-600"
-          >
-            <svg 
-              className="w-6 h-6" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              {menuOpen ? (
-                // X icon (close)
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M6 18L18 6M6 6l12 12" 
-                />
-              ) : (
-                // Hamburger icon (menu)
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4 6h16M4 12h16M4 18h16" 
-                />
-              )}
-            </svg>
-          </button>
+          ) : (
+            <>
+              <Link href="/auth/login" className="px-4 py-2 text-gray-600 font-medium hover:text-orange-600 transition">
+                Login
+              </Link>
+              <Link href="/auth/signup" className="px-4 py-2 bg-orange-600 text-white font-medium rounded-md hover:bg-orange-700 transition shadow-sm">
+                Sign Up Free
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* Mobile Menu (dropdown for phones) */}
-        {menuOpen && (
-          <div className="md:hidden pb-4 space-y-2">
-            <Link 
-              href="/dashboard" 
-              className="block text-gray-700 hover:bg-orange-100 px-4 py-2 rounded-lg"
-              onClick={() => setMenuOpen(false)}
-            >
-              🏠 Dashboard
-            </Link>
-            
-            <Link 
-              href="/pets/new" 
-              className="block text-gray-700 hover:bg-orange-100 px-4 py-2 rounded-lg"
-              onClick={() => setMenuOpen(false)}
-            >
-              ➕ Add Pet
-            </Link>
-            
-            {/* The NEW Food Checker link (mobile) */}
-            <Link 
-              href="/pets/safe-food" 
-              className="block bg-green-600 text-white px-4 py-2 rounded-lg text-center"
-              onClick={() => setMenuOpen(false)}
-            >
-              🍖 Food Checker
-            </Link>
-            
-            <button 
-              onClick={() => {
-                setMenuOpen(false);
-                handleLogout();
-              }}
-              className="block w-full text-left text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg"
-            >
-              🚪 Logout
-            </button>
-          </div>
-        )}
       </div>
     </nav>
   );
