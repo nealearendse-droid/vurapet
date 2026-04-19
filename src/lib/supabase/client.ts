@@ -1,14 +1,19 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-// 1. Get the values directly from the environment
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+export const getSupabase = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// 2. Export a simple, single client
-export const supabase = createBrowserClient(
-  supabaseUrl,
-  supabaseAnonKey
-);
+  if (!url || !key) {
+    console.error("CRITICAL ERROR: Supabase keys are missing from Vercel environment variables.");
+    return null;
+  }
 
-// 3. Keep this for your other pages so they don't break
-export const createSupabaseBrowserClient = () => supabase;
+  return createBrowserClient(url, key);
+};
+
+// Export a constant for easy use
+export const supabase = getSupabase();
+
+// Export the helper for pages that use the old name
+export const createSupabaseBrowserClient = () => getSupabase();
