@@ -16,3 +16,4 @@ export function createSupabaseBrowserClient() {
 
   return client;
 }
+
