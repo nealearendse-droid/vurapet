@@ -1,79 +1,70 @@
 'use client';
-export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 
-export default function Signup() {
+export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-// ADD THIS CHECK HERE:
-if (!supabase) { 
-  alert("Connection error. Please try again."); 
-  setLoading(false); 
-  return; 
-}
-
-const { error } = await supabase.auth.signInWithPassword({ email, password });
-
+    
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      }
+    });
+    
+    setLoading(false);
     if (error) {
       alert(error.message);
     } else {
-      alert('Check your email to confirm, then log in!');
+      alert('Check your email for the confirmation link!');
       router.push('/auth/login');
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
-      <form onSubmit={handleSignup} className="p-8 bg-white shadow-md rounded-2xl w-96">
-        
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <Image src="/logo.png" alt="VuraPet" width={180} height={50} className="h-12 w-auto" priority />
-        </div>
-
-        <h1 className="text-2xl font-bold mb-1 text-center">Create Account</h1>
-        <p className="text-gray-500 text-sm text-center mb-6">Start tracking your pet's health</p>
-
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full border border-gray-300 p-3 mb-3 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password (min 6 characters)"
-          className="w-full border border-gray-300 p-3 mb-4 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button
-          disabled={loading}
-          className="w-full bg-orange-500 text-white p-3 rounded-lg font-semibold hover:bg-orange-600 disabled:bg-orange-300 transition"
-        >
-          {loading ? 'Creating account...' : 'Sign Up Free'}
-        </button>
-        <div className="mt-4 text-center text-sm">
-          <Link href="/auth/login" className="text-blue-600 hover:underline">
-            Already have an account? Login
-          </Link>
-        </div>
-      </form>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+        <h1 className="text-2xl font-bold text-center">Create Account</h1>
+        <form onSubmit={handleSignup} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full p-3 border rounded-lg"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 border rounded-lg"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full p-3 font-bold text-white bg-orange-600 rounded-lg hover:bg-orange-700 disabled:opacity-50"
+          >
+            {loading ? 'Creating account...' : 'Sign Up Free'}
+          </button>
+        </form>
+        <p className="text-center text-sm">
+          Already have an account? <Link href="/auth/login" className="text-orange-600 hover:underline">Login</Link>
+        </p>
+      </div>
     </div>
   );
 }
