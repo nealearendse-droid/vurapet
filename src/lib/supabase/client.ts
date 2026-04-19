@@ -1,19 +1,18 @@
 import { createBrowserClient } from '@supabase/ssr';
-import { Database } from './database.types'; // If you have types, otherwise remove
 
-// Singleton pattern - only create ONE client ever
-let client: ReturnType<typeof createBrowserClient<Database>> | null = null;
+export const createClient = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export function createSupabaseBrowserClient() {
-  if (client) {
-    return client;
+  if (!url || !key) {
+    console.warn("Supabase keys are missing. This is normal during build time.");
+    return null as any; 
   }
 
-  client = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  return createBrowserClient(url, key);
+};
 
-  return client;
-}
+export const supabase = createClient();
 
+// This keeps the old name working so other pages don't break
+export const createSupabaseBrowserClient = () => supabase;
