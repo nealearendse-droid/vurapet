@@ -1,99 +1,94 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import Navbar from '@/components/Navbar';
-import PetSummaryCard from '@/components/PetSummaryCard';
+import ProtectionStatus from '@/components/ProtectionStatus';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
-
-  const [user, setUser] = useState<any>(null);
   const [pets, setPets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadDashboard() {
-      setLoading(true);
+    const supabase = getSupabaseClient();
 
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-
-      if (!currentUser) {
+    const fetchPets = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
         router.push('/auth/login');
         return;
       }
 
-      setUser(currentUser);
-
       const { data, error } = await supabase
         .from('pets')
         .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
+        .eq('owner_id', session.user.id);
 
-      if (error) {
-        console.error('Error loading pets:', error);
-      } else {
+      if (!error) {
         setPets(data || []);
       }
-
       setLoading(false);
-    }
+    };
 
-    loadDashboard();
-  }, [router, supabase]);
+    fetchPets();
+  }, [router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your pets...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="p-8 text-center">Loading your pets...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navbar with Logo */}
-      <Navbar userEmail={user?.email} />
-
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        
-        {/* Welcome Header */}
-        <div className="mb-8">
+      <Navbar />
+      
+      <main className="max-w-6xl mx-auto p-6">
+        <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Pets</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your pet's health, nutrition, and wellness.
-          </p>
+          <Link 
+            href="/dashboard/add-pet" 
+            className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-700"
+          >
+            + Add New Pet
+          </Link>
         </div>
 
-        {/* Pet Cards or Empty State */}
         {pets.length === 0 ? (
-          <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
-            <div className="text-6xl mb-4">🐾</div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">No pets yet</h2>
-            <p className="text-gray-500 mb-6">Add your first pet to get started.</p>
-            <Link
-              href="/pets/new"
-              className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition"
-            >
-              Add Your First Pet
+          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-300">
+            <p className="text-gray-500 text-xl">You haven't added any pets yet!</p>
+            <Link href="/dashboard/add-pet" className="text-orange-600 font-bold mt-4 inline-block">
+              Click here to add your first pet
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-8">
             {pets.map((pet) => (
-              <PetSummaryCard key={pet.id} pet={pet} />
+              <div key={pet.id} className="space-y-4">
+                {/* 🛡️ THIS IS THE NEW RED/GREEN PROTECTION BANNER */}
+                <ProtectionStatus petId={pet.id} />
+
+                {/* Pet Card */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center gap-6">
+                   <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center text-4xl">
+                     🐾
+                   </div>
+                   <div>
+                     <h2 className="text-2xl font-bold text-gray-800">{pet.name}</h2>
+                     <p className="text-gray-500">{pet.breed} • {pet.species}</p>
+                     <Link 
+                        href={`/pets/${pet.id}`} 
+                        className="text-orange-600 font-bold mt-2 inline-block hover:underline"
+                     >
+                       View Full Profile & Care Plan →
+                     </Link>
+                   </div>
+                </div>
+              </div>
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
