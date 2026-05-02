@@ -3,13 +3,13 @@ import Image from 'next/image';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-8">
       <div className="text-center max-w-2xl">
         
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <Image 
-            src="/logo.png" 
+            src="/logo.white.png" 
             alt="VuraPet" 
             width={280} 
             height={80} 
@@ -18,10 +18,10 @@ export default function Home() {
           />
         </div>
 
-        <p className="text-gray-600 text-xl mb-2">
+        <p className="text-white text-xl mb-2">
           Your Pet's Lifetime Companion
         </p>
-        <p className="text-gray-500 text-base mb-8">
+        <p className="text-gray-300 text-base mb-8">
           Track health, nutrition, vaccines, memories — and plan for what happens when you can't be there.
         </p>
 

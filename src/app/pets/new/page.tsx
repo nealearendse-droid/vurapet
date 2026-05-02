@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
 
 export default function NewPet() {
   const [loading, setLoading] = useState(false);
@@ -45,27 +44,25 @@ export default function NewPet() {
       return;
     }
 
-    const { error } = await supabase.from('pets').insert([
-      {
-        name,
-        species,
-        breed: breed || null,
-        date_of_birth: dateOfBirth || null,
-        sex: sex || null,
-        reproductive_status: reproductiveStatus || null,
-        microchip_number: microchipNumber || null,
-        allergies: allergies || null,
-        chronic_conditions: chronicConditions || null,
-        special_needs: specialNeeds || null,
-        primary_vet_name: primaryVetName || null,
-        primary_vet_clinic: primaryVetClinic || null,
-        primary_vet_contact: primaryVetContact || null,
-        emergency_vet_name: emergencyVetName || null,
-        emergency_vet_clinic: emergencyVetClinic || null,
-        emergency_vet_contact: emergencyVetContact || null,
-        user_id: user.id,
-      },
-    ]);
+    const { error } = await supabase.from('pets').insert([{
+      name,
+      species,
+      breed: breed || null,
+      date_of_birth: dateOfBirth || null,
+      sex: sex || null,
+      reproductive_status: reproductiveStatus || null,
+      microchip_number: microchipNumber || null,
+      allergies: allergies || null,
+      chronic_conditions: chronicConditions || null,
+      special_needs: specialNeeds || null,
+      primary_vet_name: primaryVetName || null,
+      primary_vet_clinic: primaryVetClinic || null,
+      primary_vet_contact: primaryVetContact || null,
+      emergency_vet_name: emergencyVetName || null,
+      emergency_vet_clinic: emergencyVetClinic || null,
+      emergency_vet_contact: emergencyVetContact || null,
+      user_id: user.id,
+    }]);
 
     if (error) {
       console.error(error);
@@ -78,43 +75,63 @@ export default function NewPet() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="np-page">
+      <style>{styles}</style>
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <Link href="/dashboard" className="text-blue-600 hover:underline font-medium">
-          ← Back to Dashboard
-        </Link>
+      <div className="np-inner">
 
-        <h1 className="text-3xl font-bold mt-4 mb-2">Add New Pet</h1>
-        <p className="text-gray-600 mb-6">Fill in what you know — you can always update later.</p>
+        {/* Back */}
+        <Link href="/dashboard" className="np-back">← Back to Dashboard</Link>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Page header */}
+        <div className="np-page-header">
+          <div className="np-page-header-left">
+            <h1 className="np-title">Add New Pet</h1>
+            <p className="np-subtitle">Fill in what you know — you can always update later.</p>
+          </div>
+          <div className="np-logo-mark">🐾</div>
+        </div>
 
-          {/* Section 1: Basic Info */}
-          <div className="bg-white rounded-2xl border p-6 shadow-sm">
-            <h2 className="text-lg font-bold mb-4">🐾 Basic Information</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pet Name *</label>
+        {/* Progress hint */}
+        <div className="np-steps-row">
+          {['Basic Info', 'Health', 'Vet Details'].map((s, i) => (
+            <div key={s} className="np-step">
+              <div className="np-step-num">{i + 1}</div>
+              <span className="np-step-label">{s}</span>
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="np-form">
+
+          {/* ── Section 1: Basic Info ── */}
+          <div className="np-section">
+            <div className="np-section-header">
+              <span className="np-section-icon">🐾</span>
+              <h2 className="np-section-title">Basic Information</h2>
+            </div>
+
+            <div className="np-grid-2">
+
+              <div className="np-field np-col-2">
+                <label className="np-label">Pet Name <span className="np-required">*</span></label>
                 <input
                   type="text"
                   required
-                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="e.g. Buddy, Whiskers, Sylar..."
+                  className="np-input"
+                  placeholder="e.g. Buddy, Whiskers, Luna…"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Species *</label>
+              <div className="np-field">
+                <label className="np-label">Species <span className="np-required">*</span></label>
                 <select
                   required
-                  className="w-full border border-gray-300 rounded-lg p-3"
+                  className="np-input"
                   value={species}
-                  onChange={(e) => setSpecies(e.target.value)}
+                  onChange={e => setSpecies(e.target.value)}
                 >
                   <option value="Dog">🐕 Dog</option>
                   <option value="Cat">🐈 Cat</option>
@@ -126,47 +143,39 @@ export default function NewPet() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Breed</label>
+              <div className="np-field">
+                <label className="np-label">Breed</label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. Golden Retriever, Persian..."
+                  className="np-input"
+                  placeholder="e.g. Golden Retriever, Persian…"
                   value={breed}
-                  onChange={(e) => setBreed(e.target.value)}
+                  onChange={e => setBreed(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+              <div className="np-field">
+                <label className="np-label">Date of Birth</label>
                 <input
                   type="date"
-                  className="w-full border border-gray-300 rounded-lg p-3"
+                  className="np-input np-date"
                   value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  onChange={e => setDateOfBirth(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
-                <select
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  value={sex}
-                  onChange={(e) => setSex(e.target.value)}
-                >
+              <div className="np-field">
+                <label className="np-label">Sex</label>
+                <select className="np-input" value={sex} onChange={e => setSex(e.target.value)}>
                   <option value="">Not specified</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reproductive Status</label>
-                <select
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  value={reproductiveStatus}
-                  onChange={(e) => setReproductiveStatus(e.target.value)}
-                >
+              <div className="np-field">
+                <label className="np-label">Reproductive Status</label>
+                <select className="np-input" value={reproductiveStatus} onChange={e => setReproductiveStatus(e.target.value)}>
                   <option value="">Not specified</option>
                   <option value="Intact">Intact</option>
                   <option value="Neutered">Neutered</option>
@@ -174,147 +183,325 @@ export default function NewPet() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Microchip Number</label>
+              <div className="np-field">
+                <label className="np-label">Microchip Number</label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
+                  className="np-input"
                   placeholder="Optional"
                   value={microchipNumber}
-                  onChange={(e) => setMicrochipNumber(e.target.value)}
+                  onChange={e => setMicrochipNumber(e.target.value)}
                 />
               </div>
+
             </div>
           </div>
 
-          {/* Section 2: Health Info */}
-          <div className="bg-white rounded-2xl border p-6 shadow-sm">
-            <h2 className="text-lg font-bold mb-4">🏥 Health Information</h2>
+          {/* ── Section 2: Health ── */}
+          <div className="np-section">
+            <div className="np-section-header">
+              <span className="np-section-icon">🏥</span>
+              <h2 className="np-section-title">Health Information</h2>
+            </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Known Allergies</label>
+            <div className="np-grid-1">
+              <div className="np-field">
+                <label className="np-label">Known Allergies</label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. Chicken, certain medications..."
+                  className="np-input"
+                  placeholder="e.g. Chicken, certain medications…"
                   value={allergies}
-                  onChange={(e) => setAllergies(e.target.value)}
+                  onChange={e => setAllergies(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Chronic Conditions</label>
+              <div className="np-field">
+                <label className="np-label">Chronic Conditions</label>
                 <input
                   type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. Hip dysplasia, diabetes..."
+                  className="np-input"
+                  placeholder="e.g. Hip dysplasia, diabetes…"
                   value={chronicConditions}
-                  onChange={(e) => setChronicConditions(e.target.value)}
+                  onChange={e => setChronicConditions(e.target.value)}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Special Needs</label>
+              <div className="np-field">
+                <label className="np-label">Special Needs</label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  rows={2}
-                  placeholder="Any special care instructions..."
+                  className="np-input np-textarea"
+                  rows={3}
+                  placeholder="Any special care instructions…"
                   value={specialNeeds}
-                  onChange={(e) => setSpecialNeeds(e.target.value)}
+                  onChange={e => setSpecialNeeds(e.target.value)}
                 />
               </div>
             </div>
           </div>
 
-          {/* Section 3: Vet Info */}
-          <div className="bg-white rounded-2xl border p-6 shadow-sm">
-            <h2 className="text-lg font-bold mb-4">👨‍⚕️ Veterinary Information</h2>
+          {/* ── Section 3: Vet ── */}
+          <div className="np-section">
+            <div className="np-section-header">
+              <span className="np-section-icon">👨‍⚕️</span>
+              <h2 className="np-section-title">Veterinary Information</h2>
+            </div>
 
-            <h3 className="font-medium text-gray-700 mb-3">Primary Vet</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vet Name</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. Dr. Smith"
-                  value={primaryVetName}
-                  onChange={(e) => setPrimaryVetName(e.target.value)}
-                />
+            <p className="np-vet-sub">Primary Vet</p>
+            <div className="np-grid-3">
+              <div className="np-field">
+                <label className="np-label">Vet Name</label>
+                <input type="text" className="np-input" placeholder="e.g. Dr. Smith"
+                  value={primaryVetName} onChange={e => setPrimaryVetName(e.target.value)} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Clinic</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. ABC Vet Clinic"
-                  value={primaryVetClinic}
-                  onChange={(e) => setPrimaryVetClinic(e.target.value)}
-                />
+              <div className="np-field">
+                <label className="np-label">Clinic</label>
+                <input type="text" className="np-input" placeholder="e.g. City Animal Clinic"
+                  value={primaryVetClinic} onChange={e => setPrimaryVetClinic(e.target.value)} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. 021 123 4567"
-                  value={primaryVetContact}
-                  onChange={(e) => setPrimaryVetContact(e.target.value)}
-                />
+              <div className="np-field">
+                <label className="np-label">Contact Number</label>
+                <input type="text" className="np-input" placeholder="e.g. 021 123 4567"
+                  value={primaryVetContact} onChange={e => setPrimaryVetContact(e.target.value)} />
               </div>
             </div>
 
-            <h3 className="font-medium text-gray-700 mb-3">Emergency Vet (24-hour)</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vet Name</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. Emergency Vet"
-                  value={emergencyVetName}
-                  onChange={(e) => setEmergencyVetName(e.target.value)}
-                />
+            <div className="np-divider" />
+
+            <p className="np-vet-sub">Emergency Vet <span className="np-vet-24">24-hour</span></p>
+            <div className="np-grid-3">
+              <div className="np-field">
+                <label className="np-label">Vet Name</label>
+                <input type="text" className="np-input" placeholder="e.g. Emergency Vet"
+                  value={emergencyVetName} onChange={e => setEmergencyVetName(e.target.value)} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Clinic</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. 24hr Animal Hospital"
-                  value={emergencyVetClinic}
-                  onChange={(e) => setEmergencyVetClinic(e.target.value)}
-                />
+              <div className="np-field">
+                <label className="np-label">Clinic</label>
+                <input type="text" className="np-input" placeholder="e.g. 24hr Animal Hospital"
+                  value={emergencyVetClinic} onChange={e => setEmergencyVetClinic(e.target.value)} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 rounded-lg p-3"
-                  placeholder="e.g. 021 987 6543"
-                  value={emergencyVetContact}
-                  onChange={(e) => setEmergencyVetContact(e.target.value)}
-                />
+              <div className="np-field">
+                <label className="np-label">Contact Number</label>
+                <input type="text" className="np-input" placeholder="e.g. 021 987 6543"
+                  value={emergencyVetContact} onChange={e => setEmergencyVetContact(e.target.value)} />
               </div>
             </div>
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:bg-blue-400 transition shadow-sm"
-          >
-            {loading ? 'Saving...' : '🐾 Create Pet Profile'}
+          {/* Submit */}
+          <button type="submit" disabled={loading} className="np-submit">
+            {loading
+              ? <><span className="np-spinner" /> Saving…</>
+              : '🐾 Create Pet Profile'
+            }
           </button>
 
         </form>
 
-        <Link href="/dashboard" className="block mt-6 text-center text-gray-500 hover:text-blue-600 underline">
-          Cancel & go back
-        </Link>
+        <Link href="/dashboard" className="np-cancel">Cancel & go back</Link>
+
       </div>
     </div>
   );
 }
+
+const styles = `
+  .np-page {
+    background: #0c0a08;
+    min-height: 100vh;
+    font-family: 'Geist', 'Inter', sans-serif;
+    color: #f0ebe4;
+  }
+
+  .np-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 24px 80px;
+  }
+
+  /* Back */
+  .np-back {
+    display: inline-block;
+    font-size: 13px; font-weight: 500;
+    color: #c47a3a; text-decoration: none;
+    margin-bottom: 24px;
+    transition: color 0.2s;
+  }
+  .np-back:hover { color: #e8963d; }
+
+  /* Page header */
+  .np-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .np-title {
+    font-size: 28px; font-weight: 700;
+    color: #f0ebe4; letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .np-subtitle { font-size: 14px; color: #7a6050; }
+  .np-logo-mark { font-size: 40px; opacity: 0.3; }
+
+  /* Steps */
+  .np-steps-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .np-step {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.08);
+    border-radius: 999px;
+    padding: 6px 14px;
+  }
+  .np-step-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(196,122,58,0.2);
+    border: 0.5px solid rgba(196,122,58,0.4);
+    color: #c47a3a;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .np-step-label { font-size: 12px; color: #8a7060; font-weight: 500; }
+
+  /* Form */
+  .np-form { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Section card */
+  .np-section {
+    background: #181411;
+    border: 0.5px solid rgba(255,255,255,0.07);
+    border-radius: 18px;
+    padding: 22px 24px;
+  }
+  .np-section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+  }
+  .np-section-icon { font-size: 20px; }
+  .np-section-title {
+    font-size: 15px; font-weight: 700; color: #f0ebe4;
+  }
+
+  /* Grids */
+  .np-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .np-grid-1 { display: flex; flex-direction: column; gap: 14px; }
+  .np-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .np-col-2 { grid-column: span 2; }
+
+  /* Field */
+  .np-field { display: flex; flex-direction: column; gap: 6px; }
+  .np-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: #6a5040;
+  }
+  .np-required { color: #c47a3a; }
+
+  /* Inputs */
+  .np-input {
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #f0ebe4;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+  }
+  .np-input:focus {
+    border-color: rgba(196,122,58,0.5);
+    background: rgba(196,122,58,0.05);
+  }
+  .np-input::placeholder { color: #4a3828; }
+  .np-input option { background: #1a1612; color: #f0ebe4; }
+  .np-textarea { resize: none; }
+  .np-date { color-scheme: dark; }
+
+  /* Vet sub-labels */
+  .np-vet-sub {
+    font-size: 13px; font-weight: 600; color: #a08060;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .np-vet-24 {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: rgba(226,75,74,0.15);
+    color: #e24b4a;
+    border: 0.5px solid rgba(226,75,74,0.3);
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .np-divider {
+    height: 0.5px;
+    background: rgba(255,255,255,0.06);
+    margin: 20px 0;
+  }
+
+  /* Submit */
+  .np-submit {
+    width: 100%;
+    background: #c47a3a;
+    color: #fff;
+    font-size: 16px; font-weight: 700;
+    padding: 16px;
+    border-radius: 14px;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: background 0.2s, transform 0.15s;
+    margin-top: 8px;
+    letter-spacing: 0.01em;
+  }
+  .np-submit:hover:not(:disabled) {
+    background: #d48a46;
+    transform: translateY(-1px);
+  }
+  .np-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Spinner */
+  .np-spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: np-spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes np-spin { to { transform: rotate(360deg); } }
+
+  /* Cancel */
+  .np-cancel {
+    display: block; text-align: center;
+    margin-top: 20px;
+    font-size: 13px; color: #4a3828;
+    text-decoration: underline;
+    transition: color 0.2s;
+  }
+  .np-cancel:hover { color: #c47a3a; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .np-inner { padding: 20px 16px 60px; }
+    .np-grid-2 { grid-template-columns: 1fr; }
+    .np-grid-3 { grid-template-columns: 1fr; }
+    .np-col-2 { grid-column: span 1; }
+    .np-steps-row { flex-wrap: wrap; }
+    .np-title { font-size: 22px; }
+  }
+`;

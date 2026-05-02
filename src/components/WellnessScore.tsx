@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 type VaccineRecord = {
   id: string;
@@ -85,7 +85,7 @@ function calculateScore(vaccines: VaccineRecord[], weights: WeightEntry[]) {
 }
 
 export default function WellnessScore({ petId }: { petId: string }) {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = getSupabaseClient();
 
   const [vaccines, setVaccines] = useState<VaccineRecord[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
@@ -119,12 +119,12 @@ export default function WellnessScore({ petId }: { petId: string }) {
         setVaccines((vaccinesRes.data || []) as VaccineRecord[]);
       }
 
-      if (weightsRes.error) {
-        console.error(weightsRes.error);
-      } else {
-        setWeights((weightsRes.data || []) as WeightEntry[]);
-      }
-
+     if (weightsRes.error) {
+  console.warn('Weight entries not available:', weightsRes.error.message);
+  setWeights([]);
+} else {
+  setWeights((weightsRes.data || []) as WeightEntry[]);
+}
       setLoading(false);
     }
 

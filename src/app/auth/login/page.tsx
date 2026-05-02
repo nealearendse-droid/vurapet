@@ -30,7 +30,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-50">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#121212] text-white">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
         <h1 className="text-2xl font-bold text-center">Login to VuraPet</h1>
         <form onSubmit={handleLogin} className="space-y-4">
