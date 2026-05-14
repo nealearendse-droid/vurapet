@@ -76,6 +76,24 @@ export default function Dashboard() {
 
   return (
     <div className="vp-dash">
+          {/* BIG UPGRADE BUTTON - ADDED FOR TESTING */}
+    <div style={{ 
+      background: '#c47a3a', 
+      margin: '20px', 
+      padding: '20px', 
+      borderRadius: '16px',
+      textAlign: 'center'
+    }}>
+      <a href="/upgrade?plan=pro&billing=monthly" style={{
+        color: 'white',
+        fontSize: '20px',
+        fontWeight: 'bold',
+        textDecoration: 'none',
+        display: 'block'
+      }}>
+        ⭐ UPGRADE TO PRO - CLICK HERE ⭐
+      </a>
+    </div>
       <style>{dashStyles}</style>
 
       {/* ── Hero greeting ── */}
