@@ -216,6 +216,45 @@ export default function Dashboard() {
               </Link>
             ))}
           </div>
+          {/* Upgrade Banner */}
+        <section className="vp-section">
+          <div style={{
+            background: 'linear-gradient(135deg, #1a1410, #2a1a0a)',
+            border: '0.5px solid rgba(196,122,58,0.4)',
+            borderRadius: 20,
+            padding: '28px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap' as const,
+            gap: 16
+          }}>
+            <div>
+              <p style={{ color: '#c47a3a', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: 6 }}>
+                🔒 Pro Features Locked
+              </p>
+              <h3 style={{ color: '#f0ebe4', fontSize: 18, fontWeight: 600, marginBottom: 4 }}>
+                Unlock Full Protection
+              </h3>
+              <p style={{ color: '#7a6050', fontSize: 13, lineHeight: 1.6 }}>
+                Vet records, health journal, emergency care doc, vaccine reminders & more.
+              </p>
+            </div>
+            <Link href="/upgrade?plan=pro&billing=monthly" style={{
+              background: '#c47a3a',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 14,
+              padding: '12px 24px',
+              borderRadius: 12,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap' as const,
+              flexShrink: 0
+            }}>
+              Upgrade to Pro →
+            </Link>
+          </div>
+        </section>
         </section>
 
       </div>
