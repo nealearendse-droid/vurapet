@@ -927,3 +927,4 @@ export default function WeightTracker({ petId, petInfo, onLatestWeightChange }: 
     </>
   );
 }
+

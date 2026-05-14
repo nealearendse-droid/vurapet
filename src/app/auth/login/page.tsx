@@ -1,27 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      // WE START THE CONNECTION HERE (only when clicked)
       const supabase = getSupabaseClient();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) throw error;
-      router.push('/dashboard');
+      router.push(redirectTo || '/dashboard');
     } catch (error: any) {
       alert(error.message || 'An unexpected error occurred');
     } finally {
@@ -59,9 +60,20 @@ export default function LoginPage() {
           </button>
         </form>
         <p className="text-center text-sm text-gray-600">
-          Don't have an account? <Link href="/auth/signup" className="text-orange-600 hover:underline">Sign Up</Link>
+          Don't have an account?{' '}
+          <Link href="/auth/signup" className="text-orange-600 hover:underline">
+            Sign Up
+          </Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#121212]" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -412,3 +412,4 @@ export default function GuardianSystem({ petId, petName }: { petId: string; petN
     </div>
   );
 }
+
