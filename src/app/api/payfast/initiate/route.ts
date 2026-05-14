@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const lastName = nameParts.slice(1).join(" ") || "User";
     const itemName = `VuraPet ${plan === "pro" ? "Full Protection" : "Family Plan"} - ${billing}`;
 
-    // IMPORTANT: Do NOT encode values when building signature string
+    // Prepare data for PayFast
     const data: Record<string, string> = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID!,
       merchant_key: process.env.PAYFAST_MERCHANT_KEY!,
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       name_first: firstName,
       name_last: lastName,
       email_address: email,
-      m_payment_id: `${userId}_${plan}_${billing}`,
+      m_payment_id: `${userId}_${plan}_${billing}_${Date.now()}`,
       amount: amount,
       item_name: itemName,
       subscription_type: "1",
@@ -45,17 +45,20 @@ export async function POST(req: NextRequest) {
       custom_str3: billing,
     };
 
-    // Generate signature correctly - NO encoding for signature string
+    // Get passphrase from environment
     const passphrase = process.env.PAYFAST_PASSPHRASE || "";
-    
-    // Sort the data alphabetically by key
+
+    // Sort keys alphabetically and build signature string
     const sortedKeys = Object.keys(data).sort();
     let sigString = "";
+    
     for (const key of sortedKeys) {
-      if (data[key] && data[key] !== "") {
-        sigString += `${key}=${data[key]}&`;
+      const value = data[key];
+      if (value && value !== "") {
+        sigString += `${key}=${value}&`;
       }
     }
+    
     // Remove trailing &
     sigString = sigString.slice(0, -1);
     
@@ -67,20 +70,25 @@ export async function POST(req: NextRequest) {
     // Generate MD5 hash
     const signature = crypto.createHash("md5").update(sigString).digest("hex");
 
-    // Log for debugging
-    console.log("=== PAYFAST DEBUG ===");
+    // Debug logging
+    console.log("=== PAYFAST SUBSCRIPTION DEBUG ===");
+    console.log("Plan:", plan);
+    console.log("Billing:", billing);
+    console.log("Amount:", amount);
     console.log("Merchant ID:", data.merchant_id);
-    console.log("Merchant Key:", data.merchant_key);
-    console.log("Amount:", data.amount);
-    console.log("Signature String:", sigString);
+    console.log("Merchant Key (first 5 chars):", data.merchant_key.substring(0, 5));
+    console.log("Passphrase exists:", passphrase ? "YES" : "NO");
     console.log("Generated Signature:", signature);
-    console.log("Passphrase used:", passphrase ? "YES" : "NO");
-    console.log("===================");
+    console.log("===================================");
 
-    // Create data for PayFast form (this gets URL-encoded when submitted)
-    const formData = { ...data, signature };
+    // Add signature to data
+    data.signature = signature;
 
-    return NextResponse.json({ payfastUrl: PAYFAST_URL, data: formData });
+    return NextResponse.json({ 
+      payfastUrl: PAYFAST_URL, 
+      data: data 
+    });
+    
   } catch (err) {
     console.error("Payfast initiate error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
