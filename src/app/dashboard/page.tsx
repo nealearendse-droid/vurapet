@@ -118,6 +118,20 @@ export default function Dashboard() {
       {/* ── Main body ── */}
       <div className="vp-body">
 
+        {/* ── Upgrade Banner ── */}
+        <div className="vp-upgrade-banner">
+          <div className="vp-upgrade-left">
+            <p className="vp-upgrade-tag">🔒 Free Plan</p>
+            <h3 className="vp-upgrade-title">Unlock Full Protection</h3>
+            <p className="vp-upgrade-sub">
+              Vet records · Health journal · Emergency care doc · Vaccine reminders · Custom meal plans
+            </p>
+          </div>
+          <Link href="/upgrade?plan=pro&billing=monthly" className="vp-upgrade-btn">
+            Upgrade to Pro →
+          </Link>
+        </div>
+
         {/* ── Pets section ── */}
         <section className="vp-section">
           <div className="vp-section-header">
@@ -193,10 +207,10 @@ export default function Dashboard() {
           <h2 className="vp-section-title" style={{ marginBottom: '1rem' }}>Quick Actions</h2>
           <div className="vp-actions-grid">
             {[
-              { href: '/dashboard/nutrition',          icon: '🥗', label: 'Nutrition Plan',    sub: 'Custom meal plans',    color: '#c47a3a' },
-              { href: '/pets/safe-food',               icon: '🍎', label: 'Food Checker',      sub: 'Safe or unsafe?',      color: '#1d9e75' },
-              { href: '/pets/guardian',                icon: '🛡️', label: 'Guardians',         sub: 'Protect your pet',     color: '#378add' },
-              { href: '/pets/memories',                icon: '📸', label: 'Memory Book',       sub: 'Capture moments',      color: '#d4537e' },
+              { href: '/dashboard/nutrition',          icon: '🥗', label: 'Nutrition Plan',     sub: 'Custom meal plans',   color: '#c47a3a' },
+              { href: '/pets/safe-food',               icon: '🍎', label: 'Food Checker',       sub: 'Safe or unsafe?',     color: '#1d9e75' },
+              { href: '/pets/guardian',                icon: '🛡️', label: 'Guardians',          sub: 'Protect your pet',    color: '#378add' },
+              { href: '/pets/memories',                icon: '📸', label: 'Memory Book',        sub: 'Capture moments',     color: '#d4537e' },
               { href: '/dashboard/breed-intelligence', icon: '🧠', label: 'Breed Intelligence', sub: 'Know your breed',     color: '#8b6dd4' },
             ].map((action, i) => (
               <Link
@@ -216,45 +230,6 @@ export default function Dashboard() {
               </Link>
             ))}
           </div>
-          {/* Upgrade Banner */}
-        <section className="vp-section">
-          <div style={{
-            background: 'linear-gradient(135deg, #1a1410, #2a1a0a)',
-            border: '0.5px solid rgba(196,122,58,0.4)',
-            borderRadius: 20,
-            padding: '28px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap' as const,
-            gap: 16
-          }}>
-            <div>
-              <p style={{ color: '#c47a3a', fontSize: 12, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: 6 }}>
-                🔒 Pro Features Locked
-              </p>
-              <h3 style={{ color: '#f0ebe4', fontSize: 18, fontWeight: 600, marginBottom: 4 }}>
-                Unlock Full Protection
-              </h3>
-              <p style={{ color: '#7a6050', fontSize: 13, lineHeight: 1.6 }}>
-                Vet records, health journal, emergency care doc, vaccine reminders & more.
-              </p>
-            </div>
-            <Link href="/upgrade?plan=pro&billing=monthly" style={{
-              background: '#c47a3a',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 14,
-              padding: '12px 24px',
-              borderRadius: 12,
-              textDecoration: 'none',
-              whiteSpace: 'nowrap' as const,
-              flexShrink: 0
-            }}>
-              Upgrade to Pro →
-            </Link>
-          </div>
-        </section>
         </section>
 
       </div>
@@ -397,6 +372,56 @@ const dashStyles = `
     display: flex;
     flex-direction: column;
     gap: 40px;
+  }
+
+  /* ── Upgrade Banner ── */
+  .vp-upgrade-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    background: linear-gradient(135deg, #1f1508, #2a1a0a);
+    border: 1px solid rgba(196,122,58,0.5);
+    border-radius: 20px;
+    padding: 28px 28px;
+  }
+  .vp-upgrade-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #c47a3a;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .vp-upgrade-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f0ebe4;
+    margin-bottom: 6px;
+  }
+  .vp-upgrade-sub {
+    font-size: 13px;
+    color: #7a6050;
+    line-height: 1.6;
+  }
+  .vp-upgrade-btn {
+    display: inline-flex;
+    align-items: center;
+    background: #c47a3a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px 28px;
+    border-radius: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .vp-upgrade-btn:hover {
+    background: #d48a46;
+    transform: translateY(-1px);
   }
 
   /* ── Section ── */
@@ -614,5 +639,7 @@ const dashStyles = `
     .vp-pet-actions { align-items: flex-start; flex-direction: row; gap: 12px; }
     .vp-hero-title { font-size: 22px; }
     .vp-status-pill { font-size: 12px; padding: 8px 12px; }
+    .vp-upgrade-banner { flex-direction: column; align-items: flex-start; }
+    .vp-upgrade-btn { width: 100%; justify-content: center; }
   }
 `;
