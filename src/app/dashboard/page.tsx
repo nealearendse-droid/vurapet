@@ -6,6 +6,7 @@ import { getSupabaseClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 export default function Dashboard() {
+    const [userPlan, setUserPlan] = useState('free');
   const router = useRouter();
   const [pets, setPets] = useState<any[]>([]);
   const [guardians, setGuardians] = useState<any[]>([]);
@@ -17,7 +18,13 @@ export default function Dashboard() {
 
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('subscription_plan')
+  .eq('id', session.user.id)
+  .single();
 
+setUserPlan(profile?.subscription_plan || 'free');
       if (!session) {
         router.push('/auth/login');
         return;
@@ -110,6 +117,9 @@ export default function Dashboard() {
               </span>
             </h1>
             <p className="vp-hero-sub">
+              <div style={{background: '#333', color: 'white', padding: '5px', marginBottom: '10px', borderRadius: '5px'}}>
+  🔍 YOUR PLAN: {userPlan} 🔍
+</div>
               {isProtected
                 ? `${guardians.length} guardian${guardians.length > 1 ? 's' : ''} ready to step in if you ever need them.`
                 : 'Add a guardian so someone always knows how to care for your pet.'}
