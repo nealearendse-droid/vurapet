@@ -8,6 +8,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [pets, setPets] = useState<any[]>([]);
   const [guardians, setGuardians] = useState<any[]>([]);
+  const [memories, setMemories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
   const [userPlan, setUserPlan] = useState('free');
@@ -47,8 +48,14 @@ export default function Dashboard() {
         .from('guardians')
         .select('id, pet_id');
 
+      const { data: memoriesData } = await supabase
+        .from('memories')
+        .select('*')
+        .eq('user_id', session.user.id);
+
       setPets(petsData || []);
       setGuardians(guardiansData || []);
+      setMemories(memoriesData || []);
       setLoading(false);
     };
 
@@ -65,6 +72,14 @@ export default function Dashboard() {
     'Good evening';
 
   const hasPro = userPlan === 'pro' || userPlan === 'family';
+  
+  // LIMITS based on plan
+  const maxPets = userPlan === 'family' ? 5 : 1;
+  const maxGuardians = userPlan === 'family' ? 999 : 1;
+  const maxMemories = userPlan === 'free' ? 5 : 999;
+  
+  const currentMemoriesCount = memories.length;
+  const canAddMemory = currentMemoriesCount < maxMemories;
 
   if (loading) {
     return (
@@ -146,17 +161,25 @@ export default function Dashboard() {
         )}
 
         {/* ── Your plan indicator ── */}
-        <div style={{ background: '#333', color: 'white', padding: '8px', marginBottom: '10px', borderRadius: '8px', textAlign: 'center' }}>
-          🔍 YOUR PLAN: {userPlan} 🔍 {!hasPro && '🔒 Upgrade to unlock Pro features'}
+        <div style={{ background: '#333', color: 'white', padding: '8px', marginBottom: '10px', borderRadius: '8px', textAlign: 'center', fontSize: '12px' }}>
+          📋 Plan: {userPlan} {userPlan === 'free' && '🔒 1 pet max • 1 guardian max • 5 memories max'}
+          {userPlan === 'pro' && '✅ 1 pet • 1 guardian • Unlimited memories'}
+          {userPlan === 'family' && '✅ 5 pets • Unlimited guardians • Unlimited memories'}
         </div>
 
         {/* ── Pets section ── */}
         <section className="vp-section">
           <div className="vp-section-header">
-            <h2 className="vp-section-title">My Pets</h2>
-            <Link href="/dashboard/add-pet" className="vp-btn-primary">
-              + Add Pet
-            </Link>
+            <h2 className="vp-section-title">My Pets ({pets.length}/{maxPets})</h2>
+            {pets.length < maxPets ? (
+              <Link href="/dashboard/add-pet" className="vp-btn-primary">
+                + Add Pet
+              </Link>
+            ) : (
+              <button disabled className="vp-btn-primary opacity-50 cursor-not-allowed">
+                + Add Pet (Max {maxPets})
+              </button>
+            )}
           </div>
 
           {pets.length === 0 ? (
@@ -204,10 +227,15 @@ export default function Dashboard() {
                       <Link href={`/pets/${pet.id}`} className="vp-link-primary">
                         View Profile →
                       </Link>
-                      {!hasGuardian && (
+                      {!hasGuardian && guardians.length < maxGuardians && (
                         <Link href="/pets/guardian/add" className="vp-link-muted">
-                          + Add Guardian
+                          + Add Guardian ({guardians.length}/{maxGuardians === 999 ? '∞' : maxGuardians})
                         </Link>
+                      )}
+                      {!hasGuardian && guardians.length >= maxGuardians && (
+                        <span className="vp-link-muted opacity-50">
+                          Guardian limit reached
+                        </span>
                       )}
                     </div>
                   </div>
@@ -216,6 +244,14 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+
+        {/* ── Memory limit warning ── */}
+        {!canAddMemory && userPlan === 'free' && (
+          <div className="bg-orange-500 text-white p-3 rounded-xl text-center">
+            ⚠️ You've reached the {maxMemories} memory limit on the Free plan.
+            <Link href="/upgrade?plan=pro" className="underline ml-2">Upgrade to Pro</Link> for unlimited memories.
+          </div>
+        )}
 
         {/* ── Quick Actions ── */}
         <section className="vp-section">
@@ -252,7 +288,9 @@ export default function Dashboard() {
                 <span style={{ fontSize: 22 }}>📸</span>
               </div>
               <p className="vp-action-label">Memory Book</p>
-              <p className="vp-action-sub">Capture moments</p>
+              <p className="vp-action-sub">
+                {userPlan === 'free' ? `${currentMemoriesCount}/${maxMemories} memories` : 'Unlimited memories'}
+              </p>
             </Link>
 
             {/* PRO FEATURE - Breed Intelligence with badge */}
