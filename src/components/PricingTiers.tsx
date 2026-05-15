@@ -114,7 +114,7 @@ export default function PricingTiers() {
   const handleCta = (tierId: Tier["id"]) => {
     if (tierId === "free") router.push("/auth/signup");
     else router.push(`/auth/login?redirectTo=/upgrade?plan=${tierId}%26billing=${billing}`);
-  };
+};
 
   const annualSavingsPro =
     TIERS[1].monthlyPrice! * 12 - TIERS[1].annualPrice!;
