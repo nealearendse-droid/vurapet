@@ -169,6 +169,30 @@ export default function MemoriesPage() {
     setUploadProgress(0);
 
     const supabase = getSupabaseClient();
+        // Check user's plan for memory limit
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_plan')
+      .eq('id', session.user.id)
+      .single();
+    
+    const userPlan = profile?.subscription_plan || 'free';
+    
+    // Free plan: only 5 memories allowed
+    if (userPlan === 'free') {
+      const { count } = await supabase
+        .from('memories')
+        .select('*', { count: 'exact', head: true })
+        .eq('pet_id', form.petId);
+      
+      if (count && count >= 5) {
+        alert('❌ Free plan only allows 5 memories per pet. Upgrade to Pro or Family for unlimited memories.');
+        setSaving(false);
+        return;
+      }
+    }
 
     let uploadedUrl: string | undefined = undefined;
     let uploadedType: string | undefined = undefined;
@@ -205,6 +229,22 @@ export default function MemoriesPage() {
 
     setSaving(false);
     setUploadProgress(0);
+  };
+
+  const deleteMemory = async (memoryId: string) => {
+    if (confirm('Are you sure you want to delete this memory?')) {
+      const supabase = getSupabaseClient();
+      await supabase.from('memories').delete().eq('id', memoryId);
+      
+      // Refresh the list
+      const petIds = pets.map(p => p.id);
+      const { data } = await supabase
+        .from('memories')
+        .select('*')
+        .in('pet_id', petIds)
+        .order('date', { ascending: false });
+      setMemories(data || []);
+    }
   };
 
   const getPetName = (petId: string) =>
@@ -568,6 +608,15 @@ export default function MemoriesPage() {
                       </span>
                     )}
                   </div>
+
+                  {/* DELETE BUTTON */}
+                  <button
+                    onClick={() => deleteMemory(memory.id)}
+                    className="mt-3 text-xs px-3 py-1 rounded-lg transition-all"
+                    style={{ background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer' }}
+                  >
+                    🗑️ Delete Memory
+                  </button>
                 </div>
               </div>
             </div>
