@@ -8,31 +8,32 @@ export async function POST(req: NextRequest) {
     const amount = plan === "pro" ? "99.00" : "149.00";
     const itemName = `VuraPet ${plan} plan - ${billing}`;
 
-    // PUBLIC TEST CREDENTIALS - These ALWAYS work!
-    const data: Record<string, string> = {
+    // PUBLIC TEST CREDENTIALS
+    const data = {
       merchant_id: "10000100",
       merchant_key: "46f0cd694581a",
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
-      notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payfast/notify`,
+      return_url: process.env.NEXT_PUBLIC_APP_URL + "/dashboard",
+      cancel_url: process.env.NEXT_PUBLIC_APP_URL + "/pricing",
+      notify_url: process.env.NEXT_PUBLIC_APP_URL + "/api/payfast/notify",
       name_first: name?.split(" ")[0] || "Test",
       name_last: name?.split(" ")[1] || "User",
       email_address: email,
-      m_payment_id: `TEST_${Date.now()}`,
+      m_payment_id: "TEST_" + Date.now(),
       amount: amount,
       item_name: itemName,
     };
 
-    // Generate signature (NO passphrase for public test)
-    const sortedKeys = Object.keys(data).sort();
-    let pfOutput = '';
-    for (const key of sortedKeys) {
-      if (data[key] !== '') {
-        pfOutput += key + '=' + encodeURIComponent(data[key].trim()) + '&';
+    // Make signature string
+    let signatureString = "";
+    const keys = Object.keys(data).sort();
+    for (const key of keys) {
+      if (data[key]) {
+        signatureString += key + "=" + encodeURIComponent(data[key]).replace(/%20/g, "+") + "&";
       }
     }
-    let getString = pfOutput.substring(0, pfOutput.length - 1);
-    const signature = crypto.createHash('md5').update(getString).digest('hex');
+    signatureString = signatureString.slice(0, -1);
+    
+    const signature = crypto.createHash("md5").update(signatureString).digest("hex");
     data.signature = signature;
 
     return NextResponse.json({ 
@@ -41,7 +42,6 @@ export async function POST(req: NextRequest) {
     });
     
   } catch (err) {
-    console.error("Error:", err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
