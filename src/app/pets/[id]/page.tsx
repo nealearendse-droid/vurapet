@@ -4,19 +4,12 @@ import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
-// Import all your components
+// Import only the components you want on the pet profile
 import WellnessScore from '@/components/WellnessScore';
 import WellnessPassport from '@/components/WellnessPassport';
 import WeightTracker from '@/components/WeightTracker';
-import VaccineCalendar from '@/components/VaccineCalendar';
-import SymptomChecker from '@/components/SymptomChecker';
-import HealthJournal from '@/components/HealthJournal';
-import EmergencyActionPanel from '@/components/EmergencyActionPanel';
-import BreedIntelligenceBrief from '@/components/BreedIntelligenceBrief';
 import GuardianSystem from '@/components/GuardianSystem';
-import MemoryBook from '@/components/MemoryBook';
-import NutritionArchitect from '@/components/NutritionArchitect';
-import PetSafeFoodChecker from '@/components/PetSafeFoodChecker';
+import EmergencyActionPanel from '@/components/EmergencyActionPanel';
 import PetAvatarUpload from '@/components/PetAvatarUpload';
 
 export default function PetProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +19,6 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
   const [userPlan, setUserPlan] = useState('free');
   const [petId, setPetId] = useState<string>('');
 
-  // Get the pet ID from params
   useEffect(() => {
     async function getParams() {
       const resolvedParams = await params;
@@ -35,7 +27,6 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
     getParams();
   }, [params]);
 
-  // Fetch pet data
   useEffect(() => {
     async function fetchPet() {
       if (!petId) return;
@@ -56,18 +47,13 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
       
       setUserPlan(profile?.subscription_plan || 'free');
       
-      const { data: petData, error } = await supabase
+      const { data: petData } = await supabase
         .from('pets')
         .select('*')
         .eq('id', petId)
         .single();
       
-      if (error) {
-        setPet(null);
-      } else {
-        setPet(petData);
-      }
-      
+      setPet(petData);
       setLoading(false);
     }
     
@@ -77,35 +63,25 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
   const hasPro = userPlan === 'pro' || userPlan === 'family';
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <p>Loading pet profile...</p>
-      </div>
-    );
+    return <div className="text-center py-12">Loading pet profile...</div>;
   }
   
   if (!pet) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-500">❌ Pet not found</p>
-        <Link href="/dashboard" className="text-emerald-600 mt-4 inline-block">
-          ← Back to Dashboard
-        </Link>
+        <p>❌ Pet not found</p>
+        <Link href="/dashboard" className="text-emerald-600 mt-4 inline-block">← Back</Link>
       </div>
     );
   }
   
   return (
     <div className="max-w-4xl mx-auto p-6">
+      
       {/* Back button */}
       <Link href="/dashboard" className="text-emerald-600 mb-4 inline-block">
         ← Back to Dashboard
       </Link>
-      
-      {/* Plan indicator */}
-      <div className="bg-gray-800 text-white p-2 rounded mb-4 text-center text-sm">
-        Your plan: {userPlan} {!hasPro && '🔒 Upgrade to unlock all features'}
-      </div>
       
       {/* Pet Header with Photo */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-2xl p-6 text-center">
@@ -137,66 +113,27 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
       
-      {/* Wellness Score - Always visible */}
+      {/* Wellness Score */}
       <div className="bg-white p-6 border-x">
         <WellnessScore petId={pet.id} />
       </div>
       
-      {/* Wellness Passport - Always visible */}
+      {/* Wellness Passport */}
       <div className="bg-white p-6 border-x">
         <WellnessPassport petId={pet.id} />
       </div>
       
-      {/* Weight Tracker - Always visible */}
+      {/* Weight Tracker */}
       <div className="bg-white p-6 border-x">
         <WeightTracker petId={pet.id} />
       </div>
       
-      {/* Food Checker - Always visible */}
-      <div className="bg-white p-6 border-x">
-        <PetSafeFoodChecker petId={pet.id} />
-      </div>
-      
-      {/* Guardian System - Always visible */}
+      {/* Guardian System */}
       <div className="bg-white p-6 border-x">
         <GuardianSystem petId={pet.id} />
       </div>
       
-      {/* Memory Book - Always visible (with limit for free) */}
-      <div className="bg-white p-6 border-x">
-        <MemoryBook petId={pet.id} userPlan={userPlan} />
-      </div>
-      
-      {/* PRO FEATURES - Only show if user has Pro or Family */}
-      {hasPro ? (
-        <>
-          <div className="bg-white p-6 border-x">
-            <NutritionArchitect petId={pet.id} />
-          </div>
-          <div className="bg-white p-6 border-x">
-            <VaccineCalendar petId={pet.id} />
-          </div>
-          <div className="bg-white p-6 border-x">
-            <HealthJournal petId={pet.id} />
-          </div>
-          <div className="bg-white p-6 border-x">
-            <SymptomChecker petId={pet.id} />
-          </div>
-          <div className="bg-white p-6 border-x">
-            <BreedIntelligenceBrief petId={pet.id} />
-          </div>
-        </>
-      ) : (
-        <div className="bg-orange-50 p-6 border-x border-b text-center">
-          <p className="text-orange-700">🔒 Upgrade to Pro to unlock:</p>
-          <p className="text-sm text-orange-600 mt-1">Nutrition Architect • Vaccine Calendar • Health Journal • Symptom Checker • Breed Intelligence</p>
-          <Link href="/upgrade?plan=pro" className="inline-block mt-3 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm">
-            Upgrade Now →
-          </Link>
-        </div>
-      )}
-      
-      {/* Emergency Action Panel - Always visible (this is emergency info) */}
+      {/* Emergency Action Panel */}
       <div className="bg-white p-6 border-x">
         <EmergencyActionPanel petId={pet.id} />
       </div>
@@ -208,15 +145,12 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
           onClick={() => {
             const url = `https://vurapet.vercel.app/sos/${pet.id}`;
             navigator.clipboard.writeText(url);
-            alert('✅ SOS link copied! Share with vets, pet sitters, or emergency contacts.');
+            alert('✅ SOS link copied!');
           }}
           className="bg-red-500 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-600 transition"
         >
           Generate SOS Link
         </button>
-        <p className="text-xs text-red-500 mt-2">
-          {hasPro ? 'Pro: Full medical records included' : 'Free: Basic info only'}
-        </p>
       </div>
       
     </div>
