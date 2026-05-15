@@ -2,91 +2,131 @@
 import { useEffect, useState } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 
-export default function SOSPage({ params }: { params: { petId: string } }) {
+export default function SOSPage({ params }: { params: Promise<{ petId: string }> }) {
   const [pet, setPet] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [petId, setPetId] = useState<string>('');
 
+  // First, get the pet ID from params
   useEffect(() => {
-    const fetchPet = async () => {
+    async function getParams() {
+      const resolvedParams = await params;
+      setPetId(resolvedParams.petId);
+    }
+    getParams();
+  }, [params]);
+
+  // Then, fetch the pet using that ID
+  useEffect(() => {
+    async function fetchPet() {
+      if (!petId) return;
+      
       const supabase = getSupabaseClient();
-      const { data } = await supabase
+      
+      console.log('SOS: Looking for pet with ID:', petId);
+      
+      const { data: petData, error } = await supabase
         .from('pets')
         .select('*')
-        .eq('id', params.petId)
+        .eq('id', petId)
         .single();
-      setPet(data);
+      
+      if (error) {
+        console.error('SOS Error:', error);
+        setPet(null);
+      } else {
+        setPet(petData);
+      }
+      
       setLoading(false);
-    };
+    }
+    
     fetchPet();
-  }, [params.petId]);
+  }, [petId]);
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
-  if (!pet) return <div className="p-8 text-center">Pet not found</div>;
-
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <div className="text-4xl mb-3 animate-pulse">🚨</div>
+          <p className="text-gray-600">Loading emergency information...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!pet) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-center bg-white p-8 rounded-xl shadow-md">
+          <div className="text-5xl mb-4">❌</div>
+          <h1 className="text-xl font-bold text-gray-800">Pet Not Found</h1>
+          <p className="text-gray-500 mt-2">This emergency link is invalid or the pet has been removed.</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Header */}
-        <div className="bg-orange-500 text-white p-6 text-center">
-          <h1 className="text-2xl font-bold">🚨 EMERGENCY SOS</h1>
-          <p className="text-orange-100">Important health information for {pet.name}</p>
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-2xl mx-auto">
+        
+        {/* SOS Header */}
+        <div className="bg-red-500 text-white p-6 text-center rounded-t-2xl">
+          <div className="text-5xl mb-2">🚨</div>
+          <h1 className="text-2xl font-bold">EMERGENCY SOS</h1>
+          <p className="text-red-100">Important health information for {pet.name}</p>
         </div>
-
+        
         {/* Pet Photo */}
-        {pet.photo_url && (
-          <img src={pet.photo_url} alt={pet.name} className="w-full h-48 object-cover" />
+        {pet.profile_photo_url && (
+          <div className="bg-white p-4 text-center">
+            <img 
+              src={pet.profile_photo_url} 
+              alt={pet.name}
+              className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-red-500"
+            />
+          </div>
         )}
-
-        {/* Basic Info - Always visible */}
-        <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">{pet.name}</h2>
-          <div className="grid gap-3">
+        
+        {/* Pet Basic Info */}
+        <div className="bg-white p-6">
+          <h2 className="text-xl font-bold text-center mb-4">{pet.name}</h2>
+          
+          <div className="space-y-3">
             <div className="flex justify-between border-b pb-2">
-              <span className="font-semibold">Species:</span>
-              <span>{pet.species}</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-semibold">Breed:</span>
-              <span>{pet.breed}</span>
+              <span className="font-semibold text-gray-600">Species:</span>
+              <span>{pet.species || 'Not specified'}</span>
             </div>
             <div className="flex justify-between border-b pb-2">
-              <span className="font-semibold">Microchip:</span>
-              <span>{pet.microchip || 'Not registered'}</span>
+              <span className="font-semibold text-gray-600">Breed:</span>
+              <span>{pet.breed || 'Not specified'}</span>
             </div>
-          </div>
-
-          {/* Medical Records - Show blurred for free, clear for Pro */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl relative">
-            <h3 className="font-bold mb-2">🏥 Medical Records</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Vaccinations:</span>
-                <span className="text-gray-500">Rabies, Distemper (up to date)</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Allergies:</span>
-                <span className="text-gray-500">None reported</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Current Medications:</span>
-                <span className="text-gray-500">None</span>
-              </div>
+            <div className="flex justify-between border-b pb-2">
+              <span className="font-semibold text-gray-600">Age:</span>
+              <span>{pet.age || 'Not specified'} years</span>
             </div>
-            
-            {/* Blur overlay for free users - This is just a demo, you'll need to check actual plan */}
-            <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center rounded-xl">
-              <div className="text-center">
-                <span className="text-orange-500 text-2xl mb-2 block">🔒</span>
-                <p className="text-sm font-bold">Full medical records locked</p>
-                <p className="text-xs text-gray-500">Ask owner to upgrade to Pro</p>
-              </div>
+            <div className="flex justify-between border-b pb-2">
+              <span className="font-semibold text-gray-600">Microchip:</span>
+              <span className="font-mono">{pet.microchip || 'Not registered'}</span>
             </div>
-          </div>
-
-          <div className="mt-4 text-center text-xs text-gray-400">
-            This SOS card was generated on {new Date().toLocaleDateString()}
           </div>
         </div>
+        
+        {/* Medical Records - Placeholder for now */}
+        <div className="bg-white p-6 border-t">
+          <h3 className="font-bold text-gray-700 mb-3">🏥 Medical Information</h3>
+          <div className="bg-gray-50 p-4 rounded-lg text-center text-gray-500">
+            <p>Medical records will appear here for Pro users</p>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="bg-gray-800 text-white p-4 text-center text-xs rounded-b-2xl">
+          <p>Generated by VuraPet • Emergency SOS Card</p>
+          <p className="text-gray-400 mt-1">Share this link with vets, pet sitters, or emergency contacts</p>
+        </div>
+        
       </div>
     </div>
   );
