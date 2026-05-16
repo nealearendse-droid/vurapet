@@ -32,7 +32,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/icon.png" />
       </head>
-      <body className="min-h-full flex flex-col bg-gray-50">
+      <body className="min-h-full flex flex-col bg-[#0c0a08] text-[#f0ebe4]">
         <Navbar />
         <main className="flex-1">
           {children}
