@@ -6,6 +6,8 @@ import Link from 'next/link';
 import * as React from 'react';
 import WellnessScore from '@/components/WellnessScore';
 import WellnessPassport from '@/components/WellnessPassport';
+import WeightTracker from '@/components/WeightTracker';
+import SymptomChecker from '@/components/SymptomChecker';
 
 export default function PetProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -63,6 +65,7 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
     <div className="max-w-4xl mx-auto p-6">
       <Link href="/dashboard" className="text-emerald-600 mb-4 inline-block">← Back to Dashboard</Link>
       
+      {/* Pet Header */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-2xl p-6 text-center">
         {pet.profile_photo_url ? (
           <img 
@@ -79,6 +82,7 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         <p className="text-orange-100">{pet.breed} • {pet.species}</p>
       </div>
       
+      {/* About Section */}
       <div className="bg-white p-6 border-x">
         <h2 className="text-lg font-bold mb-4">About {pet.name}</h2>
         <div className="grid md:grid-cols-2 gap-4">
@@ -90,18 +94,40 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
       </div>
       
       {/* Wellness Score */}
-      <div className="bg-white p-6 border-x">
+      <div className="bg-white p-6 border-x mt-6">
         <WellnessScore petId={pet.id} />
       </div>
       
       {/* Wellness Passport */}
-      <div className="bg-white p-6 border-x">
+      <div className="bg-white p-6 border-x mt-6">
         <WellnessPassport petId={pet.id} pet={pet} />
+      </div>
+      
+      {/* Weight Tracker */}
+      <div className="bg-white p-6 border-x mt-6">
+        <WeightTracker 
+          petId={pet.id} 
+          petInfo={{
+            name: pet.name,
+            species: pet.species,
+            breed: pet.breed,
+            date_of_birth: pet.date_of_birth
+          }}
+        />
+      </div>
+      
+      {/* Symptom Checker */}
+      <div className="bg-white p-6 border-x mt-6">
+        <SymptomChecker 
+          petId={pet.id}
+          petName={pet.name}
+          petSpecies={pet.species}
+        />
       </div>
       
       {/* Upgrade Section for Free Users */}
       {userPlan === 'free' && (
-        <div className="bg-orange-50 p-6 border-x text-center">
+        <div className="bg-orange-50 p-6 border-x text-center mt-6">
           <p className="text-orange-700 font-bold">🔒 Upgrade to Pro</p>
           <p className="text-sm text-orange-600 mt-1">Get full wellness tracking, vaccine calendar, and health journal</p>
           <Link href="/upgrade?plan=pro" className="inline-block mt-3 bg-orange-500 text-white px-4 py-2 rounded-lg">
@@ -111,7 +137,7 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
       )}
       
       {/* SOS Button */}
-      <div className="bg-red-50 p-6 border rounded-b-2xl text-center">
+      <div className="bg-red-50 p-6 border rounded-b-2xl text-center mt-6">
         <h2 className="text-lg font-bold text-red-700 mb-2">🚨 Emergency SOS</h2>
         <button
           onClick={() => {
