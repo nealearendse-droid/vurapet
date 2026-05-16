@@ -6,7 +6,7 @@ import Link from 'next/link';
 import * as React from 'react';
 import WellnessScore from '@/components/WellnessScore';
 import WellnessPassport from '@/components/WellnessPassport';
-
+import PetAvatarUpload from '@/components/PetAvatarUpload';
 export default function PetProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [pet, setPet] = useState<any>(null);
@@ -63,19 +63,17 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
     <div className="max-w-4xl mx-auto p-6">
       <Link href="/dashboard" className="text-emerald-600 mb-4 inline-block">← Back to Dashboard</Link>
       
-      {/* Pet Header */}
+            {/* Pet Header with Avatar Upload */}
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-2xl p-6 text-center">
-        {pet.profile_photo_url ? (
-          <img 
-            src={pet.profile_photo_url} 
-            alt={pet.name}
-            className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-lg"
-          />
-        ) : (
-          <div className="w-32 h-32 rounded-full mx-auto bg-white/20 flex items-center justify-center border-4 border-white shadow-lg">
-            <span className="text-5xl">🐾</span>
-          </div>
-        )}
+        <PetAvatarUpload 
+          petId={pet.id} 
+          currentAvatarUrl={pet.profile_photo_url || pet.photo_url}
+          petName={pet.name}
+          onUploadComplete={(newUrl) => {
+            // Update the pet object with the new photo URL
+            setPet({ ...pet, profile_photo_url: newUrl });
+          }}
+        />
         <h1 className="text-2xl font-bold text-white mt-3">{pet.name}</h1>
         <p className="text-orange-100">{pet.breed} • {pet.species}</p>
       </div>
