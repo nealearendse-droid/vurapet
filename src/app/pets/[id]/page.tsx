@@ -78,14 +78,14 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         <p className="text-orange-100">{pet.breed} • {pet.species}</p>
       </div>
       
-      {/* About Section */}
-      <div className="bg-white p-6 border-x">
-        <h2 className="text-lg font-bold mb-4">About {pet.name}</h2>
+           {/* About Section */}
+      <div className="bg-[#1a1a2e] p-6 border-x border-gray-800">
+        <h2 className="text-lg font-bold mb-4 text-white">About {pet.name}</h2>
         <div className="grid md:grid-cols-2 gap-4">
-          <div><span className="text-gray-500 text-sm">Age</span><p className="font-medium">{pet.age || 'Not specified'} years</p></div>
-          <div><span className="text-gray-500 text-sm">Weight</span><p className="font-medium">{pet.weight || 'Not specified'} kg</p></div>
-          <div><span className="text-gray-500 text-sm">Microchip</span><p className="font-medium">{pet.microchip || 'Not registered'}</p></div>
-          <div><span className="text-gray-500 text-sm">Colour</span><p className="font-medium">{pet.colour || 'Not specified'}</p></div>
+          <div><span className="text-gray-400 text-sm">Age</span><p className="font-medium text-white">{pet.age || 'Not specified'} years</p></div>
+          <div><span className="text-gray-400 text-sm">Weight</span><p className="font-medium text-white">{pet.weight || 'Not specified'} kg</p></div>
+          <div><span className="text-gray-400 text-sm">Microchip</span><p className="font-medium text-white">{pet.microchip || 'Not registered'}</p></div>
+          <div><span className="text-gray-400 text-sm">Colour</span><p className="font-medium text-white">{pet.colour || 'Not specified'}</p></div>
         </div>
       </div>
       
