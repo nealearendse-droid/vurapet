@@ -6,8 +6,6 @@ import Link from 'next/link';
 import * as React from 'react';
 import WellnessScore from '@/components/WellnessScore';
 import WellnessPassport from '@/components/WellnessPassport';
-import WeightTracker from '@/components/WeightTracker';
-import SymptomChecker from '@/components/SymptomChecker';
 
 export default function PetProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -103,27 +101,6 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         <WellnessPassport petId={pet.id} pet={pet} />
       </div>
       
-      {/* Weight Tracker */}
-      <div className="bg-white p-6 border-x mt-6">
-        <WeightTracker 
-          petId={pet.id} 
-          petInfo={{
-            name: pet.name,
-            species: pet.species,
-            breed: pet.breed,
-            date_of_birth: pet.date_of_birth
-          }}
-        />
-      </div>
-      
-      {/* Symptom Checker */}
-      <div className="bg-white p-6 border-x mt-6">
-        <SymptomChecker 
-          petId={pet.id}
-          petName={pet.name}
-          petSpecies={pet.species}
-        />
-      </div>
       
       {/* Upgrade Section for Free Users */}
       {userPlan === 'free' && (
