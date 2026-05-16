@@ -1,43 +1,25 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import * as React from 'react';
 
 export default function SOSPage({ params }: { params: Promise<{ petId: string }> }) {
   const [pet, setPet] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [petId, setPetId] = useState<string>('');
+  
+  const { petId } = React.use(params);
 
-  // First, get the pet ID from params
-  useEffect(() => {
-    async function getParams() {
-      const resolvedParams = await params;
-      setPetId(resolvedParams.petId);
-    }
-    getParams();
-  }, [params]);
-
-  // Then, fetch the pet using that ID
   useEffect(() => {
     async function fetchPet() {
-      if (!petId) return;
-      
       const supabase = getSupabaseClient();
       
-      console.log('SOS: Looking for pet with ID:', petId);
-      
-      const { data: petData, error } = await supabase
+      const { data: petData } = await supabase
         .from('pets')
         .select('*')
         .eq('id', petId)
         .single();
       
-      if (error) {
-        console.error('SOS Error:', error);
-        setPet(null);
-      } else {
-        setPet(petData);
-      }
-      
+      setPet(petData);
       setLoading(false);
     }
     
@@ -45,88 +27,50 @@ export default function SOSPage({ params }: { params: Promise<{ petId: string }>
   }, [petId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center">
-          <div className="text-4xl mb-3 animate-pulse">🚨</div>
-          <p className="text-gray-600">Loading emergency information...</p>
-        </div>
-      </div>
-    );
+    return <div className="text-center py-12">Loading emergency information...</div>;
   }
   
   if (!pet) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="text-center bg-white p-8 rounded-xl shadow-md">
-          <div className="text-5xl mb-4">❌</div>
-          <h1 className="text-xl font-bold text-gray-800">Pet Not Found</h1>
-          <p className="text-gray-500 mt-2">This emergency link is invalid or the pet has been removed.</p>
-        </div>
+      <div className="text-center py-12">
+        <h1>❌ Pet Not Found</h1>
+        <p>This emergency link is invalid.</p>
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-2xl mx-auto">
-        
-        {/* SOS Header */}
-        <div className="bg-red-500 text-white p-6 text-center rounded-t-2xl">
-          <div className="text-5xl mb-2">🚨</div>
-          <h1 className="text-2xl font-bold">EMERGENCY SOS</h1>
-          <p className="text-red-100">Important health information for {pet.name}</p>
-        </div>
-        
-        {/* Pet Photo */}
-        {pet.profile_photo_url && (
-          <div className="bg-white p-4 text-center">
-            <img 
-              src={pet.profile_photo_url} 
-              alt={pet.name}
-              className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-red-500"
-            />
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="bg-red-500 text-white p-6 text-center rounded-t-2xl">
+        <div className="text-5xl mb-2">🚨</div>
+        <h1 className="text-2xl font-bold">EMERGENCY SOS</h1>
+        <p>Important health information for {pet.name}</p>
+      </div>
+      
+      <div className="bg-white p-6 border-x">
+        <h2 className="text-xl font-bold text-center mb-4">{pet.name}</h2>
+        <div className="space-y-3">
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-semibold">Species:</span>
+            <span>{pet.species || 'Not specified'}</span>
           </div>
-        )}
-        
-        {/* Pet Basic Info */}
-        <div className="bg-white p-6">
-          <h2 className="text-xl font-bold text-center mb-4">{pet.name}</h2>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-semibold text-gray-600">Species:</span>
-              <span>{pet.species || 'Not specified'}</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-semibold text-gray-600">Breed:</span>
-              <span>{pet.breed || 'Not specified'}</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-semibold text-gray-600">Age:</span>
-              <span>{pet.age || 'Not specified'} years</span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="font-semibold text-gray-600">Microchip:</span>
-              <span className="font-mono">{pet.microchip || 'Not registered'}</span>
-            </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-semibold">Breed:</span>
+            <span>{pet.breed || 'Not specified'}</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-semibold">Age:</span>
+            <span>{pet.age || 'Not specified'} years</span>
+          </div>
+          <div className="flex justify-between border-b pb-2">
+            <span className="font-semibold">Microchip:</span>
+            <span>{pet.microchip || 'Not registered'}</span>
           </div>
         </div>
-        
-        {/* Medical Records - Placeholder for now */}
-        <div className="bg-white p-6 border-t">
-          <h3 className="font-bold text-gray-700 mb-3">🏥 Medical Information</h3>
-          <div className="bg-gray-50 p-4 rounded-lg text-center text-gray-500">
-            <p>Medical records will appear here for Pro users</p>
-          </div>
-        </div>
-        
-        {/* Footer */}
-        <div className="bg-gray-800 text-white p-4 text-center text-xs rounded-b-2xl">
-          <p>Generated by VuraPet • Emergency SOS Card</p>
-          <p className="text-gray-400 mt-1">Share this link with vets, pet sitters, or emergency contacts</p>
-        </div>
-        
+      </div>
+      
+      <div className="bg-gray-800 text-white p-4 text-center text-xs rounded-b-2xl">
+        <p>Generated by VuraPet • Emergency SOS Card</p>
       </div>
     </div>
   );
