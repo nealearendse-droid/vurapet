@@ -358,7 +358,23 @@ export default function Dashboard() {
                 <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
               </div>
             )}
+{/* Weight Tracker Card */}
+<Link href={`/pets/${pets[0]?.id}/weight-tracker`} className="vp-action-card">
+  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+    <span style={{ fontSize: 22 }}>⚖️</span>
+  </div>
+  <p className="vp-action-label">Weight Tracker</p>
+  <p className="vp-action-sub">Track and analyse trends</p>
+</Link>
 
+{/* Symptom Checker Card */}
+<Link href={`/pets/${pets[0]?.id}/symptom-checker`} className="vp-action-card">
+  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+    <span style={{ fontSize: 22 }}>🩺</span>
+  </div>
+  <p className="vp-action-label">Symptom Checker</p>
+  <p className="vp-action-sub">Should you call the vet?</p>
+</Link>
             {/* PRO FEATURE - Emergency Care with badge */}
             {hasPro ? (
               <Link href="/dashboard/emergency-doc" className="vp-action-card">
