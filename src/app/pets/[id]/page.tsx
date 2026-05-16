@@ -7,6 +7,7 @@ import * as React from 'react';
 import WellnessScore from '@/components/WellnessScore';
 import WellnessPassport from '@/components/WellnessPassport';
 import PetAvatarUpload from '@/components/PetAvatarUpload';
+import EmergencyPanelWrapper from '@/components/EmergencyPanelWrapper';
 export default function PetProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [pet, setPet] = useState<any>(null);
@@ -115,7 +116,10 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
           </Link>
         </div>
       )}
-      
+            {/* Emergency Action Panel */}
+      <div className="bg-[#1a1a2e] p-6 border-x border-gray-800 mt-6">
+        <EmergencyPanelWrapper petId={pet.id} />
+      </div>
       {/* SOS Button */}
       <div className="bg-red-50 p-6 border rounded-b-2xl text-center mt-6">
         <h2 className="text-lg font-bold text-red-700 mb-2">🚨 Emergency SOS</h2>
