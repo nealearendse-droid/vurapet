@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import * as React from 'react';
+import WellnessScore from '@/components/WellnessScore';
+import WellnessPassport from '@/components/WellnessPassport';
 
 export default function PetProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -11,7 +13,6 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true);
   const [userPlan, setUserPlan] = useState('free');
   
-  // IMPORTANT: Unwrap the params Promise using React.use()
   const { id } = React.use(params);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
     }
     
     fetchPet();
-  }, [id, router]);  // USE 'id' here, NOT 'params.id'
+  }, [id, router]);
 
   if (loading) {
     return <div className="text-center py-12">Loading pet profile...</div>;
@@ -63,12 +64,19 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
       <Link href="/dashboard" className="text-emerald-600 mb-4 inline-block">← Back to Dashboard</Link>
       
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-2xl p-6 text-center">
-        <div className="w-32 h-32 rounded-full mx-auto bg-white/20 flex items-center justify-center border-4 border-white shadow-lg">
-          <span className="text-5xl">🐾</span>
-        </div>
+        {pet.profile_photo_url ? (
+          <img 
+            src={pet.profile_photo_url} 
+            alt={pet.name}
+            className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-lg"
+          />
+        ) : (
+          <div className="w-32 h-32 rounded-full mx-auto bg-white/20 flex items-center justify-center border-4 border-white shadow-lg">
+            <span className="text-5xl">🐾</span>
+          </div>
+        )}
         <h1 className="text-2xl font-bold text-white mt-3">{pet.name}</h1>
         <p className="text-orange-100">{pet.breed} • {pet.species}</p>
-        <p className="text-orange-100 text-sm mt-1">Your plan: {userPlan}</p>
       </div>
       
       <div className="bg-white p-6 border-x">
@@ -81,6 +89,28 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
       
+      {/* Wellness Score */}
+      <div className="bg-white p-6 border-x">
+        <WellnessScore petId={pet.id} />
+      </div>
+      
+      {/* Wellness Passport */}
+      <div className="bg-white p-6 border-x">
+        <WellnessPassport petId={pet.id} pet={pet} />
+      </div>
+      
+      {/* Upgrade Section for Free Users */}
+      {userPlan === 'free' && (
+        <div className="bg-orange-50 p-6 border-x text-center">
+          <p className="text-orange-700 font-bold">🔒 Upgrade to Pro</p>
+          <p className="text-sm text-orange-600 mt-1">Get full wellness tracking, vaccine calendar, and health journal</p>
+          <Link href="/upgrade?plan=pro" className="inline-block mt-3 bg-orange-500 text-white px-4 py-2 rounded-lg">
+            Upgrade Now →
+          </Link>
+        </div>
+      )}
+      
+      {/* SOS Button */}
       <div className="bg-red-50 p-6 border rounded-b-2xl text-center">
         <h2 className="text-lg font-bold text-red-700 mb-2">🚨 Emergency SOS</h2>
         <button
