@@ -88,7 +88,12 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
           <div><span className="text-gray-400 text-sm">Colour</span><p className="font-medium text-white">{pet.colour || 'Not specified'}</p></div>
         </div>
       </div>
-      
+      <div className="flex justify-between items-center mb-4">
+  <h2 className="text-lg font-bold text-white">About {pet.name}</h2>
+  <Link href={`/pets/${pet.id}/edit`} className="text-sm text-emerald-400 hover:text-emerald-300">
+    ✏️ Edit Pet
+  </Link>
+</div>
       {/* Wellness Score */}
       <div className="bg-white p-6 border-x mt-6">
         <WellnessScore petId={pet.id} />
