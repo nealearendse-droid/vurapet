@@ -24,6 +24,7 @@ export default function Dashboard() {
         return;
       }
 
+      // Get user's subscription plan
       const { data: profile } = await supabase
         .from('profiles')
         .select('subscription_plan')
@@ -72,6 +73,7 @@ export default function Dashboard() {
 
   const hasPro = userPlan === 'pro' || userPlan === 'family';
   
+  // LIMITS based on plan
   const maxPets = userPlan === 'family' ? 5 : 1;
   const maxGuardians = userPlan === 'family' ? 999 : 1;
   const maxMemories = userPlan === 'free' ? 5 : 999;
@@ -97,12 +99,12 @@ export default function Dashboard() {
   }
 
   const isProtected = guardians.length > 0;
-  const firstPet = pets[0];
 
   return (
     <div className="vp-dash">
       <style>{dashStyles}</style>
 
+      {/* ── Hero greeting ── */}
       <div className="vp-hero">
         <div className="vp-hero-glow" />
         <div className="vp-hero-content">
@@ -117,11 +119,12 @@ export default function Dashboard() {
             </h1>
             <p className="vp-hero-sub">
               {isProtected
-                ? `${guardians.length} guardian${guardians.length > 1 ? 's' : ''} ready to step in.`
+                ? `${guardians.length} guardian${guardians.length > 1 ? 's' : ''} ready to step in if you ever need them.`
                 : 'Add a guardian so someone always knows how to care for your pet.'}
             </p>
           </div>
 
+          {/* Protection status pill */}
           {isProtected ? (
             <Link href="/pets/guardian" className="vp-status-pill vp-status-green">
               <span className="vp-status-dot vp-dot-green" />
@@ -138,15 +141,17 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Main body ── */}
       <div className="vp-body">
 
+        {/* ── Upgrade Banner (only shows for free users) ── */}
         {!hasPro && (
           <div className="vp-upgrade-banner">
             <div className="vp-upgrade-left">
               <p className="vp-upgrade-tag">🔒 Free Plan</p>
               <h3 className="vp-upgrade-title">Unlock Full Protection</h3>
               <p className="vp-upgrade-sub">
-                Vet records · Health journal · Emergency care · Vaccine reminders · Custom meal plans
+                Vet records · Health journal · Emergency care doc · Vaccine reminders · Custom meal plans
               </p>
             </div>
             <Link href="/upgrade?plan=pro&billing=monthly" className="vp-upgrade-btn">
@@ -155,19 +160,25 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── Your plan indicator ── */}
         <div style={{ background: '#333', color: 'white', padding: '8px', marginBottom: '10px', borderRadius: '8px', textAlign: 'center', fontSize: '12px' }}>
           📋 Plan: {userPlan} {userPlan === 'free' && '🔒 1 pet max • 1 guardian max • 5 memories max'}
           {userPlan === 'pro' && '✅ 1 pet • 1 guardian • Unlimited memories'}
           {userPlan === 'family' && '✅ 5 pets • Unlimited guardians • Unlimited memories'}
         </div>
 
+        {/* ── Pets section ── */}
         <section className="vp-section">
           <div className="vp-section-header">
             <h2 className="vp-section-title">My Pets ({pets.length}/{maxPets})</h2>
             {pets.length < maxPets ? (
-              <Link href="/dashboard/add-pet" className="vp-btn-primary">+ Add Pet</Link>
+              <Link href="/dashboard/add-pet" className="vp-btn-primary">
+                + Add Pet
+              </Link>
             ) : (
-              <button disabled className="vp-btn-primary opacity-50 cursor-not-allowed">+ Add Pet (Max {maxPets})</button>
+              <button disabled className="vp-btn-primary opacity-50 cursor-not-allowed">
+                + Add Pet (Max {maxPets})
+              </button>
             )}
           </div>
 
@@ -176,7 +187,9 @@ export default function Dashboard() {
               <div className="vp-empty-icon">🐾</div>
               <h3 className="vp-empty-title">No pets yet</h3>
               <p className="vp-empty-sub">Add your first pet to start their lifetime care plan.</p>
-              <Link href="/dashboard/add-pet" className="vp-btn-primary">+ Add My First Pet</Link>
+              <Link href="/dashboard/add-pet" className="vp-btn-primary">
+                + Add My First Pet
+              </Link>
             </div>
           ) : (
             <div className="vp-pet-list">
@@ -185,7 +198,11 @@ export default function Dashboard() {
                 const photoUrl = pet.profile_photo_url || pet.photo_url;
 
                 return (
-                  <div key={pet.id} className="vp-pet-card" style={{ animationDelay: `${i * 60}ms` }}>
+                  <div
+                    key={pet.id}
+                    className="vp-pet-card"
+                    style={{ animationDelay: `${i * 60}ms` }}
+                  >
                     <div className="vp-pet-avatar">
                       {photoUrl ? (
                         <img src={photoUrl} alt={pet.name} className="vp-pet-photo" />
@@ -193,19 +210,32 @@ export default function Dashboard() {
                         <span className="vp-pet-fallback">🐾</span>
                       )}
                     </div>
+
                     <div className="vp-pet-info">
                       <h3 className="vp-pet-name">{pet.name}</h3>
-                      <p className="vp-pet-meta">{pet.breed} · {pet.species}</p>
+                      <p className="vp-pet-meta">
+                        {[pet.breed, pet.species].filter(Boolean).join(' · ')}
+                      </p>
                       {hasGuardian ? (
                         <span className="vp-badge vp-badge-green">🛡️ Protected</span>
                       ) : (
                         <span className="vp-badge vp-badge-amber">⚠️ No guardian yet</span>
                       )}
                     </div>
+
                     <div className="vp-pet-actions">
-                      <Link href={`/pets/${pet.id}`} className="vp-link-primary">View Profile →</Link>
+                      <Link href={`/pets/${pet.id}`} className="vp-link-primary">
+                        View Profile →
+                      </Link>
                       {!hasGuardian && guardians.length < maxGuardians && (
-                        <Link href="/pets/guardian/add" className="vp-link-muted">+ Add Guardian</Link>
+                        <Link href="/pets/guardian/add" className="vp-link-muted">
+                          + Add Guardian ({guardians.length}/{maxGuardians === 999 ? '∞' : maxGuardians})
+                        </Link>
+                      )}
+                      {!hasGuardian && guardians.length >= maxGuardians && (
+                        <span className="vp-link-muted opacity-50">
+                          Guardian limit reached
+                        </span>
                       )}
                     </div>
                   </div>
@@ -215,6 +245,7 @@ export default function Dashboard() {
           )}
         </section>
 
+        {/* ── Memory limit warning ── */}
         {!canAddMemory && userPlan === 'free' && (
           <div className="bg-orange-500 text-white p-3 rounded-xl text-center">
             ⚠️ You've reached the {maxMemories} memory limit on the Free plan.
@@ -222,90 +253,146 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── Quick Actions ── */}
         <section className="vp-section">
           <h2 className="vp-section-title" style={{ marginBottom: '1rem' }}>Quick Actions</h2>
           <div className="vp-actions-grid">
             
+            {/* FREE FEATURES - Always work */}
             <Link href="/dashboard/nutrition" className="vp-action-card">
-              <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>🥗</span></div>
+              <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+                <span style={{ fontSize: 22 }}>🥗</span>
+              </div>
               <p className="vp-action-label">Nutrition Plan</p>
               <p className="vp-action-sub">Custom meal plans</p>
             </Link>
 
             <Link href="/pets/safe-food" className="vp-action-card">
-              <div className="vp-action-icon" style={{ background: '#1d9e7522' }}><span style={{ fontSize: 22 }}>🍎</span></div>
+              <div className="vp-action-icon" style={{ background: '#1d9e7522' }}>
+                <span style={{ fontSize: 22 }}>🍎</span>
+              </div>
               <p className="vp-action-label">Food Checker</p>
               <p className="vp-action-sub">Safe or unsafe?</p>
             </Link>
 
             <Link href="/pets/guardian" className="vp-action-card">
-              <div className="vp-action-icon" style={{ background: '#378add22' }}><span style={{ fontSize: 22 }}>🛡️</span></div>
+              <div className="vp-action-icon" style={{ background: '#378add22' }}>
+                <span style={{ fontSize: 22 }}>🛡️</span>
+              </div>
               <p className="vp-action-label">Guardians</p>
               <p className="vp-action-sub">Protect your pet</p>
             </Link>
 
             <Link href="/pets/memories" className="vp-action-card">
-              <div className="vp-action-icon" style={{ background: '#d4537e22' }}><span style={{ fontSize: 22 }}>📸</span></div>
+              <div className="vp-action-icon" style={{ background: '#d4537e22' }}>
+                <span style={{ fontSize: 22 }}>📸</span>
+              </div>
               <p className="vp-action-label">Memory Book</p>
-              <p className="vp-action-sub">{userPlan === 'free' ? `${currentMemoriesCount}/${maxMemories} memories` : 'Unlimited memories'}</p>
+              <p className="vp-action-sub">
+                {userPlan === 'free' ? `${currentMemoriesCount}/${maxMemories} memories` : 'Unlimited memories'}
+              </p>
             </Link>
 
-            {firstPet && (
-              <Link href={`/pets/${firstPet.id}/weight-tracker`} className="vp-action-card">
-                <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>⚖️</span></div>
-                <p className="vp-action-label">Weight Tracker</p>
-                <p className="vp-action-sub">Track and analyse trends</p>
-              </Link>
-            )}
-
-            {firstPet && (
-              <Link href={`/pets/${firstPet.id}/symptom-checker`} className="vp-action-card">
-                <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>🩺</span></div>
-                <p className="vp-action-label">Symptom Checker</p>
-                <p className="vp-action-sub">Should you call the vet?</p>
-              </Link>
-            )}
-
+            {/* PRO FEATURE - Breed Intelligence with badge */}
             {hasPro ? (
-              firstPet ? (
-                <Link href={`/pets/${firstPet.id}/health-journal`} className="vp-action-card">
-                  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>📋</span></div>
-                  <p className="vp-action-label">Health Journal</p>
-                  <p className="vp-action-sub">Track daily health</p>
-                </Link>
-              ) : (
-                <div className="vp-action-card" style={{ opacity: 0.5 }}>
-                  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>📋</span></div>
-                  <p className="vp-action-label">Health Journal</p>
-                  <p className="vp-action-sub">Add a pet first</p>
+              <Link href="/dashboard/breed-intelligence" className="vp-action-card">
+                <div className="vp-action-icon" style={{ background: '#8b6dd422' }}>
+                  <span style={{ fontSize: 22 }}>🧠</span>
                 </div>
-              )
+                <p className="vp-action-label">Breed Intelligence</p>
+                <p className="vp-action-sub">Know your breed</p>
+              </Link>
             ) : (
               <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
-                <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}><span style={{ fontSize: 22 }}>📋</span></div>
-                <p className="vp-action-label">Health Journal <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
+                <div className="vp-action-icon" style={{ background: '#8b6dd422', opacity: 0.6 }}>
+                  <span style={{ fontSize: 22 }}>🧠</span>
+                </div>
+                <p className="vp-action-label">
+                  Breed Intelligence 
+                  <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span>
+                </p>
                 <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
               </div>
             )}
 
+            {/* PRO FEATURE - Health Journal with badge */}
             {hasPro ? (
-              firstPet ? (
-                <Link href={`/pets/${firstPet.id}/emergency-care`} className="vp-action-card">
-                  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>🚑</span></div>
-                  <p className="vp-action-label">Emergency Care</p>
-                  <p className="vp-action-sub">Get urgent advice</p>
-                </Link>
-              ) : (
-                <div className="vp-action-card" style={{ opacity: 0.5 }}>
-                  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>🚑</span></div>
-                  <p className="vp-action-label">Emergency Care</p>
-                  <p className="vp-action-sub">Add a pet first</p>
+              <Link href={`/pets/${pets[0]?.id}/health-journal`} className="vp-action-card">
+                <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+                  <span style={{ fontSize: 22 }}>📋</span>
                 </div>
-              )
+                <p className="vp-action-label">Health Journal</p>
+                <p className="vp-action-sub">Track health</p>
+              </Link>
             ) : (
               <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
-                <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}><span style={{ fontSize: 22 }}>🚑</span></div>
-                <p className="vp-action-label">Emergency Care <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
+                <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}>
+                  <span style={{ fontSize: 22 }}>📋</span>
+                </div>
+                <p className="vp-action-label">
+                  Health Journal 
+                  <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span>
+                </p>
+                <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
+              </div>
+            )}
+
+            {/* PRO FEATURE - Vaccine Calendar with badge */}
+            {hasPro ? (
+              <Link href="/dashboard/vaccine-calendar" className="vp-action-card">
+                <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+                  <span style={{ fontSize: 22 }}>💉</span>
+                </div>
+                <p className="vp-action-label">Vaccine Calendar</p>
+                <p className="vp-action-sub">Never miss a shot</p>
+              </Link>
+            ) : (
+              <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
+                <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}>
+                  <span style={{ fontSize: 22 }}>💉</span>
+                </div>
+                <p className="vp-action-label">
+                  Vaccine Calendar 
+                  <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span>
+                </p>
+                <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
+              </div>
+            )}
+{/* Weight Tracker Card */}
+<Link href={`/pets/${pets[0]?.id}/weight-tracker`} className="vp-action-card">
+  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+    <span style={{ fontSize: 22 }}>⚖️</span>
+  </div>
+  <p className="vp-action-label">Weight Tracker</p>
+  <p className="vp-action-sub">Track and analyse trends</p>
+</Link>
+
+{/* Symptom Checker Card */}
+<Link href={`/pets/${pets[0]?.id}/symptom-checker`} className="vp-action-card">
+  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+    <span style={{ fontSize: 22 }}>🩺</span>
+  </div>
+  <p className="vp-action-label">Symptom Checker</p>
+  <p className="vp-action-sub">Should you call the vet?</p>
+</Link>
+            {/* PRO FEATURE - Emergency Care with badge */}
+            {hasPro ? (
+              <Link href={`/pets/${pets[0]?.id}/emergency-care`} className="vp-action-card">
+                <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+                  <span style={{ fontSize: 22 }}>🚑</span>
+                </div>
+                <p className="vp-action-label">Emergency Care</p>
+                <p className="vp-action-sub">Vet-ready document</p>
+              </Link>
+            ) : (
+              <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
+                <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}>
+                  <span style={{ fontSize: 22 }}>🚑</span>
+                </div>
+                <p className="vp-action-label">
+                  Emergency Care 
+                  <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span>
+                </p>
                 <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
               </div>
             )}
