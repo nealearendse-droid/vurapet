@@ -337,9 +337,37 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* PRO FEATURE - Vaccine Calendar with badge */}
+                        {/* PRO FEATURE - Vaccine Calendar with badge */}
             {hasPro ? (
-              <Link href="/dashboard/vaccine-calendar" className="vp-action-card">
+              pets[0] ? (
+                <Link href={`/pets/${pets[0].id}/vaccines`} className="vp-action-card">
+                  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+                    <span style={{ fontSize: 22 }}>💉</span>
+                  </div>
+                  <p className="vp-action-label">Vaccine Calendar</p>
+                  <p className="vp-action-sub">Never miss a shot</p>
+                </Link>
+              ) : (
+                <div className="vp-action-card" style={{ opacity: 0.5 }}>
+                  <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
+                    <span style={{ fontSize: 22 }}>💉</span>
+                  </div>
+                  <p className="vp-action-label">Vaccine Calendar</p>
+                  <p className="vp-action-sub">Add a pet first</p>
+                </div>
+              )
+            ) : (
+              <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
+                <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}>
+                  <span style={{ fontSize: 22 }}>💉</span>
+                </div>
+                <p className="vp-action-label">
+                  Vaccine Calendar 
+                  <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span>
+                </p>
+                <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
+              </div>
+            )}
                 <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
                   <span style={{ fontSize: 22 }}>💉</span>
                 </div>
