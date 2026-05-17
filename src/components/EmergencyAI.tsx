@@ -7,6 +7,7 @@ export default function EmergencyAI({ petId }: { petId: string }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [showHandover, setShowHandover] = useState(false);
 
   useEffect(() => {
     async function loadPet() {
@@ -145,10 +146,6 @@ export default function EmergencyAI({ petId }: { petId: string }) {
     }, 1500);
   };
 
-  const generateHandover = () => {
-    alert(`📋 EMERGENCY HANDOVER PROFILE\n\nName: ${pet?.name}\nBreed: ${pet?.breed}\nWeight: ${pet?.weight} kg\nAge: ${pet?.age} years\nMicrochip: ${pet?.microchip || 'Not registered'}\n\nShow this to your vet for faster treatment.`);
-  };
-
   if (loading) {
     return (
       <div className="bg-[#1a1a2e] rounded-xl p-6 text-center">
@@ -206,12 +203,47 @@ export default function EmergencyAI({ petId }: { petId: string }) {
 
       <div className="p-4 border-t border-gray-800">
         <button
-          onClick={generateHandover}
+          onClick={() => setShowHandover(true)}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg font-bold"
         >
           📋 Generate Vet Handover Profile
         </button>
       </div>
+
+      {showHandover && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#1a1a2e', maxWidth: 500, width: '100%', borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{ background: '#c47a3a', padding: '15px 20px', color: 'white' }}>
+              <h3 style={{ margin: 0 }}>🚑 Emergency Handover Profile</h3>
+            </div>
+            <div style={{ padding: 20, maxHeight: '70vh', overflowY: 'auto' }}>
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ color: '#c47a3a', marginBottom: 10 }}>🐾 Patient Information</h4>
+                <p><strong>Name:</strong> {pet?.name || 'Not added'}</p>
+                <p><strong>Breed:</strong> {pet?.breed || 'Not added'}</p>
+                <p><strong>Species:</strong> {pet?.species || 'Not added'}</p>
+                <p><strong>Age:</strong> {pet?.age || '?'} years</p>
+                <p><strong>Weight:</strong> {pet?.weight || '?'} kg</p>
+                <p><strong>Colour:</strong> {pet?.colour || 'Not added'}</p>
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ color: '#c47a3a', marginBottom: 10 }}>🆔 Identification</h4>
+                <p><strong>Microchip:</strong> {pet?.microchip || 'Not registered'}</p>
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ color: '#c47a3a', marginBottom: 10 }}>📞 Emergency Contacts</h4>
+                <p><strong>Owner:</strong> {pet?.owner_name || 'Not added'}</p>
+                <p><strong>Owner Phone:</strong> {pet?.owner_phone || 'Not added'}</p>
+                <p><strong>Vet Clinic:</strong> {pet?.vet_clinic || 'Not added'}</p>
+                <p><strong>Vet Phone:</strong> {pet?.vet_phone || 'Not added'}</p>
+              </div>
+            </div>
+            <div style={{ padding: 15, borderTop: '1px solid #333', display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowHandover(false)} style={{ flex: 1, background: '#c47a3a', color: 'white', padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-gray-900 p-3 text-center text-xs text-gray-500">
         ⚠️ For guidance only. Always consult a veterinarian for medical emergencies.
