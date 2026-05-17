@@ -6,14 +6,12 @@ const supabase = createClient(
 );
 
 export async function GET(request: Request) {
-  // Check for secret key so nobody else can trigger this
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    // Get today and 7 days from now
     const today = new Date();
     const in7Days = new Date();
     in7Days.setDate(today.getDate() + 7);
@@ -21,7 +19,6 @@ export async function GET(request: Request) {
     const todayStr = today.toISOString().slice(0, 10);
     const in7DaysStr = in7Days.toISOString().slice(0, 10);
 
-    // Find all vaccines due in the next 7 days
     const { data: vaccines, error } = await supabase
       .from('vaccinations')
       .select(`
@@ -40,7 +37,6 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    // Send an email for each vaccine due
     const results = await Promise.all(
       (vaccines || []).map(async (vaccine: any) => {
         const petName = vaccine.pets?.name;
@@ -50,7 +46,7 @@ export async function GET(request: Request) {
 
         if (!ownerEmail) return { skipped: true };
 
-        const response = await fetch(
+        await fetch(
           `${process.env.NEXT_PUBLIC_APP_URL}/api/send-vaccine-reminder`,
           {
             method: 'POST',

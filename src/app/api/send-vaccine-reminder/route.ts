@@ -17,7 +17,7 @@ export async function POST(request: Request) {
           <p>Just a friendly reminder that <strong>${petName}</strong> is due for their <strong>${vaccineName}</strong> vaccine on <strong>${dueDate}</strong>.</p>
           <p>Please book a vet appointment soon!</p>
           <br/>
-          <a href="https://vurapet.com" style="background: #c47a3a; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
+          <a href="https://vurapet.vercel.app" style="background: #c47a3a; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
             Open VuraPet App
           </a>
           <br/><br/>
