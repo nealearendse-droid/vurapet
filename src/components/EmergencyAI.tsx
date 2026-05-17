@@ -210,9 +210,9 @@ export default function EmergencyAI({ petId }: { petId: string }) {
         </button>
       </div>
 
-      {showHandover && (
+            {showHandover && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: '#1a1a2e', maxWidth: 500, width: '100%', borderRadius: 20, overflow: 'hidden' }}>
+          <div id="handover-print" style={{ background: '#1a1a2e', maxWidth: 500, width: '100%', borderRadius: 20, overflow: 'hidden' }}>
             <div style={{ background: '#c47a3a', padding: '15px 20px', color: 'white' }}>
               <h3 style={{ margin: 0 }}>🚑 Emergency Handover Profile</h3>
             </div>
@@ -237,14 +237,22 @@ export default function EmergencyAI({ petId }: { petId: string }) {
                 <p><strong>Vet Clinic:</strong> {pet?.vet_clinic || 'Not added'}</p>
                 <p><strong>Vet Phone:</strong> {pet?.vet_phone || 'Not added'}</p>
               </div>
+              <div style={{ marginBottom: 20 }}>
+                <h4 style={{ color: '#c47a3a', marginBottom: 10 }}>📋 Current Symptoms</h4>
+                <p>{messages.filter(m => !m.isAI).slice(-3).map(m => m.text).join(', ') || 'No symptoms recorded'}</p>
+              </div>
             </div>
-            <div style={{ padding: 15, borderTop: '1px solid #333', display: 'flex', gap: 10 }}>
+            <div style={{ padding: 15, borderTop: '1px solid #333', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={() => {
+                const message = `🚑 EMERGENCY HANDOVER PROFILE for ${pet?.name}\n\nName: ${pet?.name}\nBreed: ${pet?.breed}\nWeight: ${pet?.weight}kg\nMicrochip: ${pet?.microchip || 'Not registered'}\nVet: ${pet?.vet_clinic || 'Not added'}\nVet Phone: ${pet?.vet_phone || 'Not added'}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`);
+              }} style={{ flex: 1, background: '#25D366', color: 'white', padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>📱 WhatsApp</button>
+              <button onClick={() => window.print()} style={{ flex: 1, background: '#333', color: 'white', padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>🖨️ Print</button>
               <button onClick={() => setShowHandover(false)} style={{ flex: 1, background: '#c47a3a', color: 'white', padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>Close</button>
             </div>
           </div>
         </div>
       )}
-
       <div className="bg-gray-900 p-3 text-center text-xs text-gray-500">
         ⚠️ For guidance only. Always consult a veterinarian for medical emergencies.
       </div>
