@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
 
     // Build the data object
     const pfData = {
-      merchant_id: "10000100",
-      merchant_key: "46f0cd694581a",
+      merchant_id: "10048873",
+      merchant_key: "ewi6l0v3ahtfy",
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payfast/notify`,
@@ -33,9 +33,8 @@ export async function POST(req: NextRequest) {
     
     // Remove the last "&"
     let pfString = pfOutput.slice(0, -1);
-    
-    // Generate MD5 signature (NO passphrase for test credentials)
-    const signature = crypto.createHash("md5").update(pfString).digest("hex");
+pfString += "&passphrase=Test12345678";  // ← ADD THIS LINE
+const signature = crypto.createHash("md5").update(pfString).digest("hex");
     
     // Add signature to data
     pfData["signature"] = signature;
