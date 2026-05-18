@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
               plan_expires_at: expiresAt.toISOString(),  // ← Changed from pro_expires_at
               updated_at: new Date().toISOString()
             })
-            .eq('email', userEmail);
+            .eq('full_name', userEmail);
           
           if (updateError) {
             console.error('❌ Error updating user:', updateError);
