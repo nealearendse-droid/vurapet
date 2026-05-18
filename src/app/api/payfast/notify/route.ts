@@ -36,10 +36,12 @@ export async function POST(request: Request) {
     console.log("Email:", data.email_address);
     console.log("Item:", data.item_name);
 
-    if (data.payment_status !== "COMPLETE") {
-      console.log("Payment not complete yet, status:", data.payment_status);
-      return new Response("OK", { status: 200 });
-    }
+    console.log("Full webhook data:", JSON.stringify(data));
+
+if (data.payment_status !== "COMPLETE") {
+  console.log("Payment not complete yet, status:", data.payment_status);
+  return new Response("OK", { status: 200 });
+}
 
     const email = data.email_address;
     const itemName = data.item_name?.toLowerCase() || "";
