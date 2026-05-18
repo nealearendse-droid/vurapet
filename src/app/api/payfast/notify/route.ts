@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
 
-// Lazy-load Supabase client (only creates it when needed)
+// Lazy-load Supabase client
 let supabaseClient: any = null;
 
 function getSupabase() {
@@ -29,14 +29,14 @@ export async function POST(req: NextRequest) {
       data[key] = value.toString();
     });
 
+    console.log("📦 PayFast notification received:", data.payment_status);
+
     // Verify the signature
     const passphrase = process.env.PAYFAST_PASSPHRASE || "";
     
-    // Remove signature from data for verification
     const receivedSignature = data.signature;
     delete data.signature;
     
-    // Sort keys and build signature string
     const sortedKeys = Object.keys(data).sort();
     let sigString = "";
     for (const key of sortedKeys) {
@@ -53,21 +53,20 @@ export async function POST(req: NextRequest) {
     const calculatedSignature = crypto.createHash("md5").update(sigString).digest("hex");
     
     if (calculatedSignature !== receivedSignature) {
-      console.error("Invalid signature from PayFast");
+      console.error("❌ Invalid signature from PayFast");
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
     
     // Payment is verified!
     const paymentStatus = data.payment_status;
-    const userId = data.custom_str1;
-    const plan = data.custom_str2;
-    const billing = data.custom_str3;
     
-    console.log(`Payment received from user ${userId}: ${paymentStatus} - ${plan} plan`);
+    console.log(`✅ Payment verified! Status: ${paymentStatus}`);
     
     // Update user's subscription in Supabase
     if (paymentStatus === 'COMPLETE') {
       const userEmail = data.email_address;
+      
+      console.log(`📧 Updating user: ${userEmail}`);
       
       if (userEmail) {
         try {
@@ -76,27 +75,29 @@ export async function POST(req: NextRequest) {
           const expiresAt = new Date();
           expiresAt.setDate(expiresAt.getDate() + 30);
           
+          // UPDATE THE PROFILES TABLE (not users!)
           const { error: updateError } = await supabase
-            .from('users')
+            .from('profiles')  // ← Changed from 'users' to 'profiles'
             .update({
-              is_pro: true,
-              pro_plan: plan,
-              pro_billing: billing,
-              pro_expires_at: expiresAt.toISOString(),
+              plan: 'pro',  // ← Changed from is_pro to plan
+              plan_status: 'active',
+              subscription_plan: 'pro',  // ← Changed from pro_plan
+              plan_billing: data.custom_str3 || 'monthly',  // ← Changed from pro_billing
+              plan_expires_at: expiresAt.toISOString(),  // ← Changed from pro_expires_at
               updated_at: new Date().toISOString()
             })
             .eq('email', userEmail);
           
           if (updateError) {
-            console.error('Error updating user:', updateError);
+            console.error('❌ Error updating user:', updateError);
           } else {
-            console.log(`✅ User ${userEmail} upgraded to ${plan} plan`);
+            console.log(`🎉 SUCCESS! User ${userEmail} upgraded to PRO plan!`);
           }
         } catch (supabaseError) {
-          console.error('Supabase error:', supabaseError);
+          console.error('❌ Supabase error:', supabaseError);
         }
       } else {
-        console.warn('No email found in PayFast notification');
+        console.warn('⚠️ No email found in PayFast notification');
       }
     } else {
       console.log(`Payment status: ${paymentStatus} - not upgrading user`);
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "success" });
     
   } catch (err) {
-    console.error("Webhook error:", err);
+    console.error("❌ Webhook error:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

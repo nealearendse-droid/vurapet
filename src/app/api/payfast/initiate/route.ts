@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       merchant_key: "ewi6l0v3ahtfy",
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
-      notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payfast/notify`,
+      notify_url: `notify_url: "https://webhook.site/https://webhook.site/200e7483-3c0b-4f76-b87c-0934f006563d",
       name_first: name?.split(" ")[0] || "Test User",
       name_last: name?.split(" ")[1] || "",
       email_address: email,
