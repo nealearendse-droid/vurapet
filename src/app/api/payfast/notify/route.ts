@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
 
+export async function GET() {
+  return NextResponse.json({ status: "webhook is working" });
+}
+
+// rest of your code below...
 // Lazy-load Supabase client
 let supabaseClient: any = null;
 
