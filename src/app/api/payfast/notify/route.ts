@@ -2,10 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase configuration
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Lazy-load Supabase client (only creates it when needed)
+let supabaseClient: any = null;
+
+function getSupabase() {
+  if (!supabaseClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Missing Supabase environment variables");
+      throw new Error("Supabase configuration missing");
+    }
+    
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return supabaseClient;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Get the form data from PayFast
@@ -51,32 +65,35 @@ export async function POST(req: NextRequest) {
     
     console.log(`Payment received from user ${userId}: ${paymentStatus} - ${plan} plan`);
     
-        // Update user's subscription in Supabase
+    // Update user's subscription in Supabase
     if (paymentStatus === 'COMPLETE') {
-      // Find the user by email (PayFast sends email in data.email_address)
       const userEmail = data.email_address;
       
       if (userEmail) {
-        // Calculate when Pro expires (30 days from now)
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 30);
-        
-        // Update the user in Supabase
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            is_pro: true,
-            pro_plan: plan,
-            pro_billing: billing,
-            pro_expires_at: expiresAt.toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq('email', userEmail);
-        
-        if (updateError) {
-          console.error('Error updating user:', updateError);
-        } else {
-          console.log(`✅ User ${userEmail} upgraded to ${plan} plan`);
+        try {
+          const supabase = getSupabase();
+          
+          const expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + 30);
+          
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({
+              is_pro: true,
+              pro_plan: plan,
+              pro_billing: billing,
+              pro_expires_at: expiresAt.toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', userEmail);
+          
+          if (updateError) {
+            console.error('Error updating user:', updateError);
+          } else {
+            console.log(`✅ User ${userEmail} upgraded to ${plan} plan`);
+          }
+        } catch (supabaseError) {
+          console.error('Supabase error:', supabaseError);
         }
       } else {
         console.warn('No email found in PayFast notification');
