@@ -140,8 +140,7 @@ export default function EmergencyAI({ petId }: { petId: string }) {
         setMessages(prev => [...prev, { id: Date.now(), text: response, isAI: true }]);
       }
       else {
-        response = `Thank you for using VuraPet Emergency AI. When in doubt, always consult a veterinarian. Wishing ${pet?.name || 'your pet'} a speedy recovery!`;
-        setMessages(prev => [...prev, { id: Date.now(), text: response, isAI: true }]);
+        response = `Thank you for using VuraPet Emergency Assistant. When in doubt, always consult a veterinarian. Wishing ${pet?.name || 'your pet'} a speedy recovery!`;
       }
     }, 1500);
   };
@@ -160,7 +159,7 @@ export default function EmergencyAI({ petId }: { petId: string }) {
         <div className="flex items-center gap-3">
           <span className="text-2xl">🚨</span>
           <div>
-            <h2 className="font-bold">VuraPet Emergency AI</h2>
+            <h2 className="font-bold">VuraPet Emergency Assistant</h2>
             <p className="text-sm">24/7 Emergency Triage Assistant</p>
           </div>
         </div>
