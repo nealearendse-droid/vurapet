@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const { data: profile, error: fetchError } = await supabase
       .from("profiles")
       .select("id")
-      .eq("full_name", email)
+      .eq("email", email)
       .single();
 
     if (fetchError || !profile) {
