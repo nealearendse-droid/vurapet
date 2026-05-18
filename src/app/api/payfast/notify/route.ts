@@ -1,10 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { createClient } from "@supabase/supabase-js";
 
 function verifySignature(data: Record<string, string>): boolean {
   const pfData = { ...data };
@@ -23,6 +18,12 @@ function verifySignature(data: Record<string, string>): boolean {
 }
 
 export async function POST(request: Request) {
+  // ✅ Moved INSIDE the function so env vars are available at runtime
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   try {
     const formData = await request.formData();
     const data: Record<string, string> = {};
@@ -34,13 +35,6 @@ export async function POST(request: Request) {
     console.log("Payment status:", data.payment_status);
     console.log("Email:", data.email_address);
     console.log("Item:", data.item_name);
-
-    // ⚠️ Skip signature check in sandbox mode for easier testing
-    // Put this back when you go live!
-    // if (!verifySignature(data)) {
-    //   console.error("❌ Signature check failed");
-    //   return new Response("Invalid signature", { status: 400 });
-    // }
 
     if (data.payment_status !== "COMPLETE") {
       console.log("Payment not complete yet, status:", data.payment_status);
@@ -55,7 +49,6 @@ export async function POST(request: Request) {
 
     console.log(`Looking up user: ${email}, upgrading to: ${plan} (${billing})`);
 
-    // Look up user using full_name column (which currently stores emails)
     const { data: profile, error: fetchError } = await supabase
       .from("profiles")
       .select("id")
