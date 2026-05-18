@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   return NextResponse.json({ status: "webhook is working" });
 }
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("📦 PayFast notification received:", data.payment_status);
-
+console.log("🔍 Full PayFast data:", JSON.stringify(data, null, 2));
     // Verify the signature
     const passphrase = process.env.PAYFAST_PASSPHRASE || "";
     
