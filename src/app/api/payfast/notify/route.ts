@@ -38,6 +38,7 @@ export async function POST(request: Request) {
 
     console.log("Full webhook data:", JSON.stringify(data));
 
+    console.log("Full webhook data:", JSON.stringify(data));
 if (data.payment_status !== "COMPLETE") {
   console.log("Payment not complete yet, status:", data.payment_status);
   return new Response("OK", { status: 200 });
