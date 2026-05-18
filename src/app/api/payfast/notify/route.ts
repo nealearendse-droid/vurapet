@@ -83,17 +83,16 @@ console.log("🔍 Full PayFast data:", JSON.stringify(data, null, 2));
           expiresAt.setDate(expiresAt.getDate() + 30);
           
           // UPDATE THE PROFILES TABLE (not users!)
-          const { error: updateError } = await supabase
-            .from('profiles')  // ← Changed from 'users' to 'profiles'
-            .update({
-              plan: 'pro',  // ← Changed from is_pro to plan
-              plan_status: 'active',
-              subscription_plan: 'pro',  // ← Changed from pro_plan
-              plan_billing: data.custom_str3 || 'monthly',  // ← Changed from pro_billing
-              plan_expires_at: expiresAt.toISOString(),  // ← Changed from pro_expires_at
-              updated_at: new Date().toISOString()
-            })
-            .eq('full_name', userEmail);
+          const { error } = await supabase
+  .from('profiles')
+  .update({
+    plan: 'pro',
+    subscription_plan: 'pro',
+    plan_status: 'active',
+    plan_expires_at: expiresAt.toISOString(),
+    updated_at: new Date().toISOString()
+  })
+  .eq('full_name', userEmail);
           
           if (updateError) {
             console.error('❌ Error updating user:', updateError);
