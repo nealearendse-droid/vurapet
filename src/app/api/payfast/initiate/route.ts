@@ -25,15 +25,18 @@ export async function POST(req: NextRequest) {
 
     // CRITICAL: The signature must be generated in this EXACT way
     let pfOutput = "";
-    for (let key in pfData) {
-      if (pfData.hasOwnProperty(key) && pfData[key] !== "") {
-        pfOutput += key + "=" + encodeURIComponent(pfData[key].trim()).replace(/%20/g, "+") + "&";
-      }
-    }
-    
-    // Remove the last "&"
-    let pfString = pfOutput.slice(0, -1);
-pfString += "&passphrase=Test12345678";  // ← ADD THIS LINE
+for (let key in pfData) {
+  if (pfData.hasOwnProperty(key) && pfData[key] !== "") {
+    pfOutput += key + "=" + encodeURIComponent(pfData[key].trim()).replace(/%20/g, "+") + "&";
+  }
+}
+
+// Remove the last "&"
+let pfString = pfOutput.slice(0, -1);
+
+// Add passphrase - THIS IS THE CORRECT WAY
+pfString = pfString + "&passphrase=Test12345678";
+
 const signature = crypto.createHash("md5").update(pfString).digest("hex");
     
     // Add signature to data
