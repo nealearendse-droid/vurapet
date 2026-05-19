@@ -36,9 +36,13 @@ export async function POST(req: NextRequest) {
     // No passphrase for live accounts
     const signature = crypto.createHash("md5").update(pfString).digest("hex");
 
-    // 👇 These lines print in Vercel logs so we can debug
     console.log("Signature string:", pfString);
     console.log("Signature:", signature);
+
+    return NextResponse.json({
+      payfastUrl: "https://www.payfast.co.za/eng/process",
+      data: { ...pfData, signature },
+    });
 
     return NextResponse.json({
       payfastUrl: "https://www.payfast.co.za/eng/process",
