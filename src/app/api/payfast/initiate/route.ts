@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
     const itemName = `VuraPet ${plan} plan - ${billing}`;
 
     const pfData = {
-      merchant_id: "10048873",
-      merchant_key: "ewi6l0v3ahtfy",
+      merchant_id: "34840035",
+      merchant_key: "ikm9j75hs0xno",
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payfast/notify`,
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     pfData["signature"] = signature;
 
     return NextResponse.json({ 
-      payfastUrl: "https://sandbox.payfast.co.za/eng/process", 
+      payfastUrl: "https://www.payfast.co.za/eng/process", 
       data: pfData 
     });
     
