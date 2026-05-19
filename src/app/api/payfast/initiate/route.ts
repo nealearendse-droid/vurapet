@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, plan, billing, email, name } = await req.json();
 
-    const amount = plan === "pro" ? "99.00" : "149.00";
+    const amount = "1.00";
     const itemName = `VuraPet ${plan} plan - ${billing}`;
 
     const pfData = {
