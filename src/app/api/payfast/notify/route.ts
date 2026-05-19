@@ -48,6 +48,7 @@ export async function POST(request: Request) {
       .from("profiles")
       .update({
         plan: plan,
+        subscription_plan: plan,
         plan_status: "active",
         plan_billing: billing,
         plan_expires_at: expiresAt.toISOString(),
