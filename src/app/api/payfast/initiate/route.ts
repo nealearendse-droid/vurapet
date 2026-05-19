@@ -8,8 +8,6 @@ export async function POST(req: NextRequest) {
     const amount = "1.00";
     const itemName = `VuraPet ${plan} Plan - ${billing}`;
 
-    // ✅ IMPORTANT: The ORDER of these fields matters for the signature!
-    // PayFast is very picky - fields must be in this exact order.
     const pfData: Record<string, string> = {
       merchant_id: process.env.PAYFAST_MERCHANT_ID!,
       merchant_key: process.env.PAYFAST_MERCHANT_KEY!,
@@ -17,7 +15,6 @@ export async function POST(req: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payfast/notify`,
       name_first: name?.split(" ")[0] || "User",
-      // ✅ FIX 1: Always include name_last, even if empty string
       name_last: name?.split(" ").slice(1).join(" ") || "",
       email_address: email || "",
       m_payment_id: "ORDER_" + Date.now(),
@@ -25,22 +22,21 @@ export async function POST(req: NextRequest) {
       item_name: itemName,
     };
 
-    // ✅ FIX 2: Include ALL fields (even empty ones) when building the signature string
-    // PayFast includes empty fields - if you skip them, the signatures won't match!
+    // 👇 THIS IS THE KEY FIX - skip empty fields for live PayFast
     const pfString = Object.keys(pfData)
-      .map((key) => {
+      .filter((key) => {
         const value = pfData[key];
-        // Only skip if the value is truly undefined or null - NOT empty string
-        if (value === undefined || value === null) return null;
-        return `${key}=${encodeURIComponent(value).replace(/%20/g, "+")}`;
+        return value !== undefined && value !== null && value !== "";
       })
-      .filter(Boolean)
+      .map((key) => {
+        return `${key}=${encodeURIComponent(pfData[key]).replace(/%20/g, "+")}`;
+      })
       .join("&");
 
-    // ✅ NO passphrase for live accounts (you got this right!)
+    // No passphrase for live accounts
     const signature = crypto.createHash("md5").update(pfString).digest("hex");
 
-    // Log it so you can debug in Vercel logs if needed
+    // 👇 These lines print in Vercel logs so we can debug
     console.log("Signature string:", pfString);
     console.log("Signature:", signature);
 
