@@ -74,9 +74,13 @@ export default function Dashboard() {
   const hasPro = userPlan === 'pro' || userPlan === 'family';
   
   // LIMITS based on plan
-  const maxPets = userPlan === 'family' ? 5 : 1;
-  const maxGuardians = userPlan === 'family' ? 999 : 1;
-  const maxMemories = userPlan === 'free' ? 5 : 999;
+  // LIMITS based on plan
+const maxPets = userPlan === 'family' ? 5 : 1;
+const maxGuardians = userPlan === 'family' ? 999 : 1;
+const maxMemories = userPlan === 'free' ? 5 : 999;
+
+// For Pro users, show upgrade message when they try to add second pet
+const showFamilyUpgrade = userPlan === 'pro' && pets.length >= 1;
   
   const currentMemoriesCount = memories.length;
   const canAddMemory = currentMemoriesCount < maxMemories;
@@ -170,16 +174,27 @@ export default function Dashboard() {
         {/* ── Pets section ── */}
         <section className="vp-section">
           <div className="vp-section-header">
-            <h2 className="vp-section-title">My Pets ({pets.length}/{maxPets})</h2>
+            <h2 className="vp-section-title">
+  My Pets ({pets.length}/{maxPets === 5 ? '5' : maxPets === 1 ? '1' : maxPets})
+  {userPlan === 'pro' && pets.length >= 1 && (
+    <span style={{ fontSize: '12px', marginLeft: '10px', color: '#8B5CF6' }}>
+      🔒 Need more? <Link href="/upgrade?plan=family" style={{ color: '#8B5CF6', textDecoration: 'underline' }}>Upgrade to Family</Link>
+    </span>
+  )}
+</h2>
             {pets.length < maxPets ? (
-              <Link href="/dashboard/add-pet" className="vp-btn-primary">
-                + Add Pet
-              </Link>
-            ) : (
-              <button disabled className="vp-btn-primary opacity-50 cursor-not-allowed">
-                + Add Pet (Max {maxPets})
-              </button>
-            )}
+  <Link href="/dashboard/add-pet" className="vp-btn-primary">
+    + Add Pet
+  </Link>
+) : userPlan === 'pro' && pets.length >= 1 ? (
+  <Link href="/upgrade?plan=family&billing=monthly" className="vp-btn-primary" style={{ background: '#8B5CF6' }}>
+    👨‍👩‍👧‍👦 Upgrade to Family Plan (5 pets)
+  </Link>
+) : (
+  <button disabled className="vp-btn-primary opacity-50 cursor-not-allowed">
+    + Add Pet (Max {maxPets})
+  </button>
+)}
           </div>
 
           {pets.length === 0 ? (
