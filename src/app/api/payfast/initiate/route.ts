@@ -29,12 +29,13 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    let pfString = pfOutput.slice(0, -1);
-    // pfString = pfString + "&passphrase=Test12345678";
-    
-    const signature = crypto.createHash("md5").update(pfString).digest("hex");
-    
-    pfData["signature"] = signature;
+   let pfString = pfOutput.slice(0, -1);
+// NO passphrase for LIVE
+// pfString = pfString + "&passphrase=Test12345678";
+
+const signature = crypto.createHash("md5").update(pfString).digest("hex");
+
+pfData["signature"] = signature;
 
     return NextResponse.json({ 
       payfastUrl: "https://www.payfast.co.za/eng/process", 
