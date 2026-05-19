@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
     
     let pfString = pfOutput.slice(0, -1);
-    pfString = pfString + "&passphrase=Test12345678";
+    // pfString = pfString + "&passphrase=Test12345678";
     
     const signature = crypto.createHash("md5").update(pfString).digest("hex");
     
