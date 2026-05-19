@@ -20,22 +20,23 @@ export default function SymptomCheckerPage({ params }: { params: Promise<{ id: s
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
       
-      // Check if user is Pro
+      // Check if user is Pro or Family
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('plan')
+          .select('subscription_plan')
           .eq('id', user.id)
           .single();
         
-        if (profile?.plan === 'pro') {
+        // Allow both 'pro' AND 'family' plans
+        if (profile?.subscription_plan === 'pro' || profile?.subscription_plan === 'family') {
           setIsPro(true);
         }
       }
       
-      // Fetch pet details (only if needed for display)
+      // Fetch pet details
       const { data } = await supabase.from('pets').select('*').eq('id', id).single();
       setPet(data);
       
@@ -54,7 +55,7 @@ export default function SymptomCheckerPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  // If not Pro, show upgrade message
+  // If not Pro or Family, show upgrade message
   if (!isPro) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -62,12 +63,12 @@ export default function SymptomCheckerPage({ params }: { params: Promise<{ id: s
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Pro Feature</h1>
           <p className="text-gray-600 mb-6">
-            Symptom checker is available exclusively for Pro members.
+            Symptom checker is available exclusively for Pro and Family members.
             Upgrade to get AI-powered symptom analysis, emergency guidance, 
             and personalized health recommendations for {pet?.name || 'your pet'}!
           </p>
           <button
-            onClick={() => router.push('/pricing')}
+            onClick={() => router.push('/upgrade?plan=pro')}
             className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition w-full"
           >
             Upgrade to Pro → R99/month
@@ -83,7 +84,7 @@ export default function SymptomCheckerPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  // Pro user - show the symptom checker
+  // Pro or Family user - show the symptom checker
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Link href={`/pets/${id}`} className="text-emerald-600 mb-4 inline-block">

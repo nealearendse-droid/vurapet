@@ -22,11 +22,12 @@ export default function NutritionPage() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('plan')
+          .select('subscription_plan')
           .eq('id', user.id)
           .single();
         
-        if (profile?.plan === 'pro') {
+        // Allow both 'pro' AND 'family' plans
+        if (profile?.subscription_plan === 'pro' || profile?.subscription_plan === 'family') {
           setIsPro(true);
         }
       }
@@ -54,12 +55,12 @@ export default function NutritionPage() {
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Pro Feature</h1>
           <p className="text-gray-600 mb-6">
-            Nutrition planning is available exclusively for Pro members.
+            Nutrition planning is available exclusively for Pro and Family members.
             Upgrade to unlock personalized meal plans, portion calculators, 
             and breed-specific recommendations!
           </p>
           <button
-            onClick={() => router.push('/pricing')}
+            onClick={() => router.push('/upgrade?plan=pro')}
             className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition w-full"
           >
             Upgrade to Pro → R99/month
