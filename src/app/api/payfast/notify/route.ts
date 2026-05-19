@@ -1,4 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
+
+// ✅ Helper: verify PayFast's signature on incoming webhooks
+function verifySignature(data: Record<string, string>): boolean {
+  // Build the string from all fields EXCEPT the signature itself
+  const pfString = Object.keys(data)
+    .filter((key) => key !== "signature")
+    .map((key) => {
+      const value = data[key];
+      if (value === undefined || value === null || value === "") return null;
+      return `${key}=${encodeURIComponent(value).replace(/%20/g, "+")}`;
+    })
+    .filter(Boolean)
+    .join("&");
+
+  // No passphrase for live accounts
+  const generatedSignature = crypto
+    .createHash("md5")
+    .update(pfString)
+    .digest("hex");
+
+  console.log("Expected signature:", generatedSignature);
+  console.log("Received signature:", data.signature);
+
+  return generatedSignature === data.signature;
+}
 
 export async function POST(request: Request) {
   const supabase = createClient(
@@ -16,8 +42,12 @@ export async function POST(request: Request) {
     console.log("✅ PayFast webhook received");
     console.log("Full data:", JSON.stringify(data));
 
-    // Signature check skipped for sandbox testing
-    
+    // ✅ FIX 3: Signature check is now ON for live payments
+    if (!verifySignature(data)) {
+      console.error("❌ Signature mismatch - possible fake webhook!");
+      return new Response("Invalid signature", { status: 400 });
+    }
+
     if (data.payment_status !== "COMPLETE") {
       console.log("Not complete, status:", data.payment_status);
       return new Response("OK", { status: 200 });
@@ -42,7 +72,9 @@ export async function POST(request: Request) {
     }
 
     const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + (billing === "annual" ? 12 : 1));
+    expiresAt.setMonth(
+      expiresAt.getMonth() + (billing === "annual" ? 12 : 1)
+    );
 
     const { error: updateError } = await supabase
       .from("profiles")
