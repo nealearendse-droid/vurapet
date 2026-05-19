@@ -1,4 +1,5 @@
 'use client';
+import CareProfile from '@/components/CareProfile';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
@@ -105,6 +106,10 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         <WellnessPassport petId={pet.id} pet={pet} />
       </div>
       
+      {/* Care Profile */}
+      <div className="bg-white p-6 border-x mt-6">
+        <CareProfile petId={pet.id} />
+      </div>
       
       {/* Upgrade Section for Free Users */}
       {userPlan === 'free' && (
