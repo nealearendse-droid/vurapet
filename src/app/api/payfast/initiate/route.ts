@@ -1,4 +1,3 @@
-// /api/payfast/initiate/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -6,17 +5,16 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, plan, billing, email, name } = await req.json();
 
-    // CRITICAL FIX: Use hardcoded URL for now
-    const APP_URL = "https://vurapet.vercel.app"; // Your actual domain
+    // HARDCODED - CHANGE THIS TO YOUR ACTUAL URL
+    const APP_URL = "https://vurapet.vercel.app";
 
     const amount = "1.00";
     const itemName = `VuraPet ${plan} Plan - ${billing}`;
 
-    const merchantId = process.env.PAYFAST_MERCHANT_ID?.trim();
-    const merchantKey = process.env.PAYFAST_MERCHANT_KEY?.trim();
-    const passphrase = process.env.PAYFAST_PASSPHRASE?.trim();
+    const merchantId = "34840035";
+    const merchantKey = "ikm9j75hs0xno";
+    const passphrase = "Mason3009Blake";
 
-    // Make SURE email exists
     if (!email) {
       console.error("No email provided!");
       return NextResponse.json(
@@ -33,18 +31,11 @@ export async function POST(req: NextRequest) {
       notify_url: `${APP_URL}/api/payfast/notify`,
       name_first: name?.split(" ")[0]?.slice(0, 50) || "User",
       name_last: name?.split(" ").slice(1).join(" ")?.slice(0, 50) || "",
-      email_address: email, // Use email directly
+      email_address: email,
       m_payment_id: `ORDER_${userId}_${Date.now()}`.slice(0, 100),
       amount: amount,
       item_name: itemName.slice(0, 100),
     };
-
-    console.log("Sending to PayFast:", {
-      email: pfData.email_address,
-      return_url: pfData.return_url,
-      cancel_url: pfData.cancel_url,
-      notify_url: pfData.notify_url,
-    });
 
     // Remove empty values
     const cleanedData: Record<string, string> = {};
@@ -54,7 +45,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create signature with RAW values (no encoding)
+    // Create signature
     const pfString = Object.keys(cleanedData)
       .sort()
       .map(key => `${key}=${cleanedData[key]}`)
@@ -63,11 +54,16 @@ export async function POST(req: NextRequest) {
     const signatureString = pfString + "&passphrase=" + passphrase;
     const signature = crypto.createHash("md5").update(signatureString).digest("hex");
 
-    // URL encode values for form submission
+    // URL encode for form
     const encodedData: Record<string, string> = {};
     for (const [key, value] of Object.entries(cleanedData)) {
       encodedData[key] = encodeURIComponent(value).replace(/%20/g, "+");
     }
+
+    console.log("Sending to PayFast:", {
+      email: encodedData.email_address,
+      return_url: encodedData.return_url,
+    });
 
     return NextResponse.json({
       payfastUrl: "https://www.payfast.co.za/eng/process",
