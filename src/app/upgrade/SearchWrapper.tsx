@@ -33,12 +33,12 @@ function UpgradeContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: user.id,
-            plan,
-            billing,
-            email: user.email,
-            name: profile?.full_name || "VuraPet User",
-          }),
+  userId: user.id,
+  plan,
+  billing,
+  email: user.email || user.user_metadata?.email,  // ← ADD THIS
+  name: profile?.full_name || "VuraPet User",
+}),
         });
 
         const responseData = await res.json();
