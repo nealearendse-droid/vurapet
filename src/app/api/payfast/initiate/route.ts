@@ -11,8 +11,9 @@ export async function POST(req: NextRequest) {
 
     const merchantId = process.env.PAYFAST_MERCHANT_ID?.trim();
     const merchantKey = process.env.PAYFAST_MERCHANT_KEY?.trim();
-    const passphrase = process.env.PAYFAST_PASSPHRASE?.trim(); // ADD THIS
+    const passphrase = process.env.PAYFAST_PASSPHRASE?.trim();
 
+    // IMPORTANT: Order matters - use EXACTLY this order
     const pfData = {
       merchant_id: merchantId,
       merchant_key: merchantKey,
@@ -35,24 +36,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Sort keys alphabetically
-    const sortedKeys = Object.keys(cleanedData).sort();
-    
-    // Build the query string
-    const pfString = sortedKeys
-      .map(key => `${key}=${encodeURIComponent(cleanedData[key]).replace(/%20/g, "+")}`)
+    // Create the query string WITHOUT encoding the values for signature
+    const pfString = Object.keys(cleanedData)
+      .sort()
+      .map(key => `${key}=${cleanedData[key]}`)
       .join("&");
 
-    // CRITICAL: Add passphrase to the signature string
-    const pfStringWithPassphrase = pfString + "&passphrase=" + passphrase;
-    const signature = crypto.createHash("md5").update(pfStringWithPassphrase).digest("hex");
+    // CRITICAL FIX: Add passphrase directly, then MD5
+    const signatureString = pfString + "&passphrase=" + passphrase;
+    const signature = crypto.createHash("md5").update(signatureString).digest("hex");
 
-    console.log("🔐 Signature created WITH passphrase");
-    console.log("Passphrase length:", passphrase?.length);
+    console.log("🔐 Signature string (for verification):", signatureString);
+    console.log("🔑 Signature:", signature);
+
+    // For the actual form submission, we need to URL encode the values
+    const encodedData: Record<string, string> = {};
+    for (const [key, value] of Object.entries(cleanedData)) {
+      encodedData[key] = encodeURIComponent(value).replace(/%20/g, "+");
+    }
 
     return NextResponse.json({
       payfastUrl: "https://www.payfast.co.za/eng/process",
-      data: { ...cleanedData, signature },
+      data: { ...encodedData, signature },
     });
 
   } catch (error) {

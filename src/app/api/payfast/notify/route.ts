@@ -16,44 +16,46 @@ export async function POST(request: Request) {
     });
 
     console.log("📦 Webhook received");
+    console.log("Payment status:", data.payment_status);
 
-    // VERIFY SIGNATURE WITH PASSPHRASE
+    // IMPORTANT: For signature verification, use raw values (not URL decoded)
     const signatureData = { ...data };
     delete signatureData.signature;
 
-    // Sort keys alphabetically
-    const sortedKeys = Object.keys(signatureData).sort();
-    
-    const pfString = sortedKeys
+    // Create string with raw values (PayFast sends them URL encoded, but we use as-is)
+    const pfString = Object.keys(signatureData)
+      .sort()
       .filter(key => signatureData[key] && signatureData[key] !== "")
-      .map(key => `${key}=${encodeURIComponent(signatureData[key]).replace(/%20/g, "+")}`)
+      .map(key => `${key}=${signatureData[key]}`)
       .join("&");
 
-    // CRITICAL: Add the passphrase
     const passphrase = process.env.PAYFAST_PASSPHRASE?.trim();
-    const pfStringWithPassphrase = pfString + "&passphrase=" + passphrase;
-    const expectedSignature = crypto.createHash("md5").update(pfStringWithPassphrase).digest("hex");
+    const signatureString = pfString + "&passphrase=" + passphrase;
+    const expectedSignature = crypto.createHash("md5").update(signatureString).digest("hex");
 
     console.log("Expected signature:", expectedSignature);
     console.log("Received signature:", data.signature);
 
     if (expectedSignature !== data.signature) {
       console.error("❌ Signature mismatch!");
+      console.log("String used:", signatureString);
       return new Response("Invalid signature", { status: 400 });
     }
 
-    console.log("✅ Signature verified with passphrase");
+    console.log("✅ Signature verified!");
 
     if (data.payment_status !== "COMPLETE") {
-      console.log("Payment status:", data.payment_status);
+      console.log("Payment not complete, ignoring");
       return new Response("OK", { status: 200 });
     }
 
-    // Process payment (same as before)
+    // Process the successful payment
     const email = data.email_address;
     const itemName = data.item_name?.toLowerCase() || "";
     const plan = itemName.includes("family") ? "family" : "pro";
     const billing = itemName.includes("annual") ? "annual" : "monthly";
+
+    console.log(`Upgrading ${email} to ${plan} (${billing})`);
 
     const { data: profile, error: fetchError } = await supabase
       .from("profiles")
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + (billing === "annual" ? 12 : 1));
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({
         plan: plan,
@@ -81,11 +83,23 @@ export async function POST(request: Request) {
       })
       .eq("id", profile.id);
 
-    console.log(`🎉 Upgraded ${email} to ${plan}!`);
+    if (updateError) {
+      console.error("❌ Update failed:", updateError);
+      return new Response("DB update failed", { status: 500 });
+    }
+
+    console.log(`🎉 Successfully upgraded ${email} to ${plan}!`);
     return new Response("OK", { status: 200 });
 
   } catch (error) {
     console.error("❌ Webhook error:", error);
     return new Response("Server error", { status: 500 });
   }
+}
+
+export async function GET() {
+  return new Response(JSON.stringify({ status: "Webhook is working" }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }
