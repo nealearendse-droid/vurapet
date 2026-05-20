@@ -5,32 +5,19 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, plan, billing, email, name } = await req.json();
 
-    // Simple hardcoded values
+    // 🔴 FORCED EMAIL FOR TESTING - REMOVE AFTER
+    const forcedEmail = "test@vurapet.com";
+
     const domain = "https://vurapet.vercel.app";
-    
     const merchant_id = "34840035";
     const merchant_key = "ikm9j75hs0xno";
     const passphrase = "Mason3009Blake";
     
     const amount = "1.00";
     const item_name = `VuraPet ${plan} Plan - ${billing}`;
-
-    // Clean email - remove any spaces or weird characters
-    const cleanEmail = email ? email.trim().toLowerCase() : "";
-    
-    if (!cleanEmail) {
-      console.error("No email provided");
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
-    }
-
-    // Clean name
-    const first_name = name?.split(" ")[0]?.trim() || "VuraPet";
+    const first_name = name?.split(" ")[0]?.trim() || "Test";
     const last_name = name?.split(" ").slice(1).join(" ")?.trim() || "User";
 
-    // Create the data object in EXACT order PayFast expects
     const pfData = {
       merchant_id: merchant_id,
       merchant_key: merchant_key,
@@ -39,19 +26,13 @@ export async function POST(req: NextRequest) {
       notify_url: `${domain}/api/payfast/notify`,
       name_first: first_name,
       name_last: last_name,
-      email_address: cleanEmail,
+      email_address: forcedEmail, // 🔴 USING FORCED EMAIL
       m_payment_id: `ORDER_${userId}_${Date.now()}`,
       amount: amount,
       item_name: item_name
     };
 
-    console.log("Sending to PayFast:", {
-      email: pfData.email_address,
-      return_url: pfData.return_url,
-      amount: pfData.amount
-    });
-
-    // Build string for signature (NO encoding for signature)
+    // Build signature
     const signatureString = Object.keys(pfData)
       .sort()
       .map(key => `${key}=${pfData[key]}`)
@@ -59,12 +40,14 @@ export async function POST(req: NextRequest) {
 
     const signature = crypto.createHash("md5").update(signatureString).digest("hex");
 
-    // For form submission, encode the values
+    // Encode for form
     const formData: Record<string, string> = {};
     for (const [key, value] of Object.entries(pfData)) {
       formData[key] = encodeURIComponent(value).replace(/%20/g, "+");
     }
     formData.signature = signature;
+
+    console.log("Sending email:", forcedEmail);
 
     return NextResponse.json({
       payfastUrl: "https://www.payfast.co.za/eng/process",
