@@ -5,18 +5,16 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, plan, billing, email, name } = await req.json();
 
-    // HARDCODED - CHANGE THIS TO YOUR ACTUAL URL
+    // HARDCODED VALUES FOR TESTING
     const APP_URL = "https://vurapet.vercel.app";
-
-    const amount = "1.00";
-    const itemName = `VuraPet ${plan} Plan - ${billing}`;
-
     const merchantId = "34840035";
     const merchantKey = "ikm9j75hs0xno";
     const passphrase = "Mason3009Blake";
 
+    const amount = "1.00";
+    const itemName = `VuraPet ${plan} Plan - ${billing}`;
+
     if (!email) {
-      console.error("No email provided!");
       return NextResponse.json(
         { error: "Email is required" },
         { status: 400 }
@@ -59,11 +57,6 @@ export async function POST(req: NextRequest) {
     for (const [key, value] of Object.entries(cleanedData)) {
       encodedData[key] = encodeURIComponent(value).replace(/%20/g, "+");
     }
-
-    console.log("Sending to PayFast:", {
-      email: encodedData.email_address,
-      return_url: encodedData.return_url,
-    });
 
     return NextResponse.json({
       payfastUrl: "https://www.payfast.co.za/eng/process",
