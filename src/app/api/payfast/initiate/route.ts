@@ -5,22 +5,24 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, plan, billing, email, name } = await req.json();
 
-    // EVERYTHING HARDCODED - NOTHING FANCY
+    // USE YOUR ACTUAL EMAIL HERE - CHANGE THIS
+    const YOUR_EMAIL = "shireen.arendse80@gmail.com"; // 🔴 PUT YOUR REAL EMAIL HERE
+
     const formData = {
       merchant_id: "34840035",
       merchant_key: "ikm9j75hs0xno",
       return_url: "https://vurapet.vercel.app/payment/success",
       cancel_url: "https://vurapet.vercel.app/pricing",
       notify_url: "https://vurapet.vercel.app/api/payfast/notify",
-      name_first: "Test",
-      name_last: "User",
-      email_address: "test@vurapet.com",
+      name_first: "Shireen",
+      name_last: "Arendse",
+      email_address: YOUR_EMAIL,
       m_payment_id: "TEST_" + Date.now(),
-      amount: "1.00",
+      amount: "20.00",
       item_name: "VuraPet Test Payment"
     };
 
-    // Create signature string in EXACT PayFast format
+    // Create signature string
     let signatureString = "";
     const keys = Object.keys(formData).sort();
     for (let i = 0; i < keys.length; i++) {
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
     encodedData.signature = signature;
 
-    console.log("SENDING:", encodedData);
+    console.log("Sending to PayFast:", encodedData);
 
     return NextResponse.json({
       payfastUrl: "https://www.payfast.co.za/eng/process",
