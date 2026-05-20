@@ -6,59 +6,49 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, plan, billing, email, name } = await req.json();
 
-    const amount = "1.00"; // Your R1 test amount
+    const amount = "1.00";
     const itemName = `VuraPet ${plan} Plan - ${billing}`;
 
-    // CRITICAL: For LIVE, fields must be in EXACT order and NO extra fields
+    const merchantId = process.env.PAYFAST_MERCHANT_ID?.trim();
+    const merchantKey = process.env.PAYFAST_MERCHANT_KEY?.trim();
+    const passphrase = process.env.PAYFAST_PASSPHRASE?.trim(); // ADD THIS
+
     const pfData = {
-      merchant_id: process.env.PAYFAST_MERCHANT_ID!.trim(),
-      merchant_key: process.env.PAYFAST_MERCHANT_KEY!.trim(),
+      merchant_id: merchantId,
+      merchant_key: merchantKey,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payfast/notify`,
-      name_first: name?.split(" ")[0]?.substring(0, 50) || "User",
-      name_last: name?.split(" ").slice(1).join(" ")?.substring(0, 50) || "",
-      email_address: email?.substring(0, 100) || "",
-      m_payment_id: `ORDER_${userId}_${Date.now()}`.substring(0, 100),
+      name_first: name?.split(" ")[0]?.slice(0, 50) || "User",
+      name_last: name?.split(" ").slice(1).join(" ")?.slice(0, 50) || "",
+      email_address: email?.slice(0, 100) || "",
+      m_payment_id: `ORDER_${userId}_${Date.now()}`.slice(0, 100),
       amount: amount,
-      item_name: itemName.substring(0, 100),
+      item_name: itemName.slice(0, 100),
     };
 
-    // CRITICAL: Remove ANY undefined or empty values
+    // Remove empty values
     const cleanedData: Record<string, string> = {};
-    Object.keys(pfData).forEach(key => {
-      const value = pfData[key as keyof typeof pfData];
+    for (const [key, value] of Object.entries(pfData)) {
       if (value && value !== "") {
         cleanedData[key] = value;
       }
-    });
+    }
 
-    // CRITICAL: Build string in EXACT order PayFast expects
-    const pfString = Object.keys(cleanedData)
-      .sort() // Sort alphabetically as PayFast requires
-      .map(key => {
-        // Encode values correctly for LIVE
-        const encodedValue = encodeURIComponent(cleanedData[key])
-          .replace(/%20/g, "+")
-          .replace(/!/g, "%21")
-          .replace(/'/g, "%27")
-          .replace(/\(/g, "%28")
-          .replace(/\)/g, "%29")
-          .replace(/\*/g, "%2A");
-        return `${key}=${encodedValue}`;
-      })
+    // Sort keys alphabetically
+    const sortedKeys = Object.keys(cleanedData).sort();
+    
+    // Build the query string
+    const pfString = sortedKeys
+      .map(key => `${key}=${encodeURIComponent(cleanedData[key]).replace(/%20/g, "+")}`)
       .join("&");
 
-    // MD5 signature - NO passphrase for LIVE
-    const signature = crypto
-      .createHash("md5")
-      .update(pfString)
-      .digest("hex");
+    // CRITICAL: Add passphrase to the signature string
+    const pfStringWithPassphrase = pfString + "&passphrase=" + passphrase;
+    const signature = crypto.createHash("md5").update(pfStringWithPassphrase).digest("hex");
 
-    console.log("🔐 LIVE Signature String:", pfString);
-    console.log("🔑 Generated Signature:", signature);
-    console.log("💰 Amount:", amount);
-    console.log("🏪 Merchant ID:", cleanedData.merchant_id);
+    console.log("🔐 Signature created WITH passphrase");
+    console.log("Passphrase length:", passphrase?.length);
 
     return NextResponse.json({
       payfastUrl: "https://www.payfast.co.za/eng/process",

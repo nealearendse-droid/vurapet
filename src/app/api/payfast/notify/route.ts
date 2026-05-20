@@ -15,47 +15,37 @@ export async function POST(request: Request) {
       data[key] = value.toString();
     });
 
-    console.log("📦 LIVE Webhook received");
-    console.log("Raw data:", JSON.stringify(data, null, 2));
+    console.log("📦 Webhook received");
 
-    // CRITICAL: Verify signature for LIVE
-    // Build string from all fields EXCEPT signature
+    // VERIFY SIGNATURE WITH PASSPHRASE
     const signatureData = { ...data };
     delete signatureData.signature;
 
-    const pfString = Object.keys(signatureData)
-      .sort()
-      .map(key => {
-        const value = signatureData[key];
-        const encodedValue = encodeURIComponent(value)
-          .replace(/%20/g, "+")
-          .replace(/!/g, "%21")
-          .replace(/'/g, "%27")
-          .replace(/\(/g, "%28")
-          .replace(/\)/g, "%29")
-          .replace(/\*/g, "%2A");
-        return `${key}=${encodedValue}`;
-      })
+    // Sort keys alphabetically
+    const sortedKeys = Object.keys(signatureData).sort();
+    
+    const pfString = sortedKeys
+      .filter(key => signatureData[key] && signatureData[key] !== "")
+      .map(key => `${key}=${encodeURIComponent(signatureData[key]).replace(/%20/g, "+")}`)
       .join("&");
 
-    const generatedSignature = crypto
-      .createHash("md5")
-      .update(pfString)
-      .digest("hex");
+    // CRITICAL: Add the passphrase
+    const passphrase = process.env.PAYFAST_PASSPHRASE?.trim();
+    const pfStringWithPassphrase = pfString + "&passphrase=" + passphrase;
+    const expectedSignature = crypto.createHash("md5").update(pfStringWithPassphrase).digest("hex");
 
-    console.log("Expected signature:", generatedSignature);
+    console.log("Expected signature:", expectedSignature);
     console.log("Received signature:", data.signature);
 
-    if (generatedSignature !== data.signature) {
-      console.error("❌ Signature verification FAILED!");
-      console.log("String used:", pfString);
+    if (expectedSignature !== data.signature) {
+      console.error("❌ Signature mismatch!");
       return new Response("Invalid signature", { status: 400 });
     }
 
-    console.log("✅ Signature verified for LIVE");
+    console.log("✅ Signature verified with passphrase");
 
     if (data.payment_status !== "COMPLETE") {
-      console.log("Payment not complete:", data.payment_status);
+      console.log("Payment status:", data.payment_status);
       return new Response("OK", { status: 200 });
     }
 
@@ -91,7 +81,7 @@ export async function POST(request: Request) {
       })
       .eq("id", profile.id);
 
-    console.log(`🎉 Upgraded ${email} to ${plan}! R${data.amount} payment`);
+    console.log(`🎉 Upgraded ${email} to ${plan}!`);
     return new Response("OK", { status: 200 });
 
   } catch (error) {
