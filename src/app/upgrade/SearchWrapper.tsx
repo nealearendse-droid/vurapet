@@ -41,18 +41,20 @@ function UpgradeContent() {
           }),
         });
 
-        const { payfastUrl, data, error: apiError } = await res.json();
+        const responseData = await res.json();
 
-        if (apiError) {
-          setError(apiError);
+        if (!res.ok) {
+          setError(responseData.error || "Payment initiation failed");
           setLoading(false);
           return;
         }
 
+        const { payfastUrl, data: payfastData } = responseData;
+
         const form = document.createElement("form");
         form.method = "POST";
         form.action = payfastUrl;
-        Object.entries(data).forEach(([key, value]) => {
+        Object.entries(payfastData).forEach(([key, value]) => {
           const input = document.createElement("input");
           input.type = "hidden";
           input.name = key;
@@ -62,6 +64,7 @@ function UpgradeContent() {
         document.body.appendChild(form);
         form.submit();
       } catch (err) {
+        console.error(err);
         setError("Something went wrong. Please try again.");
         setLoading(false);
       }
