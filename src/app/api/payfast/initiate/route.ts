@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
 const PLAN_PRICES: Record<string, Record<string, string>> = {
-  pro: { monthly: "49.00", annual: "470.00" },
-  family: { monthly: "79.00", annual: "758.00" },
+  pro: { monthly: "99.00", annual: "990.00" },
+  family: { monthly: "149.00", annual: "1490.00" },
 };
 
 export async function POST(req: NextRequest) {
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const amount = "1.00";
+    const amount = PLAN_PRICES[plan]?.[billing] ?? "99.00";
     const [firstName, ...rest] = (name || "VuraPet User").split(" ");
     const lastName = rest.join(" ") || "User";
 
