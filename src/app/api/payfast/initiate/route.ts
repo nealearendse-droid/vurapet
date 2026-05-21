@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const amount = PLAN_PRICES[plan]?.[billing] ?? "49.00";
+    const amount = "1.00";
     const [firstName, ...rest] = (name || "VuraPet User").split(" ");
     const lastName = rest.join(" ") || "User";
 
