@@ -1,17 +1,5 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
-
-import { Suspense } from "react";
-import UpgradeClient from "./UpgradeClient";
-
-export default function UpgradePage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <UpgradeClient />
-    </Suspense>
-  );
-}
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
