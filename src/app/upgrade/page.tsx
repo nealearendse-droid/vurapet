@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
+export const dynamic = 'force-dynamic';
+
 export default function UpgradePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
