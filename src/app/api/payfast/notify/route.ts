@@ -1,4 +1,3 @@
-// /api/payfast/notify/route.ts
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
@@ -9,53 +8,40 @@ export async function POST(request: Request) {
   );
 
   try {
-    const formData = await request.formData();
+    const body = await request.text();
+    const params = new URLSearchParams(body);
     const data: Record<string, string> = {};
-    formData.forEach((value, key) => {
-      data[key] = value.toString();
-    });
+    params.forEach((value, key) => { data[key] = value; });
 
-    console.log("📦 Webhook received");
-    console.log("Payment status:", data.payment_status);
+    console.log("📦 Webhook received:", data.payment_status);
 
-    // IMPORTANT: For signature verification, use raw values (not URL decoded)
-    const signatureData = { ...data };
-    delete signatureData.signature;
+    const signatureString =
+      body
+        .split("&")
+        .filter((pair) => !pair.startsWith("signature="))
+        .join("&") +
+      `&passphrase=${encodeURIComponent(process.env.PAYFAST_PASSPHRASE!).replace(/%20/g, "+")}`;
 
-    // Create string with raw values (PayFast sends them URL encoded, but we use as-is)
-    const pfString = Object.keys(signatureData)
-      .sort()
-      .filter(key => signatureData[key] && signatureData[key] !== "")
-      .map(key => `${key}=${signatureData[key]}`)
-      .join("&");
-
-    const passphrase = process.env.PAYFAST_PASSPHRASE?.trim();
-    const signatureString = pfString + "&passphrase=" + passphrase;
-    const expectedSignature = crypto.createHash("md5").update(signatureString).digest("hex");
-
-    console.log("Expected signature:", expectedSignature);
-    console.log("Received signature:", data.signature);
+    const expectedSignature = crypto
+      .createHash("md5")
+      .update(signatureString)
+      .digest("hex");
 
     if (expectedSignature !== data.signature) {
-      console.error("❌ Signature mismatch!");
-      console.log("String used:", signatureString);
+      console.error("❌ Signature mismatch");
       return new Response("Invalid signature", { status: 400 });
     }
 
-    console.log("✅ Signature verified!");
+    console.log("✅ Signature verified");
 
     if (data.payment_status !== "COMPLETE") {
-      console.log("Payment not complete, ignoring");
       return new Response("OK", { status: 200 });
     }
 
-    // Process the successful payment
     const email = data.email_address;
-    const itemName = data.item_name?.toLowerCase() || "";
+    const itemName = data.item_name?.toLowerCase() ?? "";
     const plan = itemName.includes("family") ? "family" : "pro";
     const billing = itemName.includes("annual") ? "annual" : "monthly";
-
-    console.log(`Upgrading ${email} to ${plan} (${billing})`);
 
     const { data: profile, error: fetchError } = await supabase
       .from("profiles")
@@ -74,7 +60,7 @@ export async function POST(request: Request) {
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
-        plan: plan,
+        plan,
         subscription_plan: plan,
         plan_status: "active",
         plan_billing: billing,
@@ -84,13 +70,12 @@ export async function POST(request: Request) {
       .eq("id", profile.id);
 
     if (updateError) {
-      console.error("❌ Update failed:", updateError);
+      console.error("❌ DB update failed:", updateError);
       return new Response("DB update failed", { status: 500 });
     }
 
-    console.log(`🎉 Successfully upgraded ${email} to ${plan}!`);
+    console.log(`🎉 Upgraded ${email} to ${plan} (${billing})`);
     return new Response("OK", { status: 200 });
-
   } catch (error) {
     console.error("❌ Webhook error:", error);
     return new Response("Server error", { status: 500 });
@@ -98,7 +83,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  return new Response(JSON.stringify({ status: "Webhook is working" }), {
+  return new Response(JSON.stringify({ status: "Webhook active" }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
