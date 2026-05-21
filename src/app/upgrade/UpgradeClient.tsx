@@ -1,11 +1,10 @@
 "use client";
 
-import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-function UpgradeContent() {
+export default function UpgradeClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState("");
@@ -86,13 +85,5 @@ function UpgradeContent() {
         <p>Redirecting to PayFast...</p>
       </div>
     </div>
-  );
-}
-
-export default function SearchWrapper() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <UpgradeContent />
-    </Suspense>
   );
 }
