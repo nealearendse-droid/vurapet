@@ -221,7 +221,7 @@ function generateHealthInsight(
 ───────────────────────────────────────────── */
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
-  const w = payload.find((p: any) => p.dataKey === 'weight');
+  const w = payload.find((p: any) => p.dataKey === 'weight_entries');
   const proj = payload.find((p: any) => p.dataKey === 'projected');
   return (
     <div style={{
@@ -335,7 +335,7 @@ export default function WeightTracker({ petId, petInfo, onLatestWeightChange }: 
   async function load() {
     setLoading(true);
     const { data } = await supabase
-      .from('weight')
+      .from('weight_entries')
       .select('*')
       .eq('pet_id', petId)
       .order('date', { ascending: true });
@@ -354,7 +354,7 @@ export default function WeightTracker({ petId, petInfo, onLatestWeightChange }: 
     const w = parseFloat(newWeight);
     if (!w || !newDate) return;
     setSaving(true);
-    await supabase.from('weight').insert({
+    await supabase.from('weight_entries').insert({
       pet_id: petId, weight: w, date: newDate, notes: newNotes || null,
     });
     setSaving(false);

@@ -150,7 +150,7 @@ const dogBreeds: BreedProfile[] = [
       { label: 'Child Safety', score: 98, note: 'One of the safest breeds with children' },
     ],
     risk_flags: [
-      { id: 'weight', title: 'Obesity Risk', consequence: 'Golden Retrievers will eat until they\'re ill. Without portion control and daily exercise, weight gain becomes a serious joint and health issue within 2 years.' },
+      { id: 'weight_entries', title: 'Obesity Risk', consequence: 'Golden Retrievers will eat until they\'re ill. Without portion control and daily exercise, weight gain becomes a serious joint and health issue within 2 years.' },
       { id: 'shedding', title: 'Heavy Shedding', consequence: 'Golden fur will be in your food, on your clothes, and embedded in your furniture. Year-round shedding with two peak seasons that will test your patience.' },
       { id: 'health', title: 'Cancer Risk', consequence: 'This breed has one of the highest cancer rates of any dog — nearly 60% will develop some form. Health insurance is not optional. Vet bills can reach tens of thousands.' },
     ],
@@ -222,7 +222,7 @@ const dogBreeds: BreedProfile[] = [
       { label: 'Child Safety', score: 95, note: 'Exceptional — gentle and patient' },
     ],
     risk_flags: [
-      { id: 'weight', title: 'Obesity Crisis', consequence: 'Labradors have a genetic mutation that removes the sensation of fullness. They will eat until they are sick — and their joints will pay the price within 3–5 years without strict portion control.' },
+      { id: 'weight_entries', title: 'Obesity Crisis', consequence: 'Labradors have a genetic mutation that removes the sensation of fullness. They will eat until they are sick — and their joints will pay the price within 3–5 years without strict portion control.' },
       { id: 'joints', title: 'Hip Dysplasia', consequence: 'One of the most hip-dysplasia-prone breeds. Without proper weight management and controlled exercise as a puppy, arthritis and surgery become inevitable conversations.' },
       { id: 'energy', title: 'Destructive Youth', consequence: 'Labs remain mentally "puppy" until age 3. Two years of high energy, poor impulse control, and zero self-awareness. Furniture, shoes, and gardens are at risk.' },
     ],
@@ -296,7 +296,7 @@ const dogBreeds: BreedProfile[] = [
     risk_flags: [
       { id: 'recall', title: 'Zero Recall Off-Lead', consequence: 'Once a Beagle locks onto a scent, you cease to exist. They have been found miles from home, oblivious and happy. Never off-lead in an unsecured area.' },
       { id: 'howling', title: 'Baying and Howling', consequence: 'Beagles were bred to signal finds with their voice. In a quiet neighbourhood, this becomes a noise complaint waiting to happen — especially when left alone.' },
-      { id: 'weight', title: 'Obesity Prone', consequence: 'Beagles are deeply food-motivated and will overeat without restriction. Obesity-related joint problems are common in the breed — strict feeding schedules matter.' },
+      { id: 'weight_entries', title: 'Obesity Prone', consequence: 'Beagles are deeply food-motivated and will overeat without restriction. Obesity-related joint problems are common in the breed — strict feeding schedules matter.' },
     ],
     guardian_note: "A Beagle will follow its nose off a cliff and look back at you like it was your idea. That same curiosity and joy is what makes living with one so unexpectedly wonderful — if you can laugh at the chaos.",
     lifespan: '12–15 years',
@@ -343,7 +343,7 @@ const dogBreeds: BreedProfile[] = [
     ],
     risk_flags: [
       { id: 'spine', title: 'IVDD Spinal Disease', consequence: 'Up to 25% of Dachshunds will develop intervertebral disc disease. A single wrong jump from the couch can result in paralysis. Surgery costs R40,000–R100,000+.' },
-      { id: 'weight', title: 'Weight is Life-Threatening', consequence: 'Extra weight on that elongated spine accelerates disc damage dramatically. Even 1–2kg overweight meaningfully shortens their mobile years.' },
+      { id: 'weight_entries', title: 'Weight is Life-Threatening', consequence: 'Extra weight on that elongated spine accelerates disc damage dramatically. Even 1–2kg overweight meaningfully shortens their mobile years.' },
       { id: 'barking', title: 'Excessive Barking', consequence: 'Dachshunds were bred to alert. Everything is a threat worth barking at — postmen, bicycles, other dogs, leaves. Apartment neighbours will notice.' },
     ],
     guardian_note: "A Dachshund will act like a Rottweiler and expect to be treated like royalty — simultaneously. Love them fiercely, watch their weight obsessively, and keep them off the furniture. Their spine depends on it.",
@@ -589,7 +589,7 @@ const catBreeds: BreedProfile[] = [
     risk_flags: [
       { id: 'hcm', title: 'Heart Disease (HCM)', consequence: 'HCM is prevalent in Ragdolls — there is a known genetic mutation in the breed. DNA testing of parents before purchasing reduces risk significantly.' },
       { id: 'naive', title: 'Dangerously Trusting', consequence: 'Ragdolls have no street sense. Their trust of strangers and other animals makes them profoundly unsuited to outdoor life. They will not protect themselves.' },
-      { id: 'weight', title: 'Obesity Risk', consequence: 'Their calm nature and love of food makes Ragdolls prone to weight gain. Portion control and daily gentle play are essential throughout their life.' },
+      { id: 'weight_entries', title: 'Obesity Risk', consequence: 'Their calm nature and love of food makes Ragdolls prone to weight gain. Portion control and daily gentle play are essential throughout their life.' },
     ],
     guardian_note: "A Ragdoll will meet you at the door, follow you to bed, and go completely limp in your arms. If you\'ve ever wanted a cat that actually wants to be with you — not just near you — this is the breed. Protect them. They won\'t protect themselves.",
     lifespan: '12–17 years',
@@ -611,7 +611,7 @@ const catBreeds: BreedProfile[] = [
       { label: 'Vocality', score: 30, note: 'Quiet and composed — communicates subtly' },
     ],
     risk_flags: [
-      { id: 'weight', title: 'Obesity Prone', consequence: 'Their low activity and love of food make British Shorthairs one of the most obesity-prone cat breeds. Weight gain accelerates joint problems significantly.' },
+      { id: 'weight_entries', title: 'Obesity Prone', consequence: 'Their low activity and love of food make British Shorthairs one of the most obesity-prone cat breeds. Weight gain accelerates joint problems significantly.' },
       { id: 'hcm', title: 'Heart Disease (HCM)', consequence: 'A known health concern in the breed. Annual cardiac check-ups and health-tested breeding lines are the best protection.' },
       { id: 'handling', title: 'Doesn\'t Want to Be Held', consequence: 'British Shorthairs typically dislike being picked up. Forcing interaction leads to stress and relationship damage. They show love differently — respect that.' },
     ],

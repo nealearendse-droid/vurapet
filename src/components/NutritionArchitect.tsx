@@ -25,7 +25,7 @@ const steps = [
   { id: 1, label: 'Pet type', icon: '🐾' },
   { id: 2, label: 'Breed', icon: '🦴' },
   { id: 3, label: 'Age', icon: '🎂' },
-  { id: 4, label: 'Weight', icon: '⚖️' },
+  { id: 4, label: 'weight_entries', icon: '⚖️' },
   { id: 5, label: 'Activity', icon: '⚡' },
   { id: 6, label: 'Health', icon: '❤️' },
   { id: 7, label: 'Budget', icon: '💳' },

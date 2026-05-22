@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ["vurapet.vercel.app"],
+      allowedOrigins: ["vurapet.vercel.app", "localhost:3000", "localhost:3001"],
     },
   },
 };
