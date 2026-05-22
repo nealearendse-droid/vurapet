@@ -9,7 +9,7 @@ export default function EmergencyCarePage({ params }: { params: Promise<{ id: st
 
   React.useEffect(() => {
     async function loadPet() {
-      const supabase = (await import('@/lib/supabase/client')).getSupabaseClient();
+      const supabase = (await import('@/lib/supabase/client')).createSupabaseBrowserClient();
       const { data } = await supabase.from('pets').select('name').eq('id', id).single();
       setPet(data);
     }

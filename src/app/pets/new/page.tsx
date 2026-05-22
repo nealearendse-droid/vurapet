@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -29,7 +29,7 @@ export default function NewPet() {
     e.preventDefault();
     setLoading(true);
 
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {

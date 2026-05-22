@@ -11,7 +11,7 @@ export default function WeightTrackerPage({ params }: { params: Promise<{ id: st
 
   React.useEffect(() => {
     async function fetchPet() {
-      const supabase = (await import('@/lib/supabase/client')).getSupabaseClient();
+      const supabase = (await import('@/lib/supabase/client')).createSupabaseBrowserClient();
       const { data } = await supabase.from('pets').select('*').eq('id', id).single();
       setPet(data);
     }

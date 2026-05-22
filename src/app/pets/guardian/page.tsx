@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 type Guardian = {
@@ -31,7 +31,7 @@ export default function GuardiansPage() {
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push('/auth/login'); return; }
@@ -69,7 +69,7 @@ export default function GuardiansPage() {
 
   const deleteGuardian = async (id: string) => {
     if (!confirm('Remove this guardian?')) return;
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     await supabase.from('guardians').delete().eq('id', id);
     setGuardians(prev => prev.filter(g => g.id !== id));
   };

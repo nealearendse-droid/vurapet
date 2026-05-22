@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 type Pet = { id: string; name: string; breed: string; species: string };
@@ -63,7 +63,7 @@ export default function AddGuardianPage() {
   });
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const fetchPets = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push('/auth/login'); return; }
@@ -86,7 +86,7 @@ export default function AddGuardianPage() {
     if (!form.petId || !form.name || !form.email) return;
     setLoading(true);
 
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const token = Array.from(crypto.getRandomValues(new Uint8Array(12)))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');

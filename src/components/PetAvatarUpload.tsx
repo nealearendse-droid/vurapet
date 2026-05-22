@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { getSupabaseClient } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Image from "next/image";
 
 interface PetAvatarUploadProps {
@@ -25,7 +25,7 @@ export default function PetAvatarUpload({
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = getSupabaseClient();
+  const supabase = createSupabaseBrowserClient();
 
   const uploadAvatar = useCallback(
     async (file: File) => {

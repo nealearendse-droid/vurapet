@@ -75,7 +75,7 @@ export default function VaccinationTracker({ petId }: { petId: string }) {
   async function load() {
     setLoading(true);
     const { data } = await supabase
-      .from('vaccinations')
+      .from('vaccine_records')
       .select('*')
       .eq('pet_id', petId)
       .order('date_given', { ascending: false });
@@ -106,7 +106,7 @@ export default function VaccinationTracker({ petId }: { petId: string }) {
     const finalName = vaccineName === 'Other' ? customName : vaccineName;
     if (!finalName || !dateGiven) return;
     setSaving(true);
-    await supabase.from('vaccinations').insert({
+    await supabase.from('vaccine_records').insert({
       pet_id: petId,
       vaccine_name: finalName,
       date_given: dateGiven,

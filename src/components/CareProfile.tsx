@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 interface CareProfileProps {
   petId: string;
@@ -26,7 +26,7 @@ export default function CareProfile({ petId }: CareProfileProps) {
 
   useEffect(() => {
     async function loadPet() {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       const { data } = await supabase
         .from('pets')
         .select('*')
@@ -55,7 +55,7 @@ export default function CareProfile({ petId }: CareProfileProps) {
   }, [petId]);
 
   const handleSave = async () => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     
     const { error } = await supabase
       .from('pets')

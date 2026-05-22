@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export default function VetHandoverProfile({ petId }: { petId: string }) {
   const [pet, setPet] = useState<any>(null);
@@ -9,7 +9,7 @@ export default function VetHandoverProfile({ petId }: { petId: string }) {
 
   useEffect(() => {
     async function loadPet() {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       const { data } = await supabase.from('pets').select('*').eq('id', petId).single();
       setPet(data);
       setLoading(false);

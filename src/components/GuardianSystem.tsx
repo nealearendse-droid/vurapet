@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -45,7 +45,7 @@ function generateToken(): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function GuardianSystem({ petId, petName }: { petId: string; petName: string }) {
-  const supabase = getSupabaseClient();
+  const supabase = createSupabaseBrowserClient();
 
   const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [loading, setLoading] = useState(true);

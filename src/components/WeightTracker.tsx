@@ -335,7 +335,7 @@ export default function WeightTracker({ petId, petInfo, onLatestWeightChange }: 
   async function load() {
     setLoading(true);
     const { data } = await supabase
-      .from('weight_entries')
+      .from('weight')
       .select('*')
       .eq('pet_id', petId)
       .order('date', { ascending: true });
@@ -354,7 +354,7 @@ export default function WeightTracker({ petId, petInfo, onLatestWeightChange }: 
     const w = parseFloat(newWeight);
     if (!w || !newDate) return;
     setSaving(true);
-    await supabase.from('weight_entries').insert({
+    await supabase.from('weight').insert({
       pet_id: petId, weight: w, date: newDate, notes: newNotes || null,
     });
     setSaving(false);

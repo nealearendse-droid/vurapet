@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const in7DaysStr = in7Days.toISOString().slice(0, 10);
 
     const { data: vaccines, error } = await supabase
-      .from('vaccinations')
+      .from('vaccine_records')
       .select(`
         vaccine_name,
         next_due_date,

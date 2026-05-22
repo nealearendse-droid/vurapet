@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 type VaccineRecord = {
   id: string;
@@ -85,7 +85,7 @@ function calculateScore(vaccines: VaccineRecord[], weights: WeightEntry[]) {
 }
 
 export default function WellnessScore({ petId }: { petId: string }) {
-  const supabase = getSupabaseClient();
+  const supabase = createSupabaseBrowserClient();
 
   const [vaccines, setVaccines] = useState<VaccineRecord[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);

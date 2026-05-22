@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import EmergencyActionPanel from './EmergencyActionPanel';
 
 export default function EmergencyPanelWrapper({ petId }: { petId: string }) {
@@ -9,7 +9,7 @@ export default function EmergencyPanelWrapper({ petId }: { petId: string }) {
 
   useEffect(() => {
     async function loadPet() {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       const { data } = await supabase.from('pets').select('*').eq('id', petId).single();
       setPet(data);
       setLoading(false);

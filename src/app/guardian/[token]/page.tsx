@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import EmergencyActionPanel from '@/components/EmergencyActionPanel';
 import GuardianCareDocument from '@/components/GuardianCareDocument';
 
@@ -60,7 +60,7 @@ export default function GuardianViewPage() {
 
   useEffect(() => {
     if (!token) return;
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
 
     const load = async () => {
       // Load guardian

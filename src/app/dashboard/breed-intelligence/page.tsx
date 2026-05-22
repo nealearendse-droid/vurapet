@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import BreedIntelligenceBrief from '@/components/BreedIntelligenceBrief';
 import { allBreeds } from '@/data/breeds';
 
@@ -14,7 +14,7 @@ export default function BreedIntelligencePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push('/auth/login'); return; }

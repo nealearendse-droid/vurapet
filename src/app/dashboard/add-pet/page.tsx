@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import PetAvatarUpload from '@/components/PetAvatarUpload';
 
@@ -23,7 +23,7 @@ export default function AddPetPage() {
     e.preventDefault();
     setLoading(true);
 
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {

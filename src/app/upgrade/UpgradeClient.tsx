@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function UpgradeClient() {
   const searchParams = useSearchParams();
@@ -14,7 +14,7 @@ export default function UpgradeClient() {
   useEffect(() => {
     async function startPayment() {
       try {
-        const supabase = getSupabaseClient();
+        const supabase = createSupabaseBrowserClient();
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {

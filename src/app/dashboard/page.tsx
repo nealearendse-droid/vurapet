@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 export default function Dashboard() {
@@ -14,7 +14,7 @@ export default function Dashboard() {
   const [userPlan, setUserPlan] = useState('free');
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
 
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();

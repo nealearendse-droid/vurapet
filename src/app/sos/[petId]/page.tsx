@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import * as React from 'react';
 
 export default function SOSPage({ params }: { params: Promise<{ petId: string }> }) {
@@ -11,7 +11,7 @@ export default function SOSPage({ params }: { params: Promise<{ petId: string }>
 
   useEffect(() => {
     async function fetchPet() {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       
       const { data: petData } = await supabase
         .from('pets')

@@ -1,5 +1,5 @@
 'use client';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 
 export default function SimpleTest() {
@@ -7,7 +7,7 @@ export default function SimpleTest() {
 
   useEffect(() => {
     async function loadPets() {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const { data } = await supabase

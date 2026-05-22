@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 type Memory = {
   id: string;
@@ -80,7 +80,7 @@ export default function MemoriesPage() {
   });
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push('/auth/login'); return; }
@@ -138,7 +138,7 @@ export default function MemoriesPage() {
   };
 
   const uploadMedia = async (file: File, petId: string): Promise<string | null> => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     const ext = file.name.split('.').pop();
     const fileName = `${petId}/${Date.now()}.${ext}`;
 
@@ -168,7 +168,7 @@ export default function MemoriesPage() {
     setSaving(true);
     setUploadProgress(0);
 
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
         // Check user's plan for memory limit
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -233,7 +233,7 @@ export default function MemoriesPage() {
 
   const deleteMemory = async (memoryId: string) => {
     if (confirm('Are you sure you want to delete this memory?')) {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       await supabase.from('memories').delete().eq('id', memoryId);
       
       // Refresh the list

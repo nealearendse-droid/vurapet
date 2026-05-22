@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import * as React from 'react';
 
@@ -26,7 +26,7 @@ export default function EditPetPage({ params }: { params: Promise<{ id: string }
 
   useEffect(() => {
     async function loadPet() {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       const { data } = await supabase.from('pets').select('*').eq('id', id).single();
       if (data) {
         setForm({
@@ -51,7 +51,7 @@ export default function EditPetPage({ params }: { params: Promise<{ id: string }
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     await supabase.from('pets').update(form).eq('id', id);
     setSaving(false);
     router.push(`/pets/${id}`);

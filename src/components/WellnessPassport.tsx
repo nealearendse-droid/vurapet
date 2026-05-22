@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,7 +95,7 @@ export default function WellnessPassport({ petId, pet }: Props) {
     : null;
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     async function load() {
       const [{ data: vaccineData }, { data: weightData }] = await Promise.all([
         supabase

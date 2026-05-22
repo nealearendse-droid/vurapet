@@ -2,7 +2,7 @@
 import CareProfile from '@/components/CareProfile';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import * as React from 'react';
 import WellnessScore from '@/components/WellnessScore';
@@ -19,7 +19,7 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     async function fetchPet() {
-      const supabase = getSupabaseClient();
+      const supabase = createSupabaseBrowserClient();
       
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {

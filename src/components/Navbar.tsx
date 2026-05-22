@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useState, useEffect } from 'react';
 
 export default function Navbar() {
@@ -12,14 +12,14 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(!!session);
     });
   }, []);
 
   const handleLogout = async () => {
-    const supabase = getSupabaseClient();
+    const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     router.push('/auth/login');
   };
