@@ -1,25 +1,8 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = 'https://apdpeyvuhdawuftsxtku.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZHBleXZ1aGRhd3VmdHN4dGt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzMwOTEsImV4cCI6MjA5MTY0OTA5MX0.zgIqLG-UMvnhv_oSzd1x4B0NF89D32v1nNyd1hNepsE';
 
 export async function createSupabaseServerClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {}
-        },
-      },
-    }
-  );
+  return createClient(SUPABASE_URL, SUPABASE_KEY);
 }
