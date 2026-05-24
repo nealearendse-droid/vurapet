@@ -90,9 +90,18 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         </div>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <span className="text-gray-400 text-sm">Age</span>
-            <p className="font-medium text-white">{pet.age || 'Not specified'} years</p>
-          </div>
+  <span className="text-gray-400 text-sm">Age</span>
+  <p className="font-medium text-white">
+    {pet.date_of_birth
+      ? (() => {
+          const diff = Date.now() - new Date(pet.date_of_birth).getTime();
+          const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+          const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30.4));
+          return years < 1 ? `${months} month${months !== 1 ? 's' : ''}` : `${years} year${years !== 1 ? 's' : ''}`;
+        })()
+      : 'Not specified'}
+  </p>
+</div>
           <div>
             <span className="text-gray-400 text-sm">Weight</span>
             <p className="font-medium text-white">{pet.weight || 'Not specified'} kg</p>
