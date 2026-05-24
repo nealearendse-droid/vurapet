@@ -100,12 +100,13 @@ export default function MemoriesPage() {
 
       const petIds = petList.map((p: Pet) => p.id);
       if (petIds.length > 0) {
-        const { data: memoriesData } = await supabase
-          .from('memories')
-          .select('*')
-          .in('pet_id', petIds)
-          .order('date', { ascending: false });
-        setMemories(memoriesData || []);
+        const { data: memoriesData, error: memoriesError } = await supabase
+  .from('memories')
+  .select('*')
+  .in('pet_id', petIds)
+  .order('created_at', { ascending: false });
+if (memoriesError) console.error('Memories load error:', memoriesError);
+setMemories(memoriesData || []);
       }
 
       setLoading(false);
@@ -145,7 +146,7 @@ export default function MemoriesPage() {
     setUploadProgress(10);
 
     const { data, error } = await supabase.storage
-      .from('memories')
+      .from('Memories')
       .upload(fileName, file, { upsert: true });
 
     if (error) {
@@ -156,7 +157,7 @@ export default function MemoriesPage() {
     setUploadProgress(80);
 
     const { data: urlData } = supabase.storage
-      .from('memories')
+      .from('Memories')
       .getPublicUrl(data.path);
 
     setUploadProgress(100);

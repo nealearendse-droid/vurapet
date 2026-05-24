@@ -107,14 +107,16 @@ export default function VaccinationTracker({ petId }: { petId: string }) {
     if (!finalName || !dateGiven) return;
     setSaving(true);
     await supabase.from('vaccine_records').insert({
-      pet_id: petId,
-      vaccine_name: finalName,
-      date_given: dateGiven,
-      next_due_date: nextDue || null,
-      vet_name: vetName || null,
-      batch_number: batchNum || null,
-      notes: notes || null,
-    });
+  pet_id: petId,
+  name: finalName,
+  type: 'vaccine',
+  vaccine_name: finalName,
+  date_given: dateGiven,
+  next_due_date: nextDue || null,
+  vet_name: vetName || null,
+  batch_number: batchNum || null,
+  notes: notes || null,
+});
     setSaving(false);
     setShowForm(false);
     setVaccineName(''); setCustomName(''); setNextDue('');

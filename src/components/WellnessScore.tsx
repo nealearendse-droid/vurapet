@@ -5,7 +5,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 type VaccineRecord = {
   id: string;
-  due_date: string | null;
+  next_due_date: string | null;
 };
 
 type WeightEntry = {
@@ -24,12 +24,12 @@ function calculateScore(vaccines: VaccineRecord[], weights: WeightEntry[]) {
   const today = new Date();
 
   const overdueVaccines = vaccines.filter(
-    (v) => v.due_date && new Date(v.due_date) < today
+    (v) => v.next_due_date && new Date(v.next_due_date) < today
   );
 
   const dueSoonVaccines = vaccines.filter((v) => {
-    if (!v.due_date) return false;
-    const days = daysBetween(new Date(v.due_date), today);
+    if (!v.next_due_date) return false;
+    const days = daysBetween(new Date(v.next_due_date), today);
     return days >= 0 && days <= 14;
   });
 
@@ -54,7 +54,6 @@ function calculateScore(vaccines: VaccineRecord[], weights: WeightEntry[]) {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     const latestWeight = sortedWeights[sortedWeights.length - 1];
-
     if (latestWeight) {
       const daysSince = daysBetween(today, new Date(latestWeight.date));
       if (daysSince > 30) {
@@ -70,12 +69,10 @@ function calculateScore(vaccines: VaccineRecord[], weights: WeightEntry[]) {
 
   let label = 'Thriving';
   let colorClass = 'bg-green-50 text-green-700 border-green-200';
-
   if (score < 80) {
     label = 'Needs attention';
     colorClass = 'bg-amber-50 text-amber-700 border-amber-200';
   }
-
   if (score < 50) {
     label = 'Action required';
     colorClass = 'bg-red-50 text-red-700 border-red-200';
@@ -85,13 +82,13 @@ function calculateScore(vaccines: VaccineRecord[], weights: WeightEntry[]) {
 }
 
 export default function WellnessScore({ petId }: { petId: string }) {
-  const supabase = createSupabaseBrowserClient();
-
   const [vaccines, setVaccines] = useState<VaccineRecord[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ✅ Create the client INSIDE useEffect so it's not a changing dependency
+    const supabase = createSupabaseBrowserClient();
     let mounted = true;
 
     async function loadData() {
@@ -100,10 +97,9 @@ export default function WellnessScore({ petId }: { petId: string }) {
       const [vaccinesRes, weightsRes] = await Promise.all([
         supabase
           .from('vaccine_records')
-          .select('id, due_date')
+          .select('id, next_due_date')
           .eq('pet_id', petId)
-          .order('due_date', { ascending: true }),
-
+          .order('next_due_date', { ascending: true }),
         supabase
           .from('weight_entries')
           .select('id, date, weight')
@@ -114,17 +110,18 @@ export default function WellnessScore({ petId }: { petId: string }) {
       if (!mounted) return;
 
       if (vaccinesRes.error) {
-        console.error(vaccinesRes.error);
+        console.error('Vaccine load error:', vaccinesRes.error);
       } else {
         setVaccines((vaccinesRes.data || []) as VaccineRecord[]);
       }
 
-     if (weightsRes.error) {
-  console.warn('Weight entries not available:', weightsRes.error.message);
-  setWeights([]);
-} else {
-  setWeights((weightsRes.data || []) as WeightEntry[]);
-}
+      if (weightsRes.error) {
+        console.warn('Weight entries not available:', weightsRes.error.message);
+        setWeights([]);
+      } else {
+        setWeights((weightsRes.data || []) as WeightEntry[]);
+      }
+
       setLoading(false);
     }
 
@@ -135,7 +132,7 @@ export default function WellnessScore({ petId }: { petId: string }) {
     return () => {
       mounted = false;
     };
-  }, [petId, supabase]);
+  }, [petId]); // ✅ Only petId here — no supabase in the dependency array
 
   const result = calculateScore(vaccines, weights);
 
@@ -154,13 +151,11 @@ export default function WellnessScore({ petId }: { petId: string }) {
           <h2 className="text-xl font-bold">Wellness Score</h2>
           <p className="text-sm opacity-80">{result.label}</p>
         </div>
-
         <div className="text-right">
           <div className="text-4xl font-extrabold">{result.score}</div>
           <div className="text-xs opacity-70">out of 100</div>
         </div>
       </div>
-
       <div className="mt-4 space-y-2">
         {result.reasons.map((reason) => (
           <div key={reason} className="text-sm">
