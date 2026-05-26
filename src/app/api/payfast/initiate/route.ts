@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
       m_payment_id: `${userId}_${Date.now()}`,
       amount,
       item_name: `VuraPet ${plan.charAt(0).toUpperCase() + plan.slice(1)} ${billing}`,
+      item_description: `VuraPet ${plan.charAt(0).toUpperCase() + plan.slice(1)} ${billing}`,
+      subscription_type: "1",   // "1" means recurring subscription
+      frequency: "3",           // "3" means monthly (PayFast's code for monthly)
+      cycles: "0",              // "0" means charge forever until cancelled
     };
 
     // Build signature string: URL-encode values, preserve field order

@@ -15,6 +15,7 @@ export async function POST(request: Request) {
 
     console.log("📦 Webhook received:", data.payment_status);
 
+    // ✅ Verify the signature (security check - don't remove this)
     const signatureString =
       body
         .split("&")
@@ -34,7 +35,12 @@ export async function POST(request: Request) {
 
     console.log("✅ Signature verified");
 
+    // ✅ Handle both first payment AND monthly renewals
+    // PayFast sends "COMPLETE" for the first payment
+    // PayFast sends "COMPLETE" again for each monthly renewal too
+    // It also sends a "token" field for subscription payments
     if (data.payment_status !== "COMPLETE") {
+      console.log("ℹ️ Payment not complete, status:", data.payment_status);
       return new Response("OK", { status: 200 });
     }
 
@@ -43,6 +49,11 @@ export async function POST(request: Request) {
     const plan = itemName.includes("family") ? "family" : "pro";
     const billing = itemName.includes("annual") ? "annual" : "monthly";
 
+    // ✅ If PayFast sends a subscription token, save it
+    // This token is how PayFast identifies the recurring billing profile
+    const subscriptionToken = data.token ?? null;
+
+    // Find the user by email
     const { data: profile, error: fetchError } = await supabase
       .from("profiles")
       .select("id")
@@ -54,9 +65,11 @@ export async function POST(request: Request) {
       return new Response("User not found", { status: 404 });
     }
 
+    // Calculate next expiry: 1 month from now for monthly, 12 for annual
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + (billing === "annual" ? 12 : 1));
 
+    // ✅ Update the user's plan in your database
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
@@ -65,6 +78,8 @@ export async function POST(request: Request) {
         plan_status: "active",
         plan_billing: billing,
         plan_expires_at: expiresAt.toISOString(),
+        // Save the PayFast subscription token if we received one
+        ...(subscriptionToken && { payfast_token: subscriptionToken }),
         updated_at: new Date().toISOString(),
       })
       .eq("id", profile.id);
@@ -74,8 +89,9 @@ export async function POST(request: Request) {
       return new Response("DB update failed", { status: 500 });
     }
 
-    console.log(`🎉 Upgraded ${email} to ${plan} (${billing})`);
+    console.log(`🎉 Upgraded/renewed ${email} to ${plan} (${billing})`);
     return new Response("OK", { status: 200 });
+
   } catch (error) {
     console.error("❌ Webhook error:", error);
     return new Response("Server error", { status: 500 });
