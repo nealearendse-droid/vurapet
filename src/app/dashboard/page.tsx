@@ -406,32 +406,32 @@ const showFamilyUpgrade = userPlan === 'pro' && pets.length >= 1;
   <p className="vp-action-sub">Track and analyse trends</p>
 </Link>
 
-{/* Symptom Checker Card */}
+{/* Travel Planner — Pro / Family */}
 {hasPro ? (
   pets[0] ? (
-    <Link href={`/pets/${pets[0].id}/symptom-checker`} className="vp-action-card">
-      <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
-        <span style={{ fontSize: 22 }}>🩺</span>
+    <Link href={`/pets/${pets[0].id}/travel`} className="vp-action-card">
+      <div className="vp-action-icon" style={{ background: '#0F6E5622' }}>
+        <span style={{ fontSize: 22 }}>✈️</span>
       </div>
-      <p className="vp-action-label">Symptom Checker</p>
-      <p className="vp-action-sub">Should you call the vet?</p>
+      <p className="vp-action-label">Travel Planner</p>
+      <p className="vp-action-sub">Requirements & timeline</p>
     </Link>
   ) : (
     <div className="vp-action-card" style={{ opacity: 0.5 }}>
-      <div className="vp-action-icon" style={{ background: '#c47a3a22' }}>
-        <span style={{ fontSize: 22 }}>🩺</span>
+      <div className="vp-action-icon" style={{ background: '#0F6E5622' }}>
+        <span style={{ fontSize: 22 }}>✈️</span>
       </div>
-      <p className="vp-action-label">Symptom Checker</p>
+      <p className="vp-action-label">Travel Planner</p>
       <p className="vp-action-sub">Add a pet first</p>
     </div>
   )
 ) : (
   <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
-    <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}>
-      <span style={{ fontSize: 22 }}>🩺</span>
+    <div className="vp-action-icon" style={{ background: '#0F6E5622', opacity: 0.6 }}>
+      <span style={{ fontSize: 22 }}>✈️</span>
     </div>
     <p className="vp-action-label">
-      Symptom Checker 
+      Travel Planner
       <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span>
     </p>
     <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>

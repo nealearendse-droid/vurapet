@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import * as React from 'react';
+import { deletePetWithRelatedData } from '@/lib/pets/deletePet';
 
 export default function EditPetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -11,6 +12,9 @@ export default function EditPetPage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     species: '',
@@ -78,6 +82,29 @@ export default function EditPetPage({ params }: { params: Promise<{ id: string }
 
     setSaving(false);
     router.push(`/pets/${id}`);
+  }
+
+  async function handleDeletePet() {
+    setDeleting(true);
+    setDeleteError(null);
+
+    const supabase = createSupabaseBrowserClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setDeleteError('You are not logged in.');
+      setDeleting(false);
+      return;
+    }
+
+    const { error } = await deletePetWithRelatedData(supabase, id, session.user.id);
+
+    if (error) {
+      setDeleteError('Could not delete pet: ' + error);
+      setDeleting(false);
+      return;
+    }
+
+    router.push('/dashboard');
   }
 
   if (loading) return <div className="p-8 text-center text-white">Loading...</div>;
@@ -175,6 +202,47 @@ export default function EditPetPage({ params }: { params: Promise<{ id: string }
           {saving ? 'Saving...' : '💾 Save Changes'}
         </button>
       </form>
+
+      <div className="border-t border-gray-700 mt-10 pt-6">
+        <h2 className="text-lg font-bold text-red-400 mb-1">Danger zone</h2>
+        <p className="text-sm text-gray-400 mb-4">
+          Permanently delete this pet and all linked records. This cannot be undone.
+        </p>
+        {deleteError && (
+          <div className="bg-red-900 border border-red-500 text-red-200 rounded-lg p-3 mb-4 text-sm">
+            {deleteError}
+          </div>
+        )}
+        {!confirmDelete ? (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="border border-red-500 text-red-400 hover:bg-red-950 px-4 py-2 rounded-lg text-sm font-medium"
+          >
+            Delete pet profile
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-gray-300">Are you sure?</span>
+            <button
+              type="button"
+              onClick={handleDeletePet}
+              disabled={deleting}
+              className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+            >
+              {deleting ? 'Deleting…' : 'Yes, delete permanently'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setConfirmDelete(false); setDeleteError(null); }}
+              disabled={deleting}
+              className="border border-gray-600 text-gray-400 px-4 py-2 rounded-lg text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

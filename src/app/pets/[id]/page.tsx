@@ -9,12 +9,16 @@ import WellnessScore from '@/components/WellnessScore';
 import WellnessPassport from '@/components/WellnessPassport';
 import PetAvatarUpload from '@/components/PetAvatarUpload';
 import EmergencyPanelWrapper from '@/components/EmergencyPanelWrapper';
+import { deletePetWithRelatedData } from '@/lib/pets/deletePet';
 
 export default function PetProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [pet, setPet] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userPlan, setUserPlan] = useState('free');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { id } = React.use(params);
 
@@ -48,6 +52,30 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
 
     fetchPet();
   }, [id, router]);
+
+  async function handleDeletePet() {
+    if (!pet) return;
+    setDeleting(true);
+    setDeleteError(null);
+
+    const supabase = createSupabaseBrowserClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setDeleteError('You are not logged in.');
+      setDeleting(false);
+      return;
+    }
+
+    const { error } = await deletePetWithRelatedData(supabase, pet.id, session.user.id);
+
+    if (error) {
+      setDeleteError('Could not delete pet: ' + error);
+      setDeleting(false);
+      return;
+    }
+
+    router.push('/dashboard');
+  }
 
   if (loading) {
     return <div className="text-center py-12">Loading pet profile...</div>;
@@ -117,6 +145,43 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
 
+      {/* Travel Planner — Pro / Family */}
+      {(userPlan === 'pro' || userPlan === 'family') ? (
+        <div className="bg-gradient-to-r from-[#0F6E56] to-[#1D9E75] p-6 border-x mt-6 text-white">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold">✈️ Pet Travel Planner</h2>
+              <p className="text-sm text-white/90 mt-1">
+                Country requirements, timeline, airlines &amp; export checklist for {pet.name}
+              </p>
+            </div>
+            <Link
+              href={`/pets/${pet.id}/travel`}
+              className="bg-white text-[#0F6E56] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-50 shrink-0"
+            >
+              Open Travel Planner →
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-[#1a1a2e] p-6 border-x border-gray-800 mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-white">✈️ Pet Travel Planner</h2>
+              <p className="text-sm text-gray-400 mt-1">
+                International travel requirements &amp; timelines — Pro feature
+              </p>
+            </div>
+            <Link
+              href="/upgrade?plan=pro"
+              className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-600 shrink-0"
+            >
+              Upgrade to Pro →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Wellness Score */}
       <div className="bg-white p-6 border-x mt-6">
         <WellnessScore petId={pet.id} />
@@ -146,6 +211,48 @@ export default function PetProfilePage({ params }: { params: Promise<{ id: strin
       {/* Emergency Action Panel */}
       <div className="bg-[#1a1a2e] p-6 border-x border-gray-800 mt-6">
         <EmergencyPanelWrapper petId={pet.id} />
+      </div>
+
+      {/* Delete pet */}
+      <div className="bg-[#1a1a2e] p-6 border-x border-gray-800 mt-6">
+        <h2 className="text-lg font-bold text-red-400 mb-1">Danger zone</h2>
+        <p className="text-sm text-gray-400 mb-4">
+          Permanently delete {pet.name}&apos;s profile and all vaccines, weight history, travel plans, guardians, and memories linked to this pet.
+        </p>
+        {deleteError && (
+          <div className="bg-red-900/50 border border-red-500 text-red-200 rounded-lg p-3 mb-4 text-sm">
+            {deleteError}
+          </div>
+        )}
+        {!confirmDelete ? (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="border border-red-500/60 text-red-400 hover:bg-red-950/40 px-4 py-2 rounded-lg text-sm font-medium transition"
+          >
+            Delete pet profile
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-gray-300">Delete {pet.name}? This cannot be undone.</span>
+            <button
+              type="button"
+              onClick={handleDeletePet}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+            >
+              {deleting ? 'Deleting…' : 'Yes, delete permanently'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setConfirmDelete(false); setDeleteError(null); }}
+              disabled={deleting}
+              className="border border-gray-600 text-gray-400 hover:text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
 
       {/* SOS Button */}
