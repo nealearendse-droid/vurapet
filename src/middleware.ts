@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   '/auth/signup',
   '/auth/callback',
   '/auth/reset-password',
+  '/auth/update-password',
   '/',                    // landing page
 ];
 
