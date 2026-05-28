@@ -1,13 +1,10 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
-const SUPABASE_URL = 'https://apdpeyvuhdawuftsxtku.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZHBleXZ1aGRhd3VmdHN4dGt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzMwOTEsImV4cCI6MjA5MTY0OTA5MX0.zgIqLG-UMvnhv_oSzd1x4B0NF89D32v1nNyd1hNepsE';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// ✅ Singleton — one client for the whole app, created once and reused
-let client: SupabaseClient | null = null;
-
-export const createSupabaseBrowserClient = (): SupabaseClient => {
-  if (client) return client;
-  client = createClient(SUPABASE_URL, SUPABASE_KEY);
-  return client;
+// Uses @supabase/ssr which stores session in COOKIES
+// This makes it visible to the middleware on all devices including mobile
+export const createSupabaseBrowserClient = () => {
+  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 };
