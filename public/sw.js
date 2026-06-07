@@ -1,6 +1,5 @@
 const CACHE_NAME = "vurapet-cache-v1";
 
-// These are the pages/files we save for offline use
 const URLS_TO_CACHE = [
   "/",
   "/dashboard",
@@ -11,7 +10,6 @@ const URLS_TO_CACHE = [
   "/manifest.json"
 ];
 
-// When the service worker installs, cache everything
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -22,26 +20,24 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Remove old caches when we update
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
-// When someone loads a page: try internet first, fall back to cache
 self.addEventListener("fetch", (event) => {
+  // Only handle http and https requests - ignore chrome-extension and others
+  if (!event.request.url.startsWith("http")) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Save a fresh copy in cache while we're online
+        // Only cache GET requests
+        if (event.request.method !== "GET") return response;
         const copy = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, copy);
@@ -49,7 +45,6 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => {
-        // No internet? Serve from cache instead
         return caches.match(event.request);
       })
   );
