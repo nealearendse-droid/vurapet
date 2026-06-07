@@ -82,16 +82,35 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/icon.png" />
-        {/* ✅ Remove the google meta tag from here — it's now in metadata above */}
-      </head>
+  <link rel="icon" href="/icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#16a34a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="VuraPet" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  {/* ✅ Remove the google meta tag from here — it's now in metadata above */}
+</head>
       <body className="min-h-full flex flex-col bg-[#0c0a08] text-[#f0ebe4]">
         <Navbar />
         <main className="flex-1">
           {children}
         </main>
         <LegalFooter />
-      </body>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(function(reg) { console.log('VuraPet SW registered'); })
+                  .catch(function(err) { console.log('VuraPet SW failed: ', err); });
+              });
+            }
+          `,
+        }}
+      />
+    </body>
     </html>
   );
 }

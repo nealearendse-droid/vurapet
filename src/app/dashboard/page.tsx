@@ -1,4 +1,5 @@
 'use client';
+import InstallBanner from '@/components/InstallBanner'; // 👈 add this line
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
@@ -42,6 +43,11 @@ function EmergencyCardButton({ petId, petName, emergencyToken }: {
   };
 
   return (
+    <div>
+    <InstallBanner /> {/* 👈 add this line */}
+    {/* ... rest of your dashboard ... */}
+  </div>
+);
     <>
       <button
         ref={btnRef}
