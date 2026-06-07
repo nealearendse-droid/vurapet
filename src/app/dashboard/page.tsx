@@ -290,7 +290,8 @@ export default function Dashboard() {
   const firstPet = pets[0];
 
   return (
-    <div className="vp-dash">
+     <div className="vp-dash">
+      <InstallBanner />
       <style>{dashStyles}</style>
 
       {/* ── Hero greeting ── */}

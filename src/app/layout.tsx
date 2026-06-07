@@ -39,12 +39,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
-
-  // ✅ THIS is the correct way to add Google verification in Next.js
   verification: {
     google: "O_jkjpxG3yC3-8YhUPGDRRnD3xNDBsAYXAlhlh1mq8A",
   },
-
   openGraph: {
     title: "VuraPet — Your Pet's Lifetime Companion",
     description:
@@ -82,35 +79,20 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-  <link rel="icon" href="/icon.png" />
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#16a34a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="VuraPet" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-  {/* ✅ Remove the google meta tag from here — it's now in metadata above */}
-</head>
-      <body className="min-h-full flex flex-col bg-[#0c0a08] text-[#f0ebe4]">
-        <Navbar />
-        <main className="flex-1">
-          {children}
-        </main>
-        <LegalFooter />
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js')
-                  .then(function(reg) { console.log('VuraPet SW registered'); })
-                  .catch(function(err) { console.log('VuraPet SW failed: ', err); });
-              });
-            }
-          `,
-        }}
-      />
-    </body>
-    </html>
-  );
-}
+        <link rel="icon" href="/icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#16a34a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="VuraPet" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '1649857192966638');
