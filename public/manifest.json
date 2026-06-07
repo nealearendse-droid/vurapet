@@ -1,7 +1,7 @@
 {
   "name": "VuraPet Lifetime Companion",
   "short_name": "VuraPet",
-  "description": "Track your pet's health, vaccines, nutrition, and memories — all in one place.",
+  "description": "Track your pets health, vaccines, nutrition, and memories.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#0c0a08",
