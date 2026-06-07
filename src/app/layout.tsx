@@ -19,33 +19,15 @@ export const metadata: Metadata = {
     default: "VuraPet — Your Pet's Lifetime Companion",
     template: "%s | VuraPet",
   },
-  description:
-    "Track your pet's health, vaccines, nutrition, and memories — all in one place. Built in South Africa for pet parents everywhere. Free to start.",
-  keywords: [
-    "pet health tracker",
-    "pet health app South Africa",
-    "dog health records",
-    "cat health tracker",
-    "pet vaccination tracker",
-    "pet nutrition South Africa",
-    "vet records app",
-    "pet wellness app",
-    "dog safe food checker",
-    "pet care South Africa",
-    "VuraPet",
-  ],
+  description: "Track your pet's health, vaccines, nutrition, and memories — all in one place. Built in South Africa for pet parents everywhere. Free to start.",
+  keywords: ["pet health tracker","pet health app South Africa","dog health records","cat health tracker","pet vaccination tracker","pet nutrition South Africa","vet records app","pet wellness app","dog safe food checker","pet care South Africa","VuraPet"],
   authors: [{ name: "VuraPet", url: "https://vurapet.vercel.app" }],
   metadataBase: new URL("https://vurapet.vercel.app"),
-  alternates: {
-    canonical: "/",
-  },
-  verification: {
-    google: "O_jkjpxG3yC3-8YhUPGDRRnD3xNDBsAYXAlhlh1mq8A",
-  },
+  alternates: { canonical: "/" },
+  verification: { google: "O_jkjpxG3yC3-8YhUPGDRRnD3xNDBsAYXAlhlh1mq8A" },
   openGraph: {
     title: "VuraPet — Your Pet's Lifetime Companion",
-    description:
-      "Track your pet's health, vaccines, nutrition, and memories. Free pet health app built in South Africa.",
+    description: "Track your pet's health, vaccines, nutrition, and memories. Free pet health app built in South Africa.",
     url: "https://vurapet.vercel.app",
     siteName: "VuraPet",
     locale: "en_ZA",
@@ -54,30 +36,14 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "VuraPet — Your Pet's Lifetime Companion",
-    description:
-      "Track your pet's health, vaccines, nutrition, and memories. Free pet health app built in South Africa.",
+    description: "Track your pet's health, vaccines, nutrition, and memories. Free pet health app built in South Africa.",
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-    },
-  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      data-scroll-behavior="smooth"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" data-scroll-behavior="smooth" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
         <link rel="icon" href="/icon.png" />
         <link rel="manifest" href="/manifest.json" />
@@ -90,14 +56,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[#0c0a08] text-[#f0ebe4]">
         <Navbar />
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
         <LegalFooter />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(func
+        <script dangerouslySetInnerHTML={{ __html: "if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').then(function(reg){console.log('VuraPet SW registered');}).catch(function(err){console.log('VuraPet SW failed: ',err);});});}" }} />
+      </body>
+    </html>
+  );
+}
