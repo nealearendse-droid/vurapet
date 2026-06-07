@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     description: "Track your pet's health, vaccines, nutrition, and memories. Free pet health app built in South Africa.",
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
