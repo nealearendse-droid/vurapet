@@ -1,4 +1,4 @@
-const CACHE_NAME = "vurapet-cache-v1";
+const CACHE_NAME = "vurapet-cache-v2";
 
 const URLS_TO_CACHE = [
   "/",
@@ -7,7 +7,7 @@ const URLS_TO_CACHE = [
   "/pets/safe-food",
   "/auth/login",
   "/auth/signup",
-  "/manifest.json"
+  "/manifest.webmanifest"
 ];
 
 self.addEventListener("install", (event) => {
