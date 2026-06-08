@@ -8,7 +8,7 @@ export default function InstallBanner() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem("vurapet-install-dismissed");
+    const dismissed = sessionStorage.getItem("vurapet-install-dismissed");
     if (dismissed) return;
     if (window.matchMedia("(display-mode: standalone)").matches) return;
 
@@ -42,12 +42,12 @@ export default function InstallBanner() {
       alert("To install: tap the Share button at the bottom of your browser, then tap 'Add to Home Screen'");
     }
     setShowBanner(false);
-    localStorage.setItem("vurapet-install-dismissed", "true");
+    sessionStorage.setItem("vurapet-install-dismissed", "true");
   };
 
   const handleDismiss = () => {
     setShowBanner(false);
-    localStorage.setItem("vurapet-install-dismissed", "true");
+    sessionStorage.setItem("vurapet-install-dismissed", "true");
   };
 
   if (!showBanner) return null;
