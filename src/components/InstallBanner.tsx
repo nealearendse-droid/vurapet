@@ -5,41 +5,33 @@ import { useEffect, useState } from "react";
 export default function InstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     const dismissed = sessionStorage.getItem("vurapet-install-dismissed");
     if (dismissed) return;
     if (window.matchMedia("(display-mode: standalone)").matches) return;
 
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    setIsIOS(ios);
-
     const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowBanner(true); // Only show banner when Chrome is ready
     };
     window.addEventListener("beforeinstallprompt", handler);
 
-    // For iOS show after delay since beforeinstallprompt never fires
-    if (ios) {
-      const timer = setTimeout(() => setShowBanner(true), 2000);
-      return () => {
-        window.removeEventListener("beforeinstallprompt", handler);
-        clearTimeout(timer);
-      };
-    }
+    // Always show after 2 seconds
+    const timer = setTimeout(() => setShowBanner(true), 2000);
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
-    } else if (isIOS) {
-      alert("To install: tap the Share button at the bottom of your browser, then tap 'Add to Home Screen'");
+    } else {
+      alert("To install: tap the three-dot menu in Chrome, then tap 'Add to Home Screen'");
     }
     setShowBanner(false);
     sessionStorage.setItem("vurapet-install-dismissed", "true");
