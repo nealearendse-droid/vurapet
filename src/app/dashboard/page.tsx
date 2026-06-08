@@ -1,11 +1,133 @@
 'use client';
 import InstallBanner from '@/components/InstallBanner';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 // ── Emergency Card Button ──
+ 
+function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
+  petId: string;
+  petName: string;
+  petPhotoUrl?: string;
+  hasPro: boolean;
+}) {
+  const [streak, setStreak] = useState(0);
+  const [mood, setMood] = useState({ emoji: '😊', label: 'Full & Happy', color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)', pulse: false });
+  const [loaded, setLoaded] = useState(false);
+ 
+  useEffect(() => {
+    if (!hasPro || !petId) return;
+    const supabase = createSupabaseBrowserClient();
+    supabase
+      .from('chow_logs')
+      .select('logged_at, outcome')
+      .eq('pet_id', petId)
+      .order('logged_at', { ascending: false })
+      .limit(60)
+      .then(({ data }) => {
+        const logs = data || [];
+ 
+        // Calc streak
+        const days = [...new Set(logs.map((l: any) => new Date(l.logged_at).toDateString()))];
+        let s = 0;
+        const today = new Date();
+        for (let i = 0; i < 365; i++) {
+          const d = new Date(today);
+          d.setDate(d.getDate() - i);
+          if (days.includes(d.toDateString())) s++;
+          else break;
+        }
+        setStreak(s);
+ 
+        // Hunger mood
+        const lastLog = logs[0] ? new Date((logs[0] as any).logged_at) : null;
+        const hours = lastLog ? (Date.now() - lastLog.getTime()) / 3_600_000 : 99;
+        if (hours < 4)       setMood({ emoji: '😊', label: 'Full & Happy',        color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)',  pulse: false });
+        else if (hours < 8)  setMood({ emoji: '😐', label: 'Getting Peckish',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   pulse: false });
+        else if (hours < 12) setMood({ emoji: '🥺', label: 'Really Hungry',       color: '#f97316', bg: 'rgba(249,115,22,0.15)',   pulse: true  });
+        else                 setMood({ emoji: '😭', label: 'Starving! Feed me NOW',color: '#ef4444', bg: 'rgba(239,68,68,0.15)',    pulse: true  });
+ 
+        setLoaded(true);
+      });
+  }, [petId, hasPro]);
+ 
+  if (!hasPro) {
+    return (
+      <div
+        onClick={() => window.location.href = '/upgrade?plan=pro'}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 7,
+          padding: '9px 18px',
+          background: 'rgba(196,122,58,0.1)',
+          color: '#c47a3a',
+          border: '1px solid rgba(196,122,58,0.25)',
+          borderRadius: 10,
+          fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          fontFamily: 'inherit',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        🔥 Chow Streak <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px' }}>PRO</span>
+      </div>
+    );
+  }
+ 
+  if (!loaded) return null;
+ 
+  return (
+    <Link
+      href="/dashboard/chow-streak"
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 10,
+        padding: '9px 16px',
+        background: mood.bg,
+        border: `1px solid ${mood.color}44`,
+        borderRadius: 10,
+        textDecoration: 'none',
+        transition: 'transform 0.2s, opacity 0.2s',
+        whiteSpace: 'nowrap',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
+      onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+    >
+      {/* Pet photo with mood ring */}
+      <div style={{
+        width: 32, height: 32, borderRadius: '50%',
+        border: `2px solid ${mood.color}`,
+        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 16, background: 'rgba(0,0,0,0.3)', flexShrink: 0,
+      }}>
+        {petPhotoUrl
+          ? <img src={petPhotoUrl} alt={petName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : '🐾'}
+      </div>
+ 
+      {/* Mood emoji */}
+      <span style={{
+        fontSize: 20,
+        animation: mood.pulse ? 'mood-pulse 1.5s ease-in-out infinite' : 'none',
+      }}>
+        {mood.emoji}
+      </span>
+ 
+      {/* Streak */}
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: mood.color }}>🔥 {streak} day streak</div>
+        <div style={{ fontSize: 10, color: '#7a6050' }}>{mood.label}</div>
+      </div>
+ 
+      <style>{`
+        @keyframes mood-pulse {
+          0%,100% { transform:scale(1); }
+          50% { transform:scale(1.15); }
+        }
+      `}</style>
+    </Link>
+  );
+}
+
 function EmergencyCardButton({ petId, petName, emergencyToken }: {
   petId: string;
   petName: string;
@@ -301,14 +423,20 @@ export default function Dashboard() {
             </p>
 
             {firstPet && (
-              <div style={{ marginTop: 16 }}>
-                <EmergencyCardButton
-                  petId={firstPet.id}
-                  petName={firstPet.name}
-                  emergencyToken={firstPet.emergency_token}
-                />
-              </div>
-            )}
+  <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+    <EmergencyCardButton
+      petId={firstPet.id}
+      petName={firstPet.name}
+      emergencyToken={firstPet.emergency_token}
+    />
+    <ChowStreakWidget
+      petId={firstPet.id}
+      petName={firstPet.name}
+      petPhotoUrl={firstPet.profile_photo_url || firstPet.photo_url}
+      hasPro={hasPro}
+    />
+  </div>
+)}
           </div>
 
           {isProtected ? (
@@ -556,7 +684,19 @@ export default function Dashboard() {
                 <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
               </div>
             )}
-
+{hasPro ? (
+  <Link href="/dashboard/chow-streak" className="vp-action-card">
+    <div className="vp-action-icon" style={{ background: 'rgba(196,122,58,0.15)' }}><span style={{ fontSize: 22 }}>🔥</span></div>
+    <p className="vp-action-label">Chow Streak</p>
+    <p className="vp-action-sub">Feed · Track · Level up</p>
+  </Link>
+) : (
+  <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
+    <div className="vp-action-icon" style={{ background: 'rgba(196,122,58,0.15)', opacity: 0.6 }}><span style={{ fontSize: 22 }}>🔥</span></div>
+    <p className="vp-action-label">Chow Streak <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
+    <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
+  </div>
+)}
           </div>
         </section>
       </div>
