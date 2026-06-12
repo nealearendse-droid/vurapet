@@ -18,7 +18,7 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
   const [loaded, setLoaded] = useState(false);
  
   useEffect(() => {
-    if (!hasPro || !petId) return;
+    if (!petId) return;
     const supabase = createSupabaseBrowserClient();
     supabase
       .from('chow_logs')
@@ -53,26 +53,6 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
       });
   }, [petId, hasPro]);
  
-  if (!hasPro) {
-    return (
-      <div
-        onClick={() => window.location.href = '/upgrade?plan=pro'}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 7,
-          padding: '9px 18px',
-          background: 'rgba(196,122,58,0.1)',
-          color: '#c47a3a',
-          border: '1px solid rgba(196,122,58,0.25)',
-          borderRadius: 10,
-          fontSize: 13, fontWeight: 700, cursor: 'pointer',
-          fontFamily: 'inherit',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        🔥 Chow Streak <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px' }}>PRO</span>
-      </div>
-    );
-  }
  
   if (!loaded) return null;
  
@@ -684,19 +664,11 @@ export default function Dashboard() {
                 <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
               </div>
             )}
-{hasPro ? (
-  <Link href="/dashboard/chow-streak" className="vp-action-card">
-    <div className="vp-action-icon" style={{ background: 'rgba(196,122,58,0.15)' }}><span style={{ fontSize: 22 }}>🔥</span></div>
-    <p className="vp-action-label">Chow Streak</p>
-    <p className="vp-action-sub">Feed · Track · Level up</p>
-  </Link>
-) : (
-  <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
-    <div className="vp-action-icon" style={{ background: 'rgba(196,122,58,0.15)', opacity: 0.6 }}><span style={{ fontSize: 22 }}>🔥</span></div>
-    <p className="vp-action-label">Chow Streak <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
-    <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
-  </div>
-)}
+<Link href="/dashboard/chow-streak" className="vp-action-card">
+  <div className="vp-action-icon" style={{ background: 'rgba(196,122,58,0.15)' }}><span style={{ fontSize: 22 }}>🔥</span></div>
+  <p className="vp-action-label">Chow Streak</p>
+  <p className="vp-action-sub">Feed · Track · Level up</p>
+</Link>
           </div>
         </section>
       </div>

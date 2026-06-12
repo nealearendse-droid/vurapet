@@ -56,6 +56,80 @@ function getOwnerBadge(streak: number): { badge: string; emoji: string; next: nu
   return                    { badge: 'Meerkat',         emoji: '🐾', next: 3    };
 }
 
+// ── Welcome Modal ──
+function WelcomeModal({ petName, onClose }: { petName: string; onClose: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9998,
+      background: 'rgba(0,0,0,0.88)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24,
+      animation: 'cs-fade-in 0.3s ease',
+    }}>
+      <div style={{
+        background: 'linear-gradient(160deg,#1e1812,#140f0a)',
+        border: '1px solid rgba(196,122,58,0.35)',
+        borderRadius: 28, padding: '36px 32px',
+        maxWidth: 380, width: '100%',
+        textAlign: 'center',
+        animation: 'cs-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>🔥</div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: '#f0ebe4', marginBottom: 8 }}>
+          Meet Chow Streak
+        </h2>
+        <p style={{ fontSize: 14, color: '#a08060', lineHeight: 1.7, marginBottom: 24 }}>
+          The feeding game you play with {petName} every single day.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28, textAlign: 'left' }}>
+          {[
+            { emoji: '😊', text: 'Watch your pet\'s hunger mood change in real time' },
+            { emoji: '🔥', text: 'Build a streak — miss a day and feel it' },
+            { emoji: '🏅', text: 'Level up from Picky Eater to Legendary Bowl Destroyer' },
+            { emoji: '🏠', text: 'Track your pantry so you\'re never caught empty-handed' },
+          ].map((item, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'flex-start', gap: 12,
+              background: 'rgba(196,122,58,0.07)', borderRadius: 12, padding: '12px 14px',
+            }}>
+              <span style={{ fontSize: 20, flexShrink: 0 }}>{item.emoji}</span>
+              <span style={{ fontSize: 13, color: '#d0b898', lineHeight: 1.5 }}>{item.text}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          background: 'rgba(93,202,165,0.08)',
+          border: '1px solid rgba(93,202,165,0.2)',
+          borderRadius: 12, padding: '12px 16px', marginBottom: 24,
+          fontSize: 13, color: '#5dcaa5',
+        }}>
+          🎁 You have 14 days of full free access. No credit card needed.
+        </div>
+
+        <button
+          onClick={onClose}
+          style={{
+            width: '100%', padding: '14px 0',
+            background: '#c47a3a', color: '#fff',
+            border: 'none', borderRadius: 13,
+            fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          Got it! Let's start 🐾
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes cs-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes cs-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      `}</style>
+    </div>
+  );
+}
+
 // ── Celebration overlay ──
 function CelebrationOverlay({ pet, streak, onClose }: {
   pet: Pet;
@@ -177,6 +251,10 @@ export default function ChowStreakPage() {
   const [pantryInput, setPantryInput] = useState('');
   const [userId, setUserId]       = useState('');
   const [todayLogged, setTodayLogged] = useState(false);
+const [trialExpired, setTrialExpired]       = useState(false);
+const [trialDaysUsed, setTrialDaysUsed]     = useState(0);
+const [trialNotStarted, setTrialNotStarted] = useState(false);
+const [showWelcome, setShowWelcome]         = useState(false);
 
   const fetchData = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
@@ -187,14 +265,29 @@ export default function ChowStreakPage() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_plan')
+      .select('subscription_plan, chow_trial_start')
       .eq('id', session.user.id)
       .single();
 
     const plan = profile?.subscription_plan || 'free';
     setUserPlan(plan);
+// ── Trial detection ──
+    const trialStart = profile?.chow_trial_start
+      ? new Date(profile.chow_trial_start)
+      : null;
 
-    if (plan === 'free') { setLoading(false); return; }
+    const daysUsed = trialStart
+  ? Math.floor((Date.now() - trialStart.getTime()) / 86_400_000)
+  : 0;
+
+    const trialStarted = trialStart !== null;
+    const expired = plan === 'free' && trialStarted && trialDaysUsed >= 14;
+    const notStarted = plan === 'free' && !trialStarted;
+
+    setTrialExpired(expired);
+    setTrialDaysUsed(daysUsed);
+    setTrialNotStarted(notStarted);
+    if (notStarted) setShowWelcome(true);
 
     const { data: petsData } = await supabase
       .from('pets')
@@ -261,6 +354,14 @@ export default function ChowStreakPage() {
     if (!pet || logging) return;
     setLogging(true);
     const supabase = createSupabaseBrowserClient();
+    // ── Start trial on first log ──
+    if (userPlan === 'free' && trialNotStarted) {
+      await supabase
+        .from('profiles')
+        .update({ chow_trial_start: new Date().toISOString() })
+        .eq('id', userId);
+    }
+
     const { error } = await supabase.from('chow_logs').insert({
       user_id: userId,
       pet_id: pet.id,
@@ -326,24 +427,92 @@ export default function ChowStreakPage() {
   }
 
   // ── Upsell for free users ──
-  if (userPlan === 'free') {
+  if (trialExpired) {
     return (
-      <div style={{ fontFamily:'Geist,Inter,sans-serif', background:'#0c0a08', minHeight:'100vh', color:'#f0ebe4', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
-        <div style={{ textAlign:'center', maxWidth:400 }}>
-          <div style={{ fontSize:72, marginBottom:20 }}>🔥</div>
-          <h1 style={{ fontSize:26, fontWeight:700, marginBottom:12 }}>Chow Streak</h1>
-          <p style={{ color:'#7a6050', lineHeight:1.7, marginBottom:28 }}>
-            Track your pet's meals, build a streak, unlock badges, and watch your pet grow from Picky Eater to Legendary Bowl Destroyer. Available on Pro & Family plans.
-          </p>
-          <Link href="/upgrade?plan=pro&billing=monthly" style={{
-            display:'inline-block', background:'#c47a3a', color:'#fff',
-            padding:'14px 32px', borderRadius:14, fontWeight:700,
-            fontSize:15, textDecoration:'none',
-          }}>
-            Upgrade to Pro →
-          </Link>
-          <div style={{ marginTop:16 }}>
-            <Link href="/dashboard" style={{ color:'#6a5040', fontSize:13, textDecoration:'none' }}>← Back to Dashboard</Link>
+      <div style={{ fontFamily:'Geist,Inter,sans-serif', background:'#0c0a08', minHeight:'100vh', color:'#f0ebe4' }}>
+        <style>{pageStyles}</style>
+
+        {/* Header */}
+        <div style={{
+          background:'linear-gradient(160deg,#1a1410,#120f0c)',
+          borderBottom:'0.5px solid rgba(196,122,58,0.15)',
+          padding:'28px 24px 24px',
+        }}>
+          <div style={{ maxWidth:640, margin:'0 auto' }}>
+            <Link href="/dashboard" style={{ fontSize:13, color:'#6a5040', textDecoration:'none', display:'inline-block', marginBottom:16 }}>
+              ← Dashboard
+            </Link>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <div style={{
+                width:64, height:64, borderRadius:'50%',
+                background:'rgba(196,122,58,0.15)',
+                border:'2px solid #c47a3a',
+                overflow:'hidden', display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:28, flexShrink:0,
+              }}>
+                {pet && (pet.profile_photo_url || pet.photo_url)
+                  ? <img src={pet.profile_photo_url || pet.photo_url!} alt={pet?.name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  : '🐾'}
+              </div>
+              <div>
+                <h1 style={{ fontSize:22, fontWeight:700, color:'#f0ebe4', marginBottom:4 }}>🔥 Chow Streak</h1>
+                <p style={{ fontSize:13, color:'#7a6050' }}>{pet?.name} · {pet?.breed || pet?.species}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ maxWidth:640, margin:'0 auto', padding:'28px 24px 64px', display:'flex', flexDirection:'column', gap:20 }}>
+
+          {/* Streak data — visible but locked */}
+          <div style={{ position:'relative' }}>
+
+            {/* Streak card — greyed out */}
+            <div className="cs-card" style={{ padding:'24px', opacity:0.5, pointerEvents:'none', filter:'blur(1px)' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                <div style={{ textAlign:'center', padding:'24px 16px', background:'#181411', borderRadius:20 }}>
+                  <div style={{ fontSize:42, fontWeight:800, color:'#c47a3a', lineHeight:1 }}>🔥{streak}</div>
+                  <div style={{ fontSize:11, color:'#6a5040', marginTop:6, textTransform:'uppercase', letterSpacing:'0.06em' }}>Day Streak</div>
+                </div>
+                <div style={{ textAlign:'center', padding:'24px 16px', background:'#181411', borderRadius:20 }}>
+                  <div style={{ fontSize:34, lineHeight:1, marginBottom:6 }}>{getPetTitle(streak).emoji}</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:'#d0b898' }}>{getPetTitle(streak).title}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Upgrade overlay */}
+            <div style={{
+              position:'absolute', inset:0,
+              display:'flex', flexDirection:'column',
+              alignItems:'center', justifyContent:'center',
+              borderRadius:20,
+              background:'rgba(12,10,8,0.75)',
+              backdropFilter:'blur(2px)',
+              padding:24,
+              textAlign:'center',
+            }}>
+              <div style={{ fontSize:48, marginBottom:12 }}>🐾</div>
+              <h2 style={{ fontSize:20, fontWeight:800, color:'#f0ebe4', marginBottom:8 }}>
+                {pet?.name} is waiting for you
+              </h2>
+              <p style={{ fontSize:14, color:'#a08060', lineHeight:1.7, marginBottom:24, maxWidth:280 }}>
+                Your 14-day free trial has ended. Upgrade to Pro to keep your {streak}-day streak alive and never miss a meal together.
+              </p>
+              <Link href="/upgrade?plan=pro&billing=monthly&ref=chow-trial" style={{
+                display:'block', width:'100%', maxWidth:260,
+                background:'#c47a3a', color:'#fff',
+                padding:'14px 0', borderRadius:13,
+                fontWeight:700, fontSize:15, textDecoration:'none',
+                textAlign:'center', marginBottom:12,
+              }}>
+                Continue with Pro →
+              </Link>
+              <Link href="/dashboard" style={{ fontSize:13, color:'#6a5040', textDecoration:'none' }}>
+                Back to Dashboard
+              </Link>
+            </div>
+
           </div>
         </div>
       </div>
@@ -367,6 +536,38 @@ export default function ChowStreakPage() {
   return (
     <div style={{ fontFamily:'Geist,Inter,sans-serif', background:'#0c0a08', minHeight:'100vh', color:'#f0ebe4' }}>
       <style>{pageStyles}</style>
+
+      {/* ── Welcome Modal ── */}
+      {showWelcome && pet && (
+        <WelcomeModal
+          petName={pet.name}
+          onClose={() => {
+            setShowWelcome(false);
+            localStorage.setItem('chow_welcome_seen', 'true');
+          }}
+        />
+      )}
+
+      {/* ── Free Trial Banner ── */}
+      {userPlan === 'free' && !trialNotStarted && !trialExpired && (
+        <div style={{
+          background: 'linear-gradient(90deg,rgba(196,122,58,0.15),rgba(196,122,58,0.08))',
+          borderBottom: '0.5px solid rgba(196,122,58,0.25)',
+          padding: '10px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 8,
+        }}>
+          <span style={{ fontSize: 13, color: '#d0b898' }}>
+            🎁 Free trial · <strong style={{ color: '#c47a3a' }}>{Math.max(0, 14 - trialDaysUsed)} days</strong> remaining
+          </span>
+          <Link href="/upgrade?plan=pro&billing=monthly&ref=chow-banner" style={{
+            color: '#c47a3a', fontWeight: 700, textDecoration: 'none', fontSize: 12,
+            border: '1px solid rgba(196,122,58,0.4)', borderRadius: 8, padding: '4px 10px',
+          }}>
+            Upgrade →
+          </Link>
+        </div>
+      )}
 
       {showCelebration && (
         <CelebrationOverlay
@@ -672,3 +873,4 @@ const pageStyles = `
     50% { opacity: 0.5; }
   }
 `;
+
