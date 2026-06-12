@@ -21,6 +21,99 @@ interface ChowLog {
   pantry_days_remaining?: number;
 }
 
+// ── Pet reaction quotes ──
+const PET_REACTIONS: Record<string, string[]> = {
+  dog: [
+    "That hit the spot! 🐕",
+    "Can we have seconds? Please? PLEASE?",
+    "You're the best human in the whole world.",
+    "My tail has been activated. Full speed.",
+    "Bowl status: absolutely destroyed. Well done.",
+    "I have never been more satisfied in my life.",
+    "I'll need this exact meal again tomorrow. Same time.",
+    "You remembered! You always remember. I love you.",
+    "10/10. Would recommend. Would eat again immediately.",
+    "The bowl is gone. I don't know what happened.",
+  ],
+  cat: [
+    "Adequate.",
+    "You may continue serving me.",
+    "The bowl servant has succeeded today.",
+    "I suppose you'll do.",
+    "I have noticed the food. I'll decide how I feel shortly.",
+    "Satisfactory. Do not expect praise.",
+    "This will sustain me. For now.",
+    "You timed this correctly. Don't let it happen again.",
+    "I ate. You're welcome.",
+    "One must maintain standards. This met them. Barely.",
+  ],
+  default: [
+    "Delicious! Thank you!",
+    "That was wonderful.",
+    "You're the best!",
+    "Meal approved!",
+    "More please?",
+  ],
+};
+
+function getRandomReaction(species: string): string {
+  const key = species?.toLowerCase().includes('cat') ? 'cat'
+    : species?.toLowerCase().includes('dog') ? 'dog'
+    : 'default';
+  const pool = PET_REACTIONS[key];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── Evolution titles ──
+const HEARTS_PER_CLEARED = 3;
+const HEARTS_PER_LEFTOVERS = 1;
+
+function getEvolutionTitle(hearts: number, species: string, clearPct: number): {
+  title: string; emoji: string; nextAt: number | null; description: string;
+} {
+  const isCat = species?.toLowerCase().includes('cat');
+  if (hearts >= 500) return {
+    title: isCat ? 'Eternal Feast Empress' : 'Eternal Feast Guardian',
+    emoji: '👑', nextAt: null,
+    description: 'A legend. A meal. A legacy.',
+  };
+  if (hearts >= 200) return {
+    title: clearPct >= 80 ? 'Supreme Snack Hunter' : 'Selective Gourmet',
+    emoji: '🏆', nextAt: 500,
+    description: 'Near-mythical status. The bowl trembles.',
+  };
+  if (hearts >= 100) return {
+    title: isCat ? 'Dinner Diva' : 'Legendary Chow Beast',
+    emoji: '🌟', nextAt: 200,
+    description: 'Respect is mandatory at dinnertime.',
+  };
+  if (hearts >= 50) return {
+    title: clearPct >= 70 ? 'Food Ninja' : 'Free Spirit Foodie',
+    emoji: '🥷', nextAt: 100,
+    description: 'Meals appear. Meals vanish. No witnesses.',
+  };
+  if (hearts >= 25) return {
+    title: isCat ? 'Treat Duchess' : 'Treat Goblin',
+    emoji: '😋', nextAt: 50,
+    description: 'Fully committed. Zero regrets.',
+  };
+  if (hearts >= 10) return {
+    title: 'Champion Chomper',
+    emoji: '🏅', nextAt: 25,
+    description: 'A serious eater. Taking this very seriously.',
+  };
+  if (hearts >= 3) return {
+    title: 'Good Eater',
+    emoji: '🍽️', nextAt: 10,
+    description: 'Getting into the groove.',
+  };
+  return {
+    title: 'Picky Eater',
+    emoji: '🙈', nextAt: 3,
+    description: 'Every legend starts somewhere.',
+  };
+}
+
 // ── Hunger mood logic ──
 function getHungerMood(lastMealAt: Date | null): {
   emoji: string;
@@ -255,6 +348,10 @@ const [trialExpired, setTrialExpired]       = useState(false);
 const [trialDaysUsed, setTrialDaysUsed]     = useState(0);
 const [trialNotStarted, setTrialNotStarted] = useState(false);
 const [showWelcome, setShowWelcome]         = useState(false);
+const [chowHearts, setChowHearts]           = useState(0);
+const [lastReaction, setLastReaction]       = useState<string | null>(null);
+const [totalLogs, setTotalLogs]             = useState(0);
+const [clearCount, setClearCount]           = useState(0);
 
   const fetchData = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
@@ -277,18 +374,17 @@ const [showWelcome, setShowWelcome]         = useState(false);
       : null;
 
     const daysUsed = trialStart
-  ? Math.floor((Date.now() - trialStart.getTime()) / 86_400_000)
-  : 0;
+      ? Math.floor((Date.now() - trialStart.getTime()) / 86_400_000)
+      : 0;
 
     const trialStarted = trialStart !== null;
-    const expired = plan === 'free' && trialStarted && trialDaysUsed >= 14;
+    const expired = plan === 'free' && trialStarted && daysUsed >= 14;
     const notStarted = plan === 'free' && !trialStarted;
 
     setTrialExpired(expired);
     setTrialDaysUsed(daysUsed);
     setTrialNotStarted(notStarted);
     if (notStarted) setShowWelcome(true);
-
     const { data: petsData } = await supabase
       .from('pets')
       .select('id,name,species,breed,profile_photo_url,photo_url')
@@ -314,6 +410,18 @@ const [showWelcome, setShowWelcome]         = useState(false);
     const todayStr = new Date().toDateString();
     const alreadyLogged = allLogs.some(l => new Date(l.logged_at).toDateString() === todayStr);
     setTodayLogged(alreadyLogged);
+    // ── Set hearts and log counts ──
+    setTotalLogs(allLogs.length);
+    const cleared = allLogs.filter((l: ChowLog) => l.outcome === 'cleared').length;
+    setClearCount(cleared);
+
+    // Fetch chow hearts
+    const { data: heartsData } = await supabase
+      .from('chow_hearts')
+      .select('total_hearts')
+      .eq('pet_id', petsData.id)
+      .single();
+    if (heartsData) setChowHearts(heartsData.total_hearts);
 
     // Get latest pantry days
     const latestWithPantry = allLogs.find(l => l.pantry_days_remaining != null);
@@ -362,19 +470,33 @@ const [showWelcome, setShowWelcome]         = useState(false);
         .eq('id', userId);
     }
 
+    const heartsEarned = outcome === 'cleared' ? HEARTS_PER_CLEARED : HEARTS_PER_LEFTOVERS;
+    const reaction = getRandomReaction(pet.species);
+
     const { error } = await supabase.from('chow_logs').insert({
       user_id: userId,
       pet_id: pet.id,
       outcome,
       pantry_days_remaining: pantryDays,
+      hearts_earned: heartsEarned,
+      pet_reaction: reaction,
     });
+
     if (!error) {
+      const newHearts = chowHearts + heartsEarned;
+      await supabase.from('chow_hearts').upsert({
+        user_id: userId,
+        pet_id: pet.id,
+        total_hearts: newHearts,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'pet_id' });
+
+      setLastReaction(reaction);
       await fetchData();
       if (outcome === 'cleared') setShowCelebration(true);
     }
     setLogging(false);
   }
-
   async function savePantry() {
     const val = parseInt(pantryInput);
     if (isNaN(val) || val < 0) return;
@@ -666,6 +788,77 @@ const [showWelcome, setShowWelcome]         = useState(false);
           </div>
         )}
 
+{/* ── Pet Reaction ── */}
+        {lastReaction && (
+          <div className="cs-card" style={{
+            padding: '20px 24px',
+            background: 'rgba(196,122,58,0.06)',
+            borderColor: 'rgba(196,122,58,0.2)',
+            display: 'flex', alignItems: 'center', gap: 14,
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: 'rgba(196,122,58,0.15)',
+              border: '2px solid rgba(196,122,58,0.3)',
+              overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 22, flexShrink: 0,
+            }}>
+              {photoUrl
+                ? <img src={photoUrl} alt={pet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : '🐾'}
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                {pet.name} says...
+              </div>
+              <div style={{ fontSize: 14, color: '#d0b898', fontStyle: 'italic', lineHeight: 1.5 }}>
+                "{lastReaction}"
+              </div>
+            </div>
+          </div>
+        )}
+
+{/* ── Chow Hearts + Evolution ── */}
+        {(() => {
+          const clearPct = totalLogs > 0 ? Math.round((clearCount / totalLogs) * 100) : 0;
+          const evo = getEvolutionTitle(chowHearts, pet.species, clearPct);
+          const progressPct = evo.nextAt ? Math.min(100, (chowHearts / evo.nextAt) * 100) : 100;
+          return (
+            <div className="cs-card" style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 40, flexShrink: 0 }}>{evo.emoji}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+                    {pet.name}'s Title
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#c47a3a' }}>{evo.title}</div>
+                  <div style={{ fontSize: 12, color: '#7a6050', marginTop: 2 }}>{evo.description}</div>
+                </div>
+                <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#e8963d' }}>❤️ {chowHearts}</div>
+                  <div style={{ fontSize: 10, color: '#6a5040' }}>hearts</div>
+                </div>
+              </div>
+              {evo.nextAt && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#6a5040', marginBottom: 6 }}>
+                    <span>{chowHearts} hearts</span>
+                    <span>{evo.nextAt} to next title</span>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 99, height: 7, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: 99,
+                      background: 'linear-gradient(90deg,#c47a3a,#e8963d)',
+                      width: `${progressPct}%`,
+                      transition: 'width 0.6s ease',
+                    }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* ── Streak + Badges Row ── */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           {/* Streak */}
@@ -745,7 +938,7 @@ const [showWelcome, setShowWelcome]         = useState(false);
         <div className="cs-card" style={{ padding:'20px 24px' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
             <p style={{ fontSize:13, color:'#a08060', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
-              🏠 Pantry Countdown
+              🐾 Snack Sentinel
             </p>
             <button
               onClick={() => { setEditingPantry(true); setPantryInput(String(pantryDays ?? '')) }}
@@ -774,7 +967,7 @@ const [showWelcome, setShowWelcome]         = useState(false);
               </button>
             </div>
           ) : pantryDays == null ? (
-            <p style={{ fontSize:13, color:'#6a5040' }}>Set how many days of food you have left to get low-stock warnings.</p>
+            <p style={{ fontSize:13, color:'#6a5040' }}>{pet.name} is watching the food supply. Set how many days are left and they'll let you know when it's getting low.</p>
           ) : (
             <div style={{ display:'flex', alignItems:'center', gap:16 }}>
               <div style={{
@@ -785,7 +978,15 @@ const [showWelcome, setShowWelcome]         = useState(false);
               </div>
               <div>
                 <div style={{ fontSize:14, fontWeight:600, color: pantryColor }}>
-                  {pantryDays === 0 ? '🚨 Out of food!' : pantryDays <= 2 ? '⚠️ Almost out!' : pantryDays <= 5 ? '⚡ Running low' : '✅ Well stocked'}
+                  {pantryDays === 0
+  ? `🚨 "${pet.name} has initiated Operation Empty Bowl."`
+  : pantryDays === 1
+  ? `😾 "${pet.name} trusts you've handled this crisis."`
+  : pantryDays === 2
+  ? `🧐 "The snack vault appears to be shrinking, human."`
+  : pantryDays <= 5
+  ? `⚡ "Adequate reserves. ${pet.name} is monitoring closely."`
+  : `✅ "Supplies secured. You may relax."`}
                 </div>
                 <div style={{ fontSize:12, color:'#6a5040', marginTop:2 }}>days of food remaining</div>
               </div>
