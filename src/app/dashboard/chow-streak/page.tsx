@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { requestNotificationPermission, sendNotification, scheduleHungerCheck } from '@/lib/notifications';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
@@ -62,6 +63,33 @@ function getRandomReaction(species: string): string {
     : 'default';
   const pool = PET_REACTIONS[key];
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── Pet Evolution Stages ──
+const DOG_EVOLUTION = [
+  { stage: 'hatchling', minHearts: 0,   maxHearts: 9,   emoji: '🥚', label: 'Hatchling',      desc: 'Every legend starts with a first meal.',         color: '#a08060' },
+  { stage: 'pup',       minHearts: 1,  maxHearts: 49,  emoji: '🐶', label: 'Hungry Pup',     desc: 'Small dog, big appetite, bigger heart.',          color: '#c47a3a' },
+  { stage: 'companion', minHearts: 50,  maxHearts: 199, emoji: '🐕', label: 'Loyal Companion', desc: 'Showing up, every single day.',                   color: '#5dcaa5' },
+  { stage: 'guardian',  minHearts: 200, maxHearts: 499, emoji: '🦮', label: 'Trusted Guardian',desc: 'The bond is real. The bowl is spotless.',          color: '#8b5cf6' },
+  { stage: 'legendary', minHearts: 500, maxHearts: Infinity, emoji: '👑', label: 'Legendary', desc: 'A myth. A meal. A legacy.',                        color: '#f59e0b' },
+];
+
+const CAT_EVOLUTION = [
+  { stage: 'hatchling', minHearts: 0,   maxHearts: 9,   emoji: '🥚', label: 'Mysterious Egg', desc: 'Something is watching. Judging.',                 color: '#a08060' },
+  { stage: 'pup',       minHearts: 10,  maxHearts: 49,  emoji: '🐱', label: 'Discerning Kitten', desc: 'Standards established. Bowl servant on trial.', color: '#c47a3a' },
+  { stage: 'companion', minHearts: 50,  maxHearts: 199, emoji: '🐈', label: 'Regal Companion', desc: 'You have been deemed acceptable.',                color: '#5dcaa5' },
+  { stage: 'guardian',  minHearts: 200, maxHearts: 499, emoji: '🐈‍⬛', label: 'Shadow Duchess', desc: 'Watching. Always watching.',                     color: '#8b5cf6' },
+  { stage: 'legendary', minHearts: 500, maxHearts: Infinity, emoji: '👑', label: 'Eternal Empress', desc: 'Bow. Just bow.',                              color: '#f59e0b' },
+];
+
+function getPetEvolution(hearts: number, species: string) {
+  const stages = species?.toLowerCase().includes('cat') ? CAT_EVOLUTION : DOG_EVOLUTION;
+  return stages.find(s => hearts >= s.minHearts && hearts <= s.maxHearts) || stages[0];
+}
+
+function getNextEvolution(hearts: number, species: string) {
+  const stages = species?.toLowerCase().includes('cat') ? CAT_EVOLUTION : DOG_EVOLUTION;
+  return stages.find(s => s.minHearts > hearts) || null;
 }
 
 // ── Evolution titles ──
@@ -149,6 +177,22 @@ function getOwnerBadge(streak: number): { badge: string; emoji: string; next: nu
   return                    { badge: 'Meerkat',         emoji: '🐾', next: 3    };
 }
 
+// ── Milestone recorder ──
+async function recordMilestone(
+  supabase: ReturnType<typeof createSupabaseBrowserClient>,
+  userId: string,
+  petId: string,
+  type: string,
+  data: Record<string, unknown>
+) {
+  await supabase.from('pet_milestones').insert({
+    user_id: userId,
+    pet_id: petId,
+    milestone_type: type,
+    milestone_data: data,
+  });
+}
+
 // ── Welcome Modal ──
 function WelcomeModal({ petName, onClose }: { petName: string; onClose: () => void }) {
   return (
@@ -166,6 +210,7 @@ function WelcomeModal({ petName, onClose }: { petName: string; onClose: () => vo
         maxWidth: 380, width: '100%',
         textAlign: 'center',
         animation: 'cs-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+        maxHeight: '90vh', overflowY: 'auto',
       }}>
         <div style={{ fontSize: 56, marginBottom: 12 }}>🔥</div>
         <h2 style={{ fontSize: 22, fontWeight: 800, color: '#f0ebe4', marginBottom: 8 }}>
@@ -175,30 +220,41 @@ function WelcomeModal({ petName, onClose }: { petName: string; onClose: () => vo
           The feeding game you play with {petName} every single day.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28, textAlign: 'left' }}>
+        {/* Feature list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24, textAlign: 'left' }}>
           {[
-            { emoji: '😊', text: 'Watch your pet\'s hunger mood change in real time' },
-            { emoji: '🔥', text: 'Build a streak — miss a day and feel it' },
-            { emoji: '🏅', text: 'Level up from Picky Eater to Legendary Bowl Destroyer' },
-            { emoji: '🏠', text: 'Track your pantry so you\'re never caught empty-handed' },
+            { emoji: '😊', title: 'Live hunger moods', text: `Watch ${petName}'s mood change from Full & Happy to Starving in real time.` },
+            { emoji: '🔥', title: 'Daily streak', text: 'Log every meal and build a streak. Miss a day and feel it.' },
+            { emoji: '🥚', title: 'Pet evolution', text: `${petName} starts as a Hatchling and grows into a Legendary form as you earn hearts.` },
+            { emoji: '❤️', title: 'Chow Hearts', text: 'Every cleared bowl earns hearts that power your pet\'s evolution.' },
+            { emoji: '📖', title: 'Monthly Feeding Story', text: `A personalised monthly recap written just for ${petName}.` },
+            { emoji: '🕰️', title: 'Memory Book', text: 'Every milestone is saved forever — streaks, evolutions, first meals.' },
+            { emoji: '🐾', title: 'Snack Sentinel', text: 'Track how many days of food are left so you\'re never caught empty-handed.' },
+            { emoji: '📸', title: 'Share moments', text: 'Share evolution unlocks and streak milestones with beautiful cards.' },
           ].map((item, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'flex-start', gap: 12,
               background: 'rgba(196,122,58,0.07)', borderRadius: 12, padding: '12px 14px',
+              textAlign: 'left',
             }}>
               <span style={{ fontSize: 20, flexShrink: 0 }}>{item.emoji}</span>
-              <span style={{ fontSize: 13, color: '#d0b898', lineHeight: 1.5 }}>{item.text}</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#c47a3a', marginBottom: 2 }}>{item.title}</div>
+                <div style={{ fontSize: 12, color: '#a08060', lineHeight: 1.5 }}>{item.text}</div>
+              </div>
             </div>
           ))}
         </div>
 
+        {/* Trial badge */}
         <div style={{
           background: 'rgba(93,202,165,0.08)',
           border: '1px solid rgba(93,202,165,0.2)',
           borderRadius: 12, padding: '12px 16px', marginBottom: 24,
-          fontSize: 13, color: '#5dcaa5',
+          fontSize: 13, color: '#5dcaa5', lineHeight: 1.6,
         }}>
-          🎁 You have 14 days of full free access. No credit card needed.
+          🎁 You have <strong>30 days of full free access.</strong><br />
+          No credit card needed. No pressure.
         </div>
 
         <button
@@ -211,10 +267,9 @@ function WelcomeModal({ petName, onClose }: { petName: string; onClose: () => vo
             fontFamily: 'inherit',
           }}
         >
-          Got it! Let's start 🐾
+          Let's go! Show me {petName}'s mood 🐾
         </button>
       </div>
-
       <style>{`
         @keyframes cs-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes cs-pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -328,6 +383,225 @@ function CelebrationOverlay({ pet, streak, onClose }: {
   );
 }
 
+function EvolutionRevealModal({ pet, stage, onClose, onShare }: {
+  pet: Pet;
+  stage: typeof DOG_EVOLUTION[0];
+  onClose: () => void;
+  onShare: () => void;
+}) {
+  const photoUrl = pet.profile_photo_url || pet.photo_url;
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10000,
+      background: 'rgba(0,0,0,0.92)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'cs-fade-in 0.4s ease',
+      padding: 24,
+    }}>
+      {[...Array(30)].map((_, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          width: 12, height: 12, borderRadius: '50%',
+          background: ['#c47a3a','#5dcaa5','#f59e0b','#8b5cf6','#ef4444'][i % 5],
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          animation: `cs-confetti ${1 + Math.random() * 1.5}s ease-out forwards`,
+          animationDelay: `${Math.random() * 0.6}s`,
+        }} />
+      ))}
+      <div style={{
+        background: 'linear-gradient(160deg,#1a1410,#120f0c)',
+        border: `2px solid ${stage.color}`,
+        borderRadius: 28, padding: '40px 32px',
+        textAlign: 'center', maxWidth: 360, width: '100%',
+        animation: 'cs-pop 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+        position: 'relative',
+      }}>
+        <div style={{ fontSize: 13, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 16 }}>
+          ✨ Evolution Unlocked
+        </div>
+        {/* Before → After */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 20 }}>
+          <div style={{ textAlign: 'center', opacity: 0.4 }}>
+            <div style={{ fontSize: 40 }}>🥚</div>
+            <div style={{ fontSize: 11, color: '#6a5040', marginTop: 4 }}>before</div>
+          </div>
+          <div style={{ fontSize: 28, color: stage.color }}>→</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 64, animation: 'cs-evo-bounce 0.6s ease 0.5s both' }}>{stage.emoji}</div>
+            <div style={{ fontSize: 11, color: stage.color, marginTop: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>now</div>
+          </div>
+        </div>
+        {/* Pet photo */}
+        <div style={{
+          width: 72, height: 72, borderRadius: '50%',
+          border: `3px solid ${stage.color}`,
+          margin: '0 auto 16px',
+          overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 32,
+          background: 'rgba(255,255,255,0.05)',
+        }}>
+          {photoUrl ? <img src={photoUrl} alt={pet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🐾'}
+        </div>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: '#f0ebe4', marginBottom: 6 }}>
+          {stage.emoji} {stage.label}
+        </h2>
+        <p style={{ fontSize: 14, color: '#a08060', lineHeight: 1.7, marginBottom: 28 }}>
+          {pet.name} has evolved.<br />
+          <em style={{ color: stage.color }}>"{stage.desc}"</em>
+        </p>
+        <button
+          onClick={onClose}
+          style={{
+            width: '100%', padding: '14px 0',
+            background: stage.color, color: '#fff',
+            border: 'none', borderRadius: 13,
+            fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          Amazing! Keep going 🐾
+        </button>
+      </div>
+      <style>{`
+        @keyframes cs-evo-bounce {
+          0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+          60% { transform: scale(1.3) rotate(5deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
+// ── Share Card Modal ──
+function ShareCardModal({ pet, streak, chowHearts, evo, story, cardType, onClose }: {
+  pet: Pet;
+  streak: number;
+  chowHearts: number;
+  evo: typeof DOG_EVOLUTION[0];
+  story: string | null;
+  cardType: 'streak' | 'evolution' | 'story';
+  onClose: () => void;
+}) {
+  const photoUrl = pet.profile_photo_url || pet.photo_url;
+  const monthName = new Date().toLocaleString('en-ZA', { month: 'long', year: 'numeric' });
+
+  const cardContent = {
+    streak: {
+      headline: `🔥 ${streak} Day Streak!`,
+      sub: `${pet.name} and I haven't missed a meal in ${streak} days.`,
+      accent: '#c47a3a',
+    },
+    evolution: {
+      headline: `${evo.emoji} ${pet.name} evolved!`,
+      sub: `${pet.name} just became a ${evo.label}. We're not crying, you're crying.`,
+      accent: evo.color,
+    },
+    story: {
+      headline: `📖 ${pet.name}'s ${monthName} Story`,
+      sub: story || '',
+      accent: '#8b5cf6',
+    },
+  }[cardType];
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 10001,
+      background: 'rgba(0,0,0,0.92)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: 24, gap: 16,
+      animation: 'cs-fade-in 0.3s ease',
+    }}>
+      {/* The shareable card */}
+      <div style={{
+        background: 'linear-gradient(145deg,#1e1812,#140f0a)',
+        border: `2px solid ${cardContent.accent}`,
+        borderRadius: 24, padding: '32px 28px',
+        maxWidth: 340, width: '100%',
+        textAlign: 'center',
+        boxShadow: `0 0 40px ${cardContent.accent}33`,
+      }}>
+        {/* VuraPet branding */}
+        <div style={{ fontSize: 11, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
+          VuraPet · Chow Streak
+        </div>
+
+        {/* Pet photo */}
+        <div style={{
+          width: 80, height: 80, borderRadius: '50%',
+          border: `3px solid ${cardContent.accent}`,
+          margin: '0 auto 16px',
+          overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 36, background: 'rgba(255,255,255,0.05)',
+        }}>
+          {photoUrl
+            ? <img src={photoUrl} alt={pet.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : '🐾'}
+        </div>
+
+        {/* Headline */}
+        <div style={{ fontSize: 24, fontWeight: 800, color: '#f0ebe4', marginBottom: 8, lineHeight: 1.2 }}>
+          {cardContent.headline}
+        </div>
+
+        {/* Sub text */}
+        <p style={{
+          fontSize: cardType === 'story' ? 13 : 15,
+          color: '#a08060', lineHeight: 1.7, marginBottom: 20,
+          fontStyle: cardType === 'story' ? 'italic' : 'normal',
+        }}>
+          {cardType === 'story' ? `"${cardContent.sub}"` : cardContent.sub}
+        </p>
+
+        {/* Stats strip */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-around',
+          padding: '14px 0',
+          borderTop: `0.5px solid ${cardContent.accent}33`,
+          borderBottom: `0.5px solid ${cardContent.accent}33`,
+          marginBottom: 20,
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: cardContent.accent }}>🔥{streak}</div>
+            <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Streak</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#5dcaa5' }}>❤️{chowHearts}</div>
+            <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hearts</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 20 }}>{evo.emoji}</div>
+            <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{evo.label}</div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div style={{ fontSize: 12, color: '#6a5040' }}>
+          Track your pet's meals at <span style={{ color: cardContent.accent }}>vurapet.co.za</span>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <p style={{ fontSize: 13, color: '#7a6050', textAlign: 'center', maxWidth: 280 }}>
+        📸 Screenshot this card to share on WhatsApp or Instagram Stories
+      </p>
+
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        style={{
+          background: 'none', border: '1px solid rgba(255,255,255,0.15)',
+          color: '#a08060', padding: '10px 32px', borderRadius: 10,
+          fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        Done
+      </button>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────
 //  MAIN PAGE
 // ─────────────────────────────────────────────
@@ -352,7 +626,22 @@ const [chowHearts, setChowHearts]           = useState(0);
 const [lastReaction, setLastReaction]       = useState<string | null>(null);
 const [totalLogs, setTotalLogs]             = useState(0);
 const [clearCount, setClearCount]           = useState(0);
-
+const [showEvolutionReveal, setShowEvolutionReveal] = useState(false);
+const [newEvolutionStage, setNewEvolutionStage] = useState<typeof DOG_EVOLUTION[0] | null>(null);
+const [lastCelebratedStage, setLastCelebratedStage] = useState<string>('hatchling');
+const [milestones, setMilestones] = useState<Array<{
+  id: string;
+  milestone_type: string;
+  milestone_data: Record<string, unknown>;
+  created_at: string;
+}>>([]);
+const [feedingStory, setFeedingStory] = useState<string | null>(null);
+const [storyLoading, setStoryLoading] = useState(false);
+const [showStory, setShowStory] = useState(false);
+const [showShareCard, setShowShareCard] = useState(false);
+const [shareCardType, setShareCardType] = useState<'streak' | 'evolution' | 'story'>('streak');
+const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+const [showNotifPrompt, setShowNotifPrompt] = useState(false);
   const fetchData = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
@@ -378,7 +667,7 @@ const [clearCount, setClearCount]           = useState(0);
       : 0;
 
     const trialStarted = trialStart !== null;
-    const expired = plan === 'free' && trialStarted && daysUsed >= 14;
+    const expired = plan === 'free' && trialStarted && daysUsed >= 30;
     const notStarted = plan === 'free' && !trialStarted;
 
     setTrialExpired(expired);
@@ -393,6 +682,33 @@ const [clearCount, setClearCount]           = useState(0);
       .limit(1)
       .single();
 
+// Fetch milestones for memories
+const { data: milestonesData } = await supabase
+  .from('pet_milestones')
+  .select('*')
+  .eq('pet_id', petsData.id)
+  .order('created_at', { ascending: false })
+  .limit(50);
+
+setMilestones(milestonesData || []);
+// Schedule hunger notifications if enabled
+if ('Notification' in window && Notification.permission === 'granted' && petsData) {
+  const lastMealDate = logsData?.[0]?.logged_at ? new Date(logsData[0].logged_at) : null;
+  scheduleHungerCheck(
+    petsData.name,
+    petsData.species,
+    lastMealDate,
+    (title, body) => sendNotification(title, body)
+  );
+}
+// Check notification permission status
+if ('Notification' in window) {
+  setNotificationsEnabled(Notification.permission === 'granted');
+  const hasPrompted = localStorage.getItem('chow_notif_prompted');
+  if (!hasPrompted && Notification.permission === 'default') {
+    setShowNotifPrompt(true);
+  }
+}
     if (!petsData) { setLoading(false); return; }
     setPet(petsData);
 
@@ -421,7 +737,10 @@ const [clearCount, setClearCount]           = useState(0);
       .select('total_hearts')
       .eq('pet_id', petsData.id)
       .single();
-    if (heartsData) setChowHearts(heartsData.total_hearts);
+    if (heartsData) {
+  setChowHearts(heartsData.total_hearts);
+  setLastCelebratedStage(heartsData.last_celebrated_stage || 'hatchling');
+}
 
     // Get latest pantry days
     const latestWithPantry = allLogs.find(l => l.pantry_days_remaining != null);
@@ -483,18 +802,44 @@ const [clearCount, setClearCount]           = useState(0);
     });
 
     if (!error) {
-      const newHearts = chowHearts + heartsEarned;
-      await supabase.from('chow_hearts').upsert({
-        user_id: userId,
-        pet_id: pet.id,
-        total_hearts: newHearts,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'pet_id' });
+  const newHearts = chowHearts + heartsEarned;
+  await supabase.from('chow_hearts').upsert({
+    user_id: userId,
+    pet_id: pet.id,
+    total_hearts: newHearts,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'pet_id' });
 
-      setLastReaction(reaction);
-      await fetchData();
-      if (outcome === 'cleared') setShowCelebration(true);
-    }
+  setLastReaction(reaction);
+
+  // Check if pet crossed into a new evolution stage
+  const currentEvo = getPetEvolution(chowHearts, pet.species);
+  const newEvo = getPetEvolution(newHearts, pet.species);
+  if (newEvo.stage !== currentEvo.stage && newEvo.stage !== lastCelebratedStage) {
+    await supabase.from('chow_hearts')
+      .update({ last_celebrated_stage: newEvo.stage })
+      .eq('pet_id', pet.id);
+    setLastCelebratedStage(newEvo.stage);
+    setNewEvolutionStage(newEvo);
+    setShowEvolutionReveal(true);
+    await recordMilestone(supabase, userId, pet.id, 'evolution', { stage: newEvo.stage, label: newEvo.label, emoji: newEvo.emoji, hearts: newHearts });
+  }
+
+  await fetchData();
+  if (outcome === 'cleared') {
+  setShowCelebration(true);
+  // Record streak milestones
+  const newStreak = streak + 1;
+  const streakMilestones = [3, 7, 14, 30, 60, 90, 180, 365];
+  if (streakMilestones.includes(newStreak)) {
+    await recordMilestone(supabase, userId, pet.id, 'streak', { days: newStreak, hearts: chowHearts + heartsEarned });
+  }
+  // Record very first meal
+  if (totalLogs === 0) {
+    await recordMilestone(supabase, userId, pet.id, 'first_meal', { hearts: heartsEarned });
+  }
+}
+}
     setLogging(false);
   }
   async function savePantry() {
@@ -533,7 +878,103 @@ const [clearCount, setClearCount]           = useState(0);
     }
     return days;
   }
+// ── On This Day ──
+function getOnThisDay() {
+  if (!milestones.length) return null;
+  const today = new Date();
+  const todayMonth = today.getMonth();
+  const todayDate = today.getDate();
 
+  return milestones.find(m => {
+    const mDate = new Date(m.created_at);
+    return (
+      mDate.getMonth() === todayMonth &&
+      mDate.getDate() === todayDate &&
+      mDate.getFullYear() < today.getFullYear()
+    );
+  }) || null;
+}
+
+function getMilestoneText(m: { milestone_type: string; milestone_data: Record<string, unknown> }, petName: string) {
+  const data = m.milestone_data;
+  switch (m.milestone_type) {
+    case 'first_meal':
+      return `${petName} had their very first logged meal. Every legend starts somewhere. 🥚`;
+    case 'evolution':
+      return `${petName} evolved into ${data.emoji} ${data.label} with ${data.hearts} hearts earned. 🎉`;
+    case 'streak':
+      return `${petName} hit a 🔥 ${data.days}-day streak! You showed up, every single day.`;
+    default:
+      return `A special moment with ${petName}.`;
+  }
+}
+// ── Simulated Monthly Feeding Story ──
+function generateSimulatedStory(
+  petName: string,
+  species: string,
+  streakDays: number,
+  totalMeals: number,
+  clearedCount: number,
+  hearts: number,
+  evoLabel: string,
+): string {
+  const clearPct = totalMeals > 0 ? Math.round((clearedCount / totalMeals) * 100) : 0;
+  const monthName = new Date().toLocaleString('en-ZA', { month: 'long' });
+  const isCat = species?.toLowerCase().includes('cat');
+
+  // Pick diagnosis line based on clear percentage
+  const diagnosis = clearPct === 100
+    ? `Official diagnosis: ${isCat ? 'bowl tyrant' : 'tiny vacuum cleaner'}.`
+    : clearPct >= 80
+    ? `Official diagnosis: ${isCat ? 'selective gourmet' : 'enthusiastic chomper'}.`
+    : clearPct >= 50
+    ? `Official diagnosis: ${isCat ? 'food critic' : 'picky but loveable eater'}.`
+    : `Official diagnosis: ${isCat ? 'mysterious hunger patterns' : 'saving room for snacks'}.`;
+
+  // Dog story templates
+  const dogTemplates = [
+    `${monthName} has been scientifically confirmed as ${petName}'s greatest month yet. ${totalMeals} meals logged, ${clearPct}% of bowls cleared with zero hesitation, and a ${streakDays}-day streak that frankly deserves a trophy. ${diagnosis} ${petName} would like you to know that consistency is everything, dinner is everything, and you are, without question, the best human on earth.`,
+
+    `${petName} entered ${monthName} with one goal: eat well, love hard, and never let the bowl sit too long. Mission accomplished. ${totalMeals} meals, a ${streakDays}-day streak, and ${hearts} hearts earned along the way. ${diagnosis} Every cleared bowl is a love letter. You've received ${clearedCount} this month alone.`,
+
+    `The ${monthName} feeding report is in, and the results are emotional. ${petName} showed up ${totalMeals} times, cleared the bowl ${clearPct}% of the time, and maintained a ${streakDays}-day streak without complaint. ${diagnosis} Somewhere between the morning kibble and the evening bowl, ${petName} quietly became a legend. You made that happen.`,
+  ];
+
+  // Cat story templates
+  const catTemplates = [
+    `${petName} has reviewed ${monthName}'s service and found it ${clearPct >= 80 ? 'acceptable' : 'adequate, barely'}. ${totalMeals} meals were presented. ${clearedCount} were deemed worthy of consumption. The ${streakDays}-day streak is noted, though punctuality could still improve by approximately five minutes. ${diagnosis} Despite everything, ${petName} has chosen to remain. That is the highest honour they bestow.`,
+
+    `${monthName} feeding report, as dictated by ${petName}: meals provided — ${totalMeals}. Meals approved — ${clearedCount}. Days of consistent service — ${streakDays}. Current satisfaction level — unconfirmed. ${diagnosis} The human has shown improvement. ${petName} will consider purring. Eventually.`,
+
+    `${petName}'s ${monthName} verdict: ${clearPct >= 80 ? 'the bowl servant has performed adequately' : 'standards were met, on most days'}. ${totalMeals} meals logged. ${hearts} hearts accumulated. A ${streakDays}-day streak achieved by someone who clearly understands the assignment. ${diagnosis} ${petName} has not forgotten a single meal. Neither should you.`,
+  ];
+
+  const templates = isCat ? catTemplates : dogTemplates;
+
+  // Pick template based on streak to add variety
+  const index = streakDays % templates.length;
+  return templates[index];
+}
+function handleGenerateStory() {
+  if (!pet || storyLoading) return;
+  setStoryLoading(true);
+  setShowStory(true);
+
+  // Simulate a short loading pause so it feels like it's thinking
+  setTimeout(() => {
+    const story = generateSimulatedStory(
+      pet.name,
+      pet.species,
+      streak,
+      totalLogs,
+      clearCount,
+      chowHearts,
+      getPetEvolution(chowHearts, pet.species).label,
+    );
+    setFeedingStory(story);
+    setStoryLoading(false);
+  }, 1800);
+}
   // ── Pantry colour ──
   const pantryColor = pantryDays == null ? '#7a6050'
     : pantryDays <= 2 ? '#ef4444'
@@ -680,7 +1121,7 @@ const [clearCount, setClearCount]           = useState(0);
           flexWrap: 'wrap', gap: 8,
         }}>
           <span style={{ fontSize: 13, color: '#d0b898' }}>
-            🎁 Free trial · <strong style={{ color: '#c47a3a' }}>{Math.max(0, 14 - trialDaysUsed)} days</strong> remaining
+            🎁 Free trial · <strong style={{ color: '#c47a3a' }}>{Math.max(0, 30 - trialDaysUsed)} days</strong> remaining
           </span>
           <Link href="/upgrade?plan=pro&billing=monthly&ref=chow-banner" style={{
             color: '#c47a3a', fontWeight: 700, textDecoration: 'none', fontSize: 12,
@@ -734,7 +1175,76 @@ const [clearCount, setClearCount]           = useState(0);
       </div>
 
       <div style={{ maxWidth:640, margin:'0 auto', padding:'28px 24px 64px', display:'flex', flexDirection:'column', gap:20 }}>
+{/* ── Notification Prompt ── */}
+{showNotifPrompt && (
+  <div className="cs-card" style={{
+    padding: '20px 24px',
+    background: 'rgba(93,202,165,0.06)',
+    borderColor: 'rgba(93,202,165,0.25)',
+    display: 'flex', flexDirection: 'column', gap: 12,
+  }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+      <span style={{ fontSize: 28, flexShrink: 0 }}>🔔</span>
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#5dcaa5', marginBottom: 4 }}>
+          Never miss a meal together
+        </div>
+        <div style={{ fontSize: 13, color: '#6a5040', lineHeight: 1.6 }}>
+          Get a nudge when {pet.name} is getting hungry so you never lose your streak.
+        </div>
+      </div>
+    </div>
+    <div style={{ display: 'flex', gap: 10 }}>
+      <button
+        onClick={async () => {
+          const granted = await requestNotificationPermission();
+          setNotificationsEnabled(granted);
+          setShowNotifPrompt(false);
+          localStorage.setItem('chow_notif_prompted', 'true');
+        }}
+        style={{
+          flex: 1, padding: '11px 0',
+          background: '#5dcaa5', color: '#fff',
+          border: 'none', borderRadius: 11,
+          fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        Yes please 🔔
+      </button>
+      <button
+        onClick={() => {
+          setShowNotifPrompt(false);
+          localStorage.setItem('chow_notif_prompted', 'true');
+        }}
+        style={{
+          flex: 1, padding: '11px 0',
+          background: 'none',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 11, color: '#6a5040',
+          fontSize: 13, cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        Maybe later
+      </button>
+    </div>
+  </div>
+)}
 
+{/* ── Notification Status ── */}
+{notificationsEnabled && (
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '10px 16px',
+    background: 'rgba(93,202,165,0.06)',
+    border: '0.5px solid rgba(93,202,165,0.2)',
+    borderRadius: 10, fontSize: 12, color: '#5dcaa5',
+  }}>
+    <span>🔔</span>
+    <span>Hunger notifications are on — {pet.name} will let you know when they need feeding.</span>
+  </div>
+)}
         {/* ── Hunger Mood Card ── */}
         <div className="cs-card" style={{ background: mood.bg, borderColor: mood.color + '55', textAlign:'center', padding:'32px 24px' }}>
           <div className={mood.pulse ? 'cs-pulse' : ''} style={{ fontSize:72, lineHeight:1, marginBottom:12 }}>
@@ -774,7 +1284,7 @@ const [clearCount, setClearCount]           = useState(0);
                 className="cs-btn-secondary"
                 style={{ flex:1 }}
               >
-                🥣 Leftovers
+                🥣 Small Appetite
               </button>
             </div>
           </div>
@@ -818,46 +1328,112 @@ const [clearCount, setClearCount]           = useState(0);
           </div>
         )}
 
-{/* ── Chow Hearts + Evolution ── */}
-        {(() => {
-          const clearPct = totalLogs > 0 ? Math.round((clearCount / totalLogs) * 100) : 0;
-          const evo = getEvolutionTitle(chowHearts, pet.species, clearPct);
-          const progressPct = evo.nextAt ? Math.min(100, (chowHearts / evo.nextAt) * 100) : 100;
-          return (
-            <div className="cs-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-                <div style={{ fontSize: 40, flexShrink: 0 }}>{evo.emoji}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
-                    {pet.name}'s Title
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: '#c47a3a' }}>{evo.title}</div>
-                  <div style={{ fontSize: 12, color: '#7a6050', marginTop: 2 }}>{evo.description}</div>
-                </div>
-                <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: '#e8963d' }}>❤️ {chowHearts}</div>
-                  <div style={{ fontSize: 10, color: '#6a5040' }}>hearts</div>
-                </div>
-              </div>
-              {evo.nextAt && (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#6a5040', marginBottom: 6 }}>
-                    <span>{chowHearts} hearts</span>
-                    <span>{evo.nextAt} to next title</span>
-                  </div>
-                  <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 99, height: 7, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', borderRadius: 99,
-                      background: 'linear-gradient(90deg,#c47a3a,#e8963d)',
-                      width: `${progressPct}%`,
-                      transition: 'width 0.6s ease',
-                    }} />
-                  </div>
-                </div>
-              )}
+{/* ── Pet Evolution Card ── */}
+{(() => {
+  const evo = getPetEvolution(chowHearts, pet.species);
+  const nextEvo = getNextEvolution(chowHearts, pet.species);
+  const clearPct = totalLogs > 0 ? Math.round((clearCount / totalLogs) * 100) : 0;
+  const progressPct = nextEvo
+    ? Math.min(100, Math.round(((chowHearts - evo.minHearts) / (nextEvo.minHearts - evo.minHearts)) * 100))
+    : 100;
+
+  return (
+    <div className="cs-card" style={{ padding: '24px', border: `0.5px solid ${evo.color}33` }}>
+      {/* Evolution stage header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+        <div style={{
+          fontSize: 56, lineHeight: 1, flexShrink: 0,
+          filter: 'drop-shadow(0 0 12px rgba(196,122,58,0.3))',
+        }}>
+          {evo.emoji}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+            {pet.name}'s current form
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: evo.color, marginBottom: 2 }}>
+            {evo.label}
+          </div>
+          <div style={{ fontSize: 12, color: '#7a6050', fontStyle: 'italic' }}>"{evo.desc}"</div>
+        </div>
+      </div>
+
+      {/* Hearts + progress */}
+      <div style={{ marginBottom: nextEvo ? 12 : 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ fontSize: 13, color: '#a08060' }}>
+            ❤️ <strong style={{ color: '#e8963d' }}>{chowHearts}</strong> hearts earned
+          </div>
+          {nextEvo && (
+            <div style={{ fontSize: 12, color: '#6a5040' }}>
+              {nextEvo.minHearts - chowHearts} to <span style={{ color: nextEvo.color }}>{nextEvo.emoji} {nextEvo.label}</span>
             </div>
-          );
-        })()}
+          )}
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 99, height: 8, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%', borderRadius: 99,
+            background: `linear-gradient(90deg,${evo.color},${evo.color}cc)`,
+            width: `${progressPct}%`,
+            transition: 'width 0.8s ease',
+          }} />
+        </div>
+      </div>
+
+      {/* Next evolution preview */}
+      {nextEvo && (
+        <div style={{
+          marginTop: 16, padding: '12px 14px',
+          background: 'rgba(255,255,255,0.03)',
+          borderRadius: 12,
+          display: 'flex', alignItems: 'center', gap: 12,
+          border: `0.5px solid ${nextEvo.color}33`,
+        }}>
+          <div style={{ fontSize: 28, opacity: 0.5 }}>{nextEvo.emoji}</div>
+          <div>
+            <div style={{ fontSize: 11, color: '#6a5040', marginBottom: 2 }}>Next evolution</div>
+            <div style={{ fontSize: 13, color: nextEvo.color, fontWeight: 700 }}>{nextEvo.label}</div>
+            <div style={{ fontSize: 11, color: '#6a5040' }}>at {nextEvo.minHearts} hearts</div>
+          </div>
+        </div>
+      )}
+
+      {/* Stats row */}
+      <div style={{
+        marginTop: 16, paddingTop: 14, borderTop: '0.5px solid rgba(255,255,255,0.06)',
+        display: 'flex', gap: 16,
+      }}>
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#c47a3a' }}>{clearPct}%</div>
+          <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bowl cleared</div>
+        </div>
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#5dcaa5' }}>{totalLogs}</div>
+          <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total meals</div>
+        </div>
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#f59e0b' }}>🔥 {streak}</div>
+          <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day streak</div>
+        </div>
+      </div>
+    </div>
+  );
+})()}
+
+{/* ── Evolution Reveal Modal ── */}
+{showEvolutionReveal && newEvolutionStage && pet && (
+  <EvolutionRevealModal
+    pet={pet}
+    stage={newEvolutionStage}
+    onClose={() => { setShowEvolutionReveal(false); setNewEvolutionStage(null); }}
+    onShare={() => {
+      setShowEvolutionReveal(false);
+      setNewEvolutionStage(null);
+      setShareCardType('evolution');
+      setShowShareCard(true);
+    }}
+  />
+)}
 
         {/* ── Streak + Badges Row ── */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
@@ -876,7 +1452,22 @@ const [clearCount, setClearCount]           = useState(0);
             </div>
           </div>
         </div>
-
+{/* ── Share Streak ── */}
+{streak >= 7 && (
+  <button
+    onClick={() => { setShareCardType('streak'); setShowShareCard(true); }}
+    style={{
+      width: '100%', padding: '12px 0',
+      background: 'rgba(196,122,58,0.08)',
+      border: '1px solid rgba(196,122,58,0.25)',
+      borderRadius: 12, color: '#c47a3a',
+      fontSize: 13, fontWeight: 700, cursor: 'pointer',
+      fontFamily: 'inherit',
+    }}
+  >
+    🔥 Share your {streak}-day streak
+  </button>
+)}
         {/* ── Owner Badge ── */}
         <div className="cs-card" style={{ display:'flex', alignItems:'center', gap:16, padding:'20px 24px' }}>
           <div style={{ fontSize:40, flexShrink:0 }}>{ownerBadge.emoji}</div>
@@ -993,7 +1584,148 @@ const [clearCount, setClearCount]           = useState(0);
             </div>
           )}
         </div>
+        {/* ── Share Card Modal ── */}
+{showShareCard && pet && (
+  <ShareCardModal
+    pet={pet}
+    streak={streak}
+    chowHearts={chowHearts}
+    evo={getPetEvolution(chowHearts, pet.species)}
+    story={feedingStory}
+    cardType={shareCardType}
+    onClose={() => setShowShareCard(false)}
+  />
+)}
+        {/* ── Monthly Feeding Story ── */}
+<div className="cs-card" style={{ padding: '20px 24px' }}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+    <p style={{ fontSize: 13, color: '#a08060', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      📖 {new Date().toLocaleString('en-ZA', { month: 'long' })} Feeding Story
+    </p>
+    {!showStory && (
+      <button
+        onClick={handleGenerateStory}
+        style={{
+          background: 'none', border: '1px solid rgba(196,122,58,0.4)',
+          color: '#c47a3a', fontSize: 12, cursor: 'pointer',
+          fontFamily: 'inherit', fontWeight: 600,
+          borderRadius: 8, padding: '4px 12px',
+        }}
+      >
+        Generate ✨
+      </button>
+    )}
+  </div>
 
+  {!showStory && (
+    <p style={{ fontSize: 13, color: '#6a5040', lineHeight: 1.6 }}>
+      {pet.name}'s personalised monthly recap. Tap Generate to see what kind of eater they've been this month.
+    </p>
+  )}
+
+  {showStory && storyLoading && (
+    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <div style={{ fontSize: 28, marginBottom: 8 }}>✍️</div>
+      <p style={{ fontSize: 13, color: '#7a6050' }}>Writing {pet.name}'s story...</p>
+    </div>
+  )}
+
+  {showStory && !storyLoading && feedingStory && (
+    <div>
+      <p style={{ fontSize: 14, color: '#d0b898', lineHeight: 1.8, fontStyle: 'italic', marginBottom: 16 }}>
+        "{feedingStory}"
+      </p>
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8,
+        paddingTop: 14, borderTop: '0.5px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#c47a3a' }}>{totalLogs}</div>
+          <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Meals</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#5dcaa5' }}>
+            {totalLogs > 0 ? Math.round((clearCount / totalLogs) * 100) : 0}%
+          </div>
+          <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cleared</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b' }}>🔥 {streak}</div>
+          <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Streak</div>
+        </div>
+      </div>
+    </div>
+  )}<button
+  onClick={() => { setShareCardType('story'); setShowShareCard(true); }}
+  style={{
+    width: '100%', marginTop: 14, padding: '11px 0',
+    background: 'rgba(139,92,246,0.08)',
+    border: '1px solid rgba(139,92,246,0.25)',
+    borderRadius: 12, color: '#8b5cf6',
+    fontSize: 13, fontWeight: 700, cursor: 'pointer',
+    fontFamily: 'inherit',
+  }}
+>
+  📸 Share {pet.name}'s story
+</button>
+</div>
+{/* ── On This Day ── */}
+{(() => {
+  const onThisDay = getOnThisDay();
+  if (!onThisDay) return null;
+  const yearsAgo = new Date().getFullYear() - new Date(onThisDay.created_at).getFullYear();
+  return (
+    <div className="cs-card" style={{
+      padding: '20px 24px',
+      background: 'rgba(139,92,246,0.06)',
+      borderColor: 'rgba(139,92,246,0.25)',
+    }}>
+      <p style={{ fontSize: 13, color: '#8b5cf6', marginBottom: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        🕰️ On This Day
+      </p>
+      <p style={{ fontSize: 13, color: '#6a5040', marginBottom: 8 }}>
+        {yearsAgo} year{yearsAgo !== 1 ? 's' : ''} ago today
+      </p>
+      <p style={{ fontSize: 15, color: '#d0b898', lineHeight: 1.6 }}>
+        {getMilestoneText(onThisDay, pet.name)}
+      </p>
+    </div>
+  );
+})()}
+
+{/* ── Memories Timeline ── */}
+{milestones.length > 0 && (
+  <div className="cs-card" style={{ padding: '20px 24px' }}>
+    <p style={{ fontSize: 13, color: '#a08060', marginBottom: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      📖 Memory Book
+    </p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {milestones.slice(0, 8).map((m, i) => (
+        <div key={m.id} style={{
+          display: 'flex', gap: 14, paddingBottom: 16,
+          borderLeft: i < milestones.slice(0, 8).length - 1 ? '1.5px solid rgba(196,122,58,0.2)' : 'none',
+          marginLeft: 10, paddingLeft: 20, position: 'relative',
+        }}>
+          <div style={{
+            position: 'absolute', left: -6, top: 2,
+            width: 11, height: 11, borderRadius: '50%',
+            background: '#c47a3a',
+            border: '2px solid #0c0a08',
+            flexShrink: 0,
+          }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, color: '#d0b898', lineHeight: 1.5, marginBottom: 4 }}>
+              {getMilestoneText(m, pet.name)}
+            </div>
+            <div style={{ fontSize: 11, color: '#6a5040' }}>
+              {new Date(m.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
         {/* ── Recent Log History ── */}
         {logs.length > 0 && (
           <div className="cs-card" style={{ padding:'20px 24px' }}>
