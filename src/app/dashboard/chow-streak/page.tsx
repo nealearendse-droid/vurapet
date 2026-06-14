@@ -642,7 +642,8 @@ const [showShareCard, setShowShareCard] = useState(false);
 const [shareCardType, setShareCardType] = useState<'streak' | 'evolution' | 'story'>('streak');
 const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 const [showNotifPrompt, setShowNotifPrompt] = useState(false);
-  const fetchData = useCallback(async () => {
+const [activeTab, setActiveTab] = useState<'today' | 'mypet' | 'memories'>('today');  
+const fetchData = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { router.push('/auth/login'); return; }
@@ -691,16 +692,7 @@ const { data: milestonesData } = await supabase
   .limit(50);
 
 setMilestones(milestonesData || []);
-// Schedule hunger notifications if enabled
-if ('Notification' in window && Notification.permission === 'granted' && petsData) {
-  const lastMealDate = logsData?.[0]?.logged_at ? new Date(logsData[0].logged_at) : null;
-  scheduleHungerCheck(
-    petsData.name,
-    petsData.species,
-    lastMealDate,
-    (title, body) => sendNotification(title, body)
-  );
-}
+
 // Check notification permission status
 if ('Notification' in window) {
   setNotificationsEnabled(Notification.permission === 'granted');
@@ -721,7 +713,16 @@ if ('Notification' in window) {
 
     const allLogs: ChowLog[] = logsData || [];
     setLogs(allLogs);
-
+// Schedule hunger notifications if enabled
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const lastMealDate = allLogs[0]?.logged_at ? new Date(allLogs[0].logged_at) : null;
+      scheduleHungerCheck(
+        petsData.name,
+        petsData.species,
+        lastMealDate,
+        (title, body) => sendNotification(title, body)
+      );
+    }
     // Check if already logged today
     const todayStr = new Date().toDateString();
     const alreadyLogged = allLogs.some(l => new Date(l.logged_at).toDateString() === todayStr);
@@ -1026,7 +1027,7 @@ function handleGenerateStory() {
         </div>
 
         <div style={{ maxWidth:640, margin:'0 auto', padding:'28px 24px 64px', display:'flex', flexDirection:'column', gap:20 }}>
-
+         
           {/* Streak data — visible but locked */}
           <div style={{ position:'relative' }}>
 
@@ -1175,8 +1176,35 @@ function handleGenerateStory() {
       </div>
 
       <div style={{ maxWidth:640, margin:'0 auto', padding:'28px 24px 64px', display:'flex', flexDirection:'column', gap:20 }}>
+        {/* ── Tab Bar ── */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8,
+          background: '#181411', border: '0.5px solid rgba(255,255,255,0.07)',
+          borderRadius: 16, padding: 6, position: 'sticky', top: 12, zIndex: 10,
+        }}>
+          {[
+            { key: 'today', label: '🍽️ Today' },
+            { key: 'mypet', label: '🐾 My Pet' },
+            { key: 'memories', label: '📖 Memories' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as 'today' | 'mypet' | 'memories')}
+              style={{
+                padding: '10px 0',
+                background: activeTab === tab.key ? '#c47a3a' : 'transparent',
+                color: activeTab === tab.key ? '#fff' : '#a08060',
+                border: 'none', borderRadius: 11,
+                fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'inherit', transition: 'background 0.2s, color 0.2s',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 {/* ── Notification Prompt ── */}
-{showNotifPrompt && (
+{activeTab === 'today' && showNotifPrompt && (
   <div className="cs-card" style={{
     padding: '20px 24px',
     background: 'rgba(93,202,165,0.06)',
@@ -1233,7 +1261,7 @@ function handleGenerateStory() {
 )}
 
 {/* ── Notification Status ── */}
-{notificationsEnabled && (
+{activeTab === 'today' && notificationsEnabled && (
   <div style={{
     display: 'flex', alignItems: 'center', gap: 8,
     padding: '10px 16px',
@@ -1246,6 +1274,7 @@ function handleGenerateStory() {
   </div>
 )}
         {/* ── Hunger Mood Card ── */}
+        {activeTab === 'today' && (
         <div className="cs-card" style={{ background: mood.bg, borderColor: mood.color + '55', textAlign:'center', padding:'32px 24px' }}>
           <div className={mood.pulse ? 'cs-pulse' : ''} style={{ fontSize:72, lineHeight:1, marginBottom:12 }}>
             {mood.emoji}
@@ -1258,13 +1287,14 @@ function handleGenerateStory() {
               Last meal: {lastLog.toLocaleString('en-ZA', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' })}
             </div>
           )}
-          {!lastLog && (
+         {!lastLog && (
             <div style={{ fontSize:12, color:'#7a6050' }}>No meals logged yet — log the first one below!</div>
           )}
         </div>
+        )}
 
         {/* ── Log Meal Buttons ── */}
-        {!todayLogged ? (
+        {activeTab === 'today' && (!todayLogged ? (
           <div className="cs-card" style={{ padding:'24px' }}>
             <p style={{ fontSize:13, color:'#a08060', marginBottom:16, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
               Log today's meal
@@ -1296,10 +1326,10 @@ function handleGenerateStory() {
               <div style={{ fontSize:12, color:'#6a5040' }}>Come back tomorrow to keep the streak alive.</div>
             </div>
           </div>
-        )}
+         ))}
 
 {/* ── Pet Reaction ── */}
-        {lastReaction && (
+        {activeTab === 'today' && lastReaction && (
           <div className="cs-card" style={{
             padding: '20px 24px',
             background: 'rgba(196,122,58,0.06)',
@@ -1329,7 +1359,7 @@ function handleGenerateStory() {
         )}
 
 {/* ── Pet Evolution Card ── */}
-{(() => {
+{activeTab === 'mypet' && (() => {
   const evo = getPetEvolution(chowHearts, pet.species);
   const nextEvo = getNextEvolution(chowHearts, pet.species);
   const clearPct = totalLogs > 0 ? Math.round((clearCount / totalLogs) * 100) : 0;
@@ -1436,6 +1466,7 @@ function handleGenerateStory() {
 )}
 
         {/* ── Streak + Badges Row ── */}
+        {activeTab === 'mypet' && (
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           {/* Streak */}
           <div className="cs-card" style={{ textAlign:'center', padding:'24px 16px' }}>
@@ -1452,6 +1483,7 @@ function handleGenerateStory() {
             </div>
           </div>
         </div>
+        )}
 {/* ── Share Streak ── */}
 {streak >= 7 && (
   <button
@@ -1469,6 +1501,7 @@ function handleGenerateStory() {
   </button>
 )}
         {/* ── Owner Badge ── */}
+        {activeTab === 'mypet' && (
         <div className="cs-card" style={{ display:'flex', alignItems:'center', gap:16, padding:'20px 24px' }}>
           <div style={{ fontSize:40, flexShrink:0 }}>{ownerBadge.emoji}</div>
           <div>
@@ -1499,8 +1532,10 @@ function handleGenerateStory() {
             )}
           </div>
         </div>
+        )}
 
         {/* ── Last 7 Days ── */}
+        {activeTab === 'mypet' && (
         <div className="cs-card" style={{ padding:'20px 24px' }}>
           <p style={{ fontSize:13, color:'#a08060', marginBottom:14, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
             Last 7 Days
@@ -1524,8 +1559,10 @@ function handleGenerateStory() {
             ))}
           </div>
         </div>
+        )}
 
         {/* ── Pantry Countdown ── */}
+        {activeTab === 'memories' && (
         <div className="cs-card" style={{ padding:'20px 24px' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
             <p style={{ fontSize:13, color:'#a08060', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
@@ -1584,6 +1621,7 @@ function handleGenerateStory() {
             </div>
           )}
         </div>
+        )}
         {/* ── Share Card Modal ── */}
 {showShareCard && pet && (
   <ShareCardModal
@@ -1597,6 +1635,7 @@ function handleGenerateStory() {
   />
 )}
         {/* ── Monthly Feeding Story ── */}
+{activeTab === 'memories' && (
 <div className="cs-card" style={{ padding: '20px 24px' }}>
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
     <p style={{ fontSize: 13, color: '#a08060', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -1669,8 +1708,9 @@ function handleGenerateStory() {
   📸 Share {pet.name}'s story
 </button>
 </div>
+)}
 {/* ── On This Day ── */}
-{(() => {
+{activeTab === 'memories' && (() => {
   const onThisDay = getOnThisDay();
   if (!onThisDay) return null;
   const yearsAgo = new Date().getFullYear() - new Date(onThisDay.created_at).getFullYear();
@@ -1694,7 +1734,7 @@ function handleGenerateStory() {
 })()}
 
 {/* ── Memories Timeline ── */}
-{milestones.length > 0 && (
+{activeTab === 'memories' && milestones.length > 0 && (
   <div className="cs-card" style={{ padding: '20px 24px' }}>
     <p style={{ fontSize: 13, color: '#a08060', marginBottom: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
       📖 Memory Book
@@ -1727,7 +1767,7 @@ function handleGenerateStory() {
   </div>
 )}
         {/* ── Recent Log History ── */}
-        {logs.length > 0 && (
+        {activeTab === 'memories' && logs.length > 0 && (
           <div className="cs-card" style={{ padding:'20px 24px' }}>
             <p style={{ fontSize:13, color:'#a08060', marginBottom:14, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>
               Recent History
