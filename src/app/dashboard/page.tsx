@@ -384,9 +384,32 @@ export default function Dashboard() {
       <style>{dashStyles}</style>
 
       {/* ── Hero greeting ── */}
+      {/* ── Hero greeting ── */}
+      {pets.length === 0 ? (
+        <div className="vp-hero">
+          <div className="vp-hero-glow" />
+          <div className="vp-hero-content">
+            <div className="vp-hero-left">
+              <p className="vp-greeting-label">
+                {greeting}, <span className="vp-name">{userName}</span>
+              </p>
+              <h1 className="vp-hero-title">
+                Welcome to <span className="vp-accent-amber">VuraPet</span>
+              </h1>
+              <p className="vp-hero-sub">
+                Let's set up your pet's lifetime care plan. Add your first pet to get started — it only takes a minute.
+              </p>
+              <div style={{ marginTop: 16 }}>
+                <Link href="/dashboard/add-pet" className="vp-btn-primary">+ Add My First Pet</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="vp-hero">
         <div className="vp-hero-glow" />
         <div className="vp-hero-content">
+
           <div className="vp-hero-left">
             <p className="vp-greeting-label">
               {greeting}, <span className="vp-name">{userName}</span>
@@ -434,11 +457,12 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+      )}
 
       {/* ── Main body ── */}
       <div className="vp-body">
 
-        {!hasPro && (
+        {!hasPro && pets.length > 0 && (
           <div className="vp-upgrade-banner">
             <div className="vp-upgrade-left">
               <p className="vp-upgrade-tag">🔒 Free Plan</p>
@@ -453,11 +477,13 @@ export default function Dashboard() {
           </div>
         )}
 
+        {pets.length > 0 && (
         <div style={{ background: '#333', color: 'white', padding: '8px', marginBottom: '10px', borderRadius: '8px', textAlign: 'center', fontSize: '12px' }}>
           📋 Plan: {userPlan} {userPlan === 'free' && '🔒 1 pet max • 1 guardian max • 5 memories max'}
           {userPlan === 'pro' && '✅ 1 pet • 1 guardian • Unlimited memories'}
           {userPlan === 'family' && '✅ 5 pets • Unlimited guardians • Unlimited memories'}
         </div>
+        )}
 
         <section className="vp-section">
           <div className="vp-section-header">
