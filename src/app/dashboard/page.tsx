@@ -291,6 +291,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
   const [userPlan, setUserPlan] = useState('free');
+  const [isRescueHero, setIsRescueHero] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -310,6 +311,8 @@ export default function Dashboard() {
         .single();
 
       setUserPlan(profile?.subscription_plan || 'free');
+      const isRescueHero = session.user.email === 'helena@example.com';
+      setIsRescueHero(isRescueHero);
 
       const name = session.user.user_metadata?.full_name
         || session.user.email?.split('@')[0]
@@ -349,10 +352,10 @@ export default function Dashboard() {
     hour < 17 ? 'Good afternoon' :
     'Good evening';
 
-  const hasPro = userPlan === 'pro' || userPlan === 'family';
+  const hasPro = userPlan === 'pro' || userPlan === 'family' || isRescueHero;
 
-  const maxPets = userPlan === 'family' ? 5 : 1;
-  const maxGuardians = userPlan === 'family' ? 999 : 1;
+  const maxPets = isRescueHero ? 12 : userPlan === 'family' ? 5 : 1;
+  const maxGuardians = userPlan === 'family' || isRescueHero ? 999 : 1;
   const maxMemories = userPlan === 'free' ? 5 : 999;
 
   const currentMemoriesCount = memories.length;
