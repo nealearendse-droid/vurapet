@@ -93,7 +93,44 @@ function getNextEvolution(hearts: number, species: string) {
   const stages = species?.toLowerCase().includes('cat') ? CAT_EVOLUTION : DOG_EVOLUTION;
   return stages.find(s => s.minHearts > hearts) || null;
 }
+// ── Daily Trivia ──
+const TRIVIA_BANK: Record<string, { q: string; options: string[]; answer: number; fact: string }[]> = {
+  yorkshire_terrier: [
+    { q: "What were Yorkshire Terriers originally bred to do?", options: ["Herd sheep", "Hunt rats in mines", "Guard estates", "Retrieve game"], answer: 1, fact: "Yorkies were bred to catch rats in Yorkshire coal mines in the 1800s. Tiny but fearless!" },
+    { q: "How much does a typical adult Yorkshire Terrier weigh?", options: ["1–2 kg", "3–4 kg", "5–7 kg", "8–10 kg"], answer: 1, fact: "Yorkies typically weigh 3–4 kg. Their small size made them perfect for chasing rats into tight spaces." },
+    { q: "What is unique about a Yorkie's coat?", options: ["It's curly like a poodle", "It's more like human hair than fur", "It sheds heavily twice a year", "It's naturally waterproof"], answer: 1, fact: "Yorkie coats are made of fine hair, not fur — which means they shed very little and are considered hypoallergenic." },
+    { q: "What colour are Yorkshire Terrier puppies when born?", options: ["Gold and white", "All black", "Black and tan", "Silver and blue"], answer: 2, fact: "Yorkie puppies are born black and tan. The classic blue and gold colouring develops as they mature." },
+    { q: "How long do Yorkshire Terriers typically live?", options: ["7–9 years", "10–12 years", "13–16 years", "17–20 years"], answer: 2, fact: "Yorkies are one of the longer-lived breeds, often reaching 13–16 years with good care." },
+    { q: "What group do Yorkshire Terriers belong to?", options: ["Terrier group", "Toy group", "Hound group", "Working group"], answer: 1, fact: "Despite their terrier heritage, Yorkies are classified in the Toy group due to their small size." },
+    { q: "Which famous Yorkie served as a WWII therapy dog?", options: ["Toto", "Smoky", "Tiny", "Pip"], answer: 1, fact: "Smoky the Yorkie served with US troops in WWII, boosting morale and even running communication wire through pipes." },
+  ],
+  dog: [
+    { q: "How many times better is a dog's sense of smell than a human's?", options: ["10 times", "100 times", "10,000 times", "100,000 times"], answer: 3, fact: "Dogs have up to 300 million olfactory receptors — humans have about 6 million. Their smell is extraordinary." },
+    { q: "What is a dog's normal resting heart rate?", options: ["40–60 bpm", "60–80 bpm", "60–140 bpm", "150–200 bpm"], answer: 2, fact: "A healthy dog's resting heart rate ranges from 60–140 bpm depending on their size. Smaller dogs tend to have faster heart rates." },
+    { q: "How many teeth does an adult dog have?", options: ["28", "32", "38", "42"], answer: 3, fact: "Adult dogs have 42 permanent teeth. Puppies start with 28 baby teeth that fall out around 3–6 months." },
+    { q: "What does it mean when a dog wags its tail to the right?", options: ["They are anxious", "They feel positive", "They want to play", "They are warning you"], answer: 1, fact: "Studies show dogs wag right for positive feelings and left for negative ones. The direction actually matters!" },
+    { q: "What is the most sensitive part of a dog's body?", options: ["Their ears", "Their paws", "Their nose", "Their tail"], answer: 2, fact: "A dog's nose has about 300 million scent receptors and is incredibly sensitive to touch, temperature and moisture." },
+    { q: "At what age are dogs considered seniors?", options: ["3 years", "5 years", "7 years", "10 years"], answer: 2, fact: "Most dogs are considered senior at around 7 years, though larger breeds age faster and may be seniors at 5–6." },
+    { q: "How long is a dog's short-term memory?", options: ["30 seconds", "2 minutes", "5 minutes", "10 minutes"], answer: 1, fact: "Dogs have about 2 minutes of short-term memory — but their long-term associative memory is excellent." },
+  ],
+  cat: [
+    { q: "How many hours a day do cats typically sleep?", options: ["8–10 hours", "10–12 hours", "12–16 hours", "18–20 hours"], answer: 2, fact: "Cats sleep 12–16 hours daily. As obligate carnivores, they conserve energy between hunts — even indoor ones." },
+    { q: "What is a group of cats called?", options: ["A pack", "A clowder", "A pride", "A colony"], answer: 1, fact: "A group of cats is called a clowder. A group of kittens is called a kindle." },
+    { q: "How fast can a domestic cat run?", options: ["20 km/h", "30 km/h", "48 km/h", "60 km/h"], answer: 2, fact: "Cats can sprint up to 48 km/h over short distances — faster than Usain Bolt's top speed." },
+    { q: "What frequency does purring occur at?", options: ["5–10 Hz", "25–150 Hz", "200–400 Hz", "500+ Hz"], answer: 1, fact: "Cats purr at 25–150 Hz — a frequency shown to promote bone density and healing in both cats and humans." },
+    { q: "How many bones does a cat have?", options: ["106", "144", "230", "290"], answer: 2, fact: "Cats have 230 bones — 24 more than humans. Many are in their flexible spine and tail." },
+    { q: "What is unique about a cat's collarbone?", options: ["They don't have one", "It's fused to the spine", "It floats freely", "It's made of cartilage"], answer: 2, fact: "A cat's collarbone floats freely, allowing them to fit through any space their head can pass through." },
+    { q: "How do cats drink water?", options: ["They lap it upward", "They scoop it with their tongue", "They curl their tongue to pull water up", "They bite the surface"], answer: 2, fact: "Cats curl their tongue into a J-shape and pull water up in a column, lapping at around 4 times per second." },
+  ],
+};
 
+function getDailyTrivia(species: string, breed: string) {
+  const breedKey = breed?.toLowerCase().replace(/\s+/g, '_');
+  const speciesKey = species?.toLowerCase().includes('cat') ? 'cat' : 'dog';
+  const questions = TRIVIA_BANK[breedKey] || TRIVIA_BANK[speciesKey] || TRIVIA_BANK['dog'];
+  const dayIndex = Math.floor(Date.now() / 86_400_000) % questions.length;
+  return questions[dayIndex];
+}
 // ── Evolution titles ──
 const HEARTS_PER_CLEARED = 3;
 const HEARTS_PER_LEFTOVERS = 1;
@@ -759,7 +796,9 @@ const [showMoodJournal, setShowMoodJournal] = useState(false);
 const [selectedMoodEmoji, setSelectedMoodEmoji] = useState<string | null>(null);
 const [selectedMoodWord, setSelectedMoodWord] = useState('');
 const [lastLoggedId, setLastLoggedId] = useState<string | null>(null);
-const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);  
+const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);
+const [triviaAnswered, setTriviaAnswered] = useState<'correct' | 'wrong' | null>(null);
+const [triviaSelected, setTriviaSelected] = useState<number | null>(null);  
 const fetchData = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
@@ -1524,7 +1563,99 @@ function handleGenerateStory() {
     </div>
   </div>
 )}
+{/* ── Daily Trivia ── */}
+{activeTab === 'today' && pet && (() => {
+  const trivia = getDailyTrivia(pet.species, pet.breed);
+  return (
+    <div className="cs-card" style={{ padding: '20px 24px' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14,
+      }}>
+        <p style={{ fontSize: 13, color: '#a08060', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          🧠 Daily trivia
+        </p>
+        {triviaAnswered === 'correct' && (
+          <span style={{ fontSize: 12, color: '#5dcaa5', fontWeight: 700 }}>+1 heart earned!</span>
+        )}
+      </div>
 
+      <p style={{ fontSize: 15, color: '#f0ebe4', lineHeight: 1.6, marginBottom: 16, fontWeight: 500 }}>
+        {trivia.q}
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+        {trivia.options.map((opt, i) => {
+          const isSelected = triviaSelected === i;
+          const isCorrect = i === trivia.answer;
+          const isAnswered = triviaAnswered !== null;
+
+          let bg = 'rgba(255,255,255,0.04)';
+          let border = '1px solid rgba(255,255,255,0.08)';
+          let color = '#d0b898';
+
+          if (isAnswered) {
+            if (isCorrect) { bg = 'rgba(93,202,165,0.15)'; border = '1px solid rgba(93,202,165,0.4)'; color = '#5dcaa5'; }
+            else if (isSelected) { bg = 'rgba(239,68,68,0.12)'; border = '1px solid rgba(239,68,68,0.3)'; color = '#f87171'; }
+          } else if (isSelected) {
+            bg = 'rgba(196,122,58,0.15)'; border = '1px solid rgba(196,122,58,0.4)'; color = '#c47a3a';
+          }
+
+          return (
+            <button
+              key={i}
+              disabled={isAnswered}
+              onClick={async () => {
+                if (isAnswered) return;
+                setTriviaSelected(i);
+                const correct = i === trivia.answer;
+                setTriviaAnswered(correct ? 'correct' : 'wrong');
+                if (correct) {
+                  const supabase = createSupabaseBrowserClient();
+                  const newHearts = chowHearts + 1;
+                  await supabase.from('chow_hearts').upsert({
+                    user_id: userId,
+                    pet_id: pet.id,
+                    total_hearts: newHearts,
+                    updated_at: new Date().toISOString(),
+                  }, { onConflict: 'pet_id' });
+                  setChowHearts(newHearts);
+                }
+              }}
+              style={{
+                padding: '12px 16px', textAlign: 'left',
+                background: bg, border, borderRadius: 10,
+                color, fontSize: 14, cursor: isAnswered ? 'default' : 'pointer',
+                fontFamily: 'inherit', transition: 'all 0.15s',
+              }}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+
+      {triviaAnswered && (
+        <div style={{
+          padding: '12px 14px',
+          background: triviaAnswered === 'correct' ? 'rgba(93,202,165,0.08)' : 'rgba(196,122,58,0.08)',
+          border: `1px solid ${triviaAnswered === 'correct' ? 'rgba(93,202,165,0.2)' : 'rgba(196,122,58,0.2)'}`,
+          borderRadius: 10, fontSize: 13,
+          color: triviaAnswered === 'correct' ? '#5dcaa5' : '#c47a3a',
+          lineHeight: 1.6,
+        }}>
+          {triviaAnswered === 'correct' ? '✅ Correct! ' : '💡 Fun fact: '}
+          {trivia.fact}
+        </div>
+      )}
+
+      {!triviaAnswered && (
+        <p style={{ fontSize: 11, color: '#6a5040', textAlign: 'center' }}>
+          Correct answer earns +1 heart for {pet.name}
+        </p>
+      )}
+    </div>
+  );
+})()}
 {/* ── Pet Evolution Card ── */}
 {activeTab === 'mypet' && (() => {
   const evo = getPetEvolution(chowHearts, pet.species);
