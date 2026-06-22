@@ -798,7 +798,14 @@ const [selectedMoodWord, setSelectedMoodWord] = useState('');
 const [lastLoggedId, setLastLoggedId] = useState<string | null>(null);
 const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);
 const [triviaAnswered, setTriviaAnswered] = useState<'correct' | 'wrong' | null>(null);
-const [triviaSelected, setTriviaSelected] = useState<number | null>(null);  
+const [triviaSelected, setTriviaSelected] = useState<number | null>(null);
+const [challenge, setChallenge] = useState<{
+  id: string;
+  title: string;
+  goal: number;
+  current_count: number;
+  reward_label: string;
+} | null>(null);  
 const fetchData = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
@@ -904,6 +911,13 @@ if ('Notification' in window) {
     if (latestWithPantry?.pantry_days_remaining != null) {
       setPantryDays(latestWithPantry.pantry_days_remaining);
     }
+const { data: challengeData, error: challengeError } = await supabase
+  .from('community_challenges')
+  .select('*')
+  .eq('month', new Date().toISOString().slice(0, 7))
+  .maybeSingle();
+
+if (challengeData) setChallenge(challengeData);
 
     setLoading(false);
   }, [router]);
@@ -961,6 +975,16 @@ if ('Notification' in window) {
     if (!error) {
   if (newLog?.id) setLastLoggedId(newLog.id);
   setShowMoodJournal(true);
+  if (challenge?.id) {
+  await supabase
+    .from('community_challenges')
+    .update({
+      current_count: challenge.current_count + 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', challenge.id);
+  setChallenge(prev => prev ? { ...prev, current_count: prev.current_count + 1 } : prev);
+}
   const newHearts = chowHearts + heartsEarned;
   await supabase.from('chow_hearts').upsert({
     user_id: userId,
@@ -1563,6 +1587,69 @@ function handleGenerateStory() {
     </div>
   </div>
 )}
+{/* ── Community Challenge ── */}
+{activeTab === 'today' && challenge && (() => {
+  const pct = Math.min(100, Math.round((challenge.current_count / challenge.goal) * 100));
+  const remaining = challenge.goal - challenge.current_count;
+  const monthName = new Date().toLocaleString('en-ZA', { month: 'long' });
+
+  return (
+    <div className="cs-card" style={{ padding: '20px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <p style={{ fontSize: 13, color: '#a08060', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          🏆 {monthName} challenge
+        </p>
+        <span style={{ fontSize: 12, color: '#8b5cf6', fontWeight: 700 }}>
+          {pct}% complete
+        </span>
+      </div>
+
+      <p style={{ fontSize: 15, color: '#f0ebe4', fontWeight: 600, marginBottom: 4, lineHeight: 1.4 }}>
+        {challenge.title}
+      </p>
+
+      <p style={{ fontSize: 12, color: '#6a5040', marginBottom: 14 }}>
+        {remaining > 0
+          ? `${remaining.toLocaleString()} bowls to go — every meal ${pet?.name} eats counts`
+          : `🎉 Challenge complete! SA pet parents did it!`}
+      </p>
+
+      {/* Progress bar */}
+      <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 99, height: 10, overflow: 'hidden', marginBottom: 10 }}>
+        <div style={{
+          height: '100%', borderRadius: 99,
+          background: 'linear-gradient(90deg,#8b5cf6,#c47a3a)',
+          width: `${pct}%`,
+          transition: 'width 0.8s ease',
+        }} />
+      </div>
+
+      {/* Count strip */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, color: '#8b5cf6', fontWeight: 700 }}>
+          🍽️ {challenge.current_count.toLocaleString()} bowls cleared
+        </span>
+        <span style={{ fontSize: 12, color: '#6a5040' }}>
+          goal: {challenge.goal.toLocaleString()}
+        </span>
+      </div>
+
+      {/* Reward label */}
+      {challenge.reward_label && (
+        <div style={{
+          marginTop: 12, padding: '8px 12px',
+          background: 'rgba(139,92,246,0.08)',
+          border: '1px solid rgba(139,92,246,0.2)',
+          borderRadius: 8, fontSize: 12, color: '#8b5cf6',
+          textAlign: 'center',
+        }}>
+          🎖️ Reward: {challenge.reward_label}
+        </div>
+      )}
+    </div>
+  );
+})()}
+
 {/* ── Daily Trivia ── */}
 {activeTab === 'today' && pet && (() => {
   const trivia = getDailyTrivia(pet.species, pet.breed);
