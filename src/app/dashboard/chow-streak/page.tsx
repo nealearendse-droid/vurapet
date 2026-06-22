@@ -20,6 +20,8 @@ interface ChowLog {
   logged_at: string;
   outcome: 'cleared' | 'leftovers';
   pantry_days_remaining?: number;
+  mood_emoji?: string;
+  mood_word?: string;
 }
 
 // ── Pet reaction quotes ──
@@ -192,7 +194,117 @@ async function recordMilestone(
     milestone_data: data,
   });
 }
+function MoodJournalModal({ petName, onSave, onSkip }: {
+  petName: string;
+  onSave: (emoji: string, word: string) => void;
+  onSkip: () => void;
+}) {
+  const [emoji, setEmoji] = useState<string | null>(null);
+  const [word, setWord] = useState('');
 
+  const moods = [
+    { emoji: '😊', label: 'Happy' },
+    { emoji: '😴', label: 'Sleepy' },
+    { emoji: '🤩', label: 'Excited' },
+    { emoji: '😌', label: 'Calm' },
+    { emoji: '🥺', label: 'Needy' },
+    { emoji: '😜', label: 'Playful' },
+    { emoji: '😒', label: 'Grumpy' },
+    { emoji: '🤒', label: 'Unwell' },
+  ];
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9997,
+      background: 'rgba(0,0,0,0.82)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24,
+      animation: 'cs-fade-in 0.3s ease',
+    }}>
+      <div style={{
+        background: 'linear-gradient(160deg,#1e1812,#140f0a)',
+        border: '1px solid rgba(196,122,58,0.3)',
+        borderRadius: 24, padding: '32px 28px',
+        maxWidth: 360, width: '100%',
+        textAlign: 'center',
+        animation: 'cs-pop 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>
+        <div style={{ fontSize: 36, marginBottom: 8 }}>📓</div>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: '#f0ebe4', marginBottom: 6 }}>
+          How is {petName} feeling?
+        </h2>
+        <p style={{ fontSize: 13, color: '#7a6050', marginBottom: 20, lineHeight: 1.6 }}>
+          One tap. Builds into {petName}'s mood timeline.
+        </p>
+
+        {/* Emoji grid */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20,
+        }}>
+          {moods.map(m => (
+            <button
+              key={m.emoji}
+              onClick={() => setEmoji(m.emoji)}
+              style={{
+                background: emoji === m.emoji ? 'rgba(196,122,58,0.2)' : 'rgba(255,255,255,0.04)',
+                border: emoji === m.emoji ? '1.5px solid #c47a3a' : '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 12, padding: '10px 4px',
+                cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                transition: 'all 0.15s',
+              }}
+            >
+              <span style={{ fontSize: 24 }}>{m.emoji}</span>
+              <span style={{ fontSize: 10, color: '#a08060' }}>{m.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Optional word */}
+        <input
+          type="text"
+          value={word}
+          onChange={e => setWord(e.target.value.slice(0, 20))}
+          placeholder={`One word about ${petName} today...`}
+          style={{
+            width: '100%', padding: '11px 14px',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(196,122,58,0.2)',
+            borderRadius: 11, color: '#f0ebe4',
+            fontSize: 14, fontFamily: 'inherit',
+            marginBottom: 16, boxSizing: 'border-box',
+          }}
+        />
+
+        <button
+          onClick={() => emoji && onSave(emoji, word)}
+          disabled={!emoji}
+          style={{
+            width: '100%', padding: '13px 0',
+            background: emoji ? '#c47a3a' : 'rgba(255,255,255,0.06)',
+            color: emoji ? '#fff' : '#6a5040',
+            border: 'none', borderRadius: 12,
+            fontSize: 14, fontWeight: 700, cursor: emoji ? 'pointer' : 'not-allowed',
+            fontFamily: 'inherit', marginBottom: 10,
+            transition: 'background 0.2s',
+          }}
+        >
+          Save to Memory Book
+        </button>
+
+        <button
+          onClick={onSkip}
+          style={{
+            background: 'none', border: 'none', color: '#6a5040',
+            fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          Skip for now
+        </button>
+      </div>
+    </div>
+  );
+}
 // ── Welcome Modal ──
 function WelcomeModal({ petName, onClose }: { petName: string; onClose: () => void }) {
   return (
@@ -642,7 +754,12 @@ const [showShareCard, setShowShareCard] = useState(false);
 const [shareCardType, setShareCardType] = useState<'streak' | 'evolution' | 'story'>('streak');
 const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 const [showNotifPrompt, setShowNotifPrompt] = useState(false);
-const [activeTab, setActiveTab] = useState<'today' | 'mypet' | 'memories'>('today');  
+const [activeTab, setActiveTab] = useState<'today' | 'mypet' | 'memories'>('today');
+const [showMoodJournal, setShowMoodJournal] = useState(false);
+const [selectedMoodEmoji, setSelectedMoodEmoji] = useState<string | null>(null);
+const [selectedMoodWord, setSelectedMoodWord] = useState('');
+const [lastLoggedId, setLastLoggedId] = useState<string | null>(null);
+const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);  
 const fetchData = useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
     const { data: { session } } = await supabase.auth.getSession();
@@ -793,16 +910,18 @@ if ('Notification' in window) {
     const heartsEarned = outcome === 'cleared' ? HEARTS_PER_CLEARED : HEARTS_PER_LEFTOVERS;
     const reaction = getRandomReaction(pet.species);
 
-    const { error } = await supabase.from('chow_logs').insert({
-      user_id: userId,
-      pet_id: pet.id,
-      outcome,
-      pantry_days_remaining: pantryDays,
-      hearts_earned: heartsEarned,
-      pet_reaction: reaction,
-    });
+    const { data: newLog, error } = await supabase.from('chow_logs').insert({
+  user_id: userId,
+  pet_id: pet.id,
+  outcome,
+  pantry_days_remaining: pantryDays,
+  hearts_earned: heartsEarned,
+  pet_reaction: reaction,
+}).select('id').single();
 
     if (!error) {
+  if (newLog?.id) setLastLoggedId(newLog.id);
+  setShowMoodJournal(true);
   const newHearts = chowHearts + heartsEarned;
   await supabase.from('chow_hearts').upsert({
     user_id: userId,
@@ -843,6 +962,18 @@ if ('Notification' in window) {
 }
     setLogging(false);
   }
+  async function saveMood() {
+  if (!lastLoggedId || !selectedMoodEmoji) return;
+  const supabase = createSupabaseBrowserClient();
+  await supabase.from('chow_logs')
+    .update({ mood_emoji: selectedMoodEmoji, mood_word: selectedMoodWord || null })
+    .eq('id', lastLoggedId);
+  setSavedMoodEmoji(selectedMoodEmoji);
+  setShowMoodJournal(false);
+  setSelectedMoodEmoji(null);
+  setSelectedMoodWord('');
+  await fetchData();
+}
   async function savePantry() {
     const val = parseInt(pantryInput);
     if (isNaN(val) || val < 0) return;
@@ -905,6 +1036,8 @@ function getMilestoneText(m: { milestone_type: string; milestone_data: Record<st
       return `${petName} evolved into ${data.emoji} ${data.label} with ${data.hearts} hearts earned. 🎉`;
     case 'streak':
       return `${petName} hit a 🔥 ${data.days}-day streak! You showed up, every single day.`;
+    case 'mood':
+      return `${petName} was feeling ${data.emoji} ${data.word ? `— ${data.word}` : ''} today.`;
     default:
       return `A special moment with ${petName}.`;
   }
@@ -1141,6 +1274,21 @@ function handleGenerateStory() {
         />
       )}
 
+{showMoodJournal && pet && (
+  <MoodJournalModal
+    petName={pet.name}
+    onSave={(emoji, word) => {
+      setSelectedMoodEmoji(emoji);
+      setSelectedMoodWord(word);
+      saveMood();
+    }}
+    onSkip={() => {
+      setShowMoodJournal(false);
+      setSelectedMoodEmoji(null);
+      setSelectedMoodWord('');
+    }}
+  />
+)}
       {/* ── Header ── */}
       <div style={{
         background:'linear-gradient(160deg,#1a1410,#120f0c)',
@@ -1357,6 +1505,25 @@ function handleGenerateStory() {
             </div>
           </div>
         )}
+
+        {activeTab === 'today' && savedMoodEmoji && (
+  <div className="cs-card" style={{
+    padding: '16px 24px',
+    display: 'flex', alignItems: 'center', gap: 14,
+    background: 'rgba(139,92,246,0.06)',
+    borderColor: 'rgba(139,92,246,0.2)',
+  }}>
+    <span style={{ fontSize: 32 }}>{savedMoodEmoji}</span>
+    <div>
+      <div style={{ fontSize: 11, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>
+        {pet.name}'s mood today
+      </div>
+      <div style={{ fontSize: 13, color: '#d0b898' }}>
+        {selectedMoodWord || 'Logged in the memory book'}
+      </div>
+    </div>
+  </div>
+)}
 
 {/* ── Pet Evolution Card ── */}
 {activeTab === 'mypet' && (() => {
