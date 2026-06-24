@@ -799,6 +799,18 @@ const [lastLoggedId, setLastLoggedId] = useState<string | null>(null);
 const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);
 const [triviaAnswered, setTriviaAnswered] = useState<'correct' | 'wrong' | null>(null);
 const [triviaSelected, setTriviaSelected] = useState<number | null>(null);
+const [leaderboard, setLeaderboard] = useState<Array<{
+  id: string;
+  pet_name: string;
+  pet_species: string;
+  owner_display_name: string;
+  current_streak: number;
+  total_hearts: number;
+}>>([]);
+const [isOnLeaderboard, setIsOnLeaderboard] = useState(false);
+const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
+const [ownerDisplayName, setOwnerDisplayName] = useState('');
+const [savingLeaderboard, setSavingLeaderboard] = useState(false);
 const [challenge, setChallenge] = useState<{
   id: string;
   title: string;
@@ -911,6 +923,24 @@ if ('Notification' in window) {
     if (latestWithPantry?.pantry_days_remaining != null) {
       setPantryDays(latestWithPantry.pantry_days_remaining);
     }
+const { data: leaderboardData } = await supabase
+  .from('pet_leaderboard')
+  .select('*')
+  .eq('is_public', true)
+  .order('current_streak', { ascending: false })
+  .limit(10);
+if (leaderboardData) setLeaderboard(leaderboardData);
+
+const { data: myEntry } = await supabase
+  .from('pet_leaderboard')
+  .select('*')
+  .eq('pet_id', petsData.id)
+  .maybeSingle();
+if (myEntry) {
+  setIsOnLeaderboard(true);
+  setLeaderboardOptIn(myEntry.is_public);
+  setOwnerDisplayName(myEntry.owner_display_name || '');
+}    
 const { data: challengeData, error: challengeError } = await supabase
   .from('community_challenges')
   .select('*')
@@ -975,6 +1005,17 @@ if (challengeData) setChallenge(challengeData);
     if (!error) {
   if (newLog?.id) setLastLoggedId(newLog.id);
   setShowMoodJournal(true);
+  await supabase.from('pet_leaderboard').upsert({
+  user_id: userId,
+  pet_id: pet.id,
+  pet_name: pet.name,
+  pet_species: pet.species,
+  pet_breed: pet.breed,
+  current_streak: streak + 1,
+  total_hearts: chowHearts + heartsEarned,
+  is_public: leaderboardOptIn,
+  updated_at: new Date().toISOString(),
+}, { onConflict: 'pet_id' });
   if (challenge?.id) {
   await supabase
     .from('community_challenges')
@@ -2093,6 +2134,143 @@ function handleGenerateStory() {
   📸 Share {pet.name}'s story
 </button>
 </div>
+)}
+{/* ── SA Pet Leaderboard ── */}
+{activeTab === 'memories' && (
+  <div className="cs-card" style={{ padding: '20px 24px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+      <p style={{ fontSize: 13, color: '#a08060', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        🇿🇦 SA pet leaderboard
+      </p>
+      <span style={{ fontSize: 11, color: '#6a5040' }}>top 10 this week</span>
+    </div>
+
+    {/* Opt-in toggle */}
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '12px 14px',
+      background: leaderboardOptIn ? 'rgba(93,202,165,0.08)' : 'rgba(255,255,255,0.03)',
+      border: `1px solid ${leaderboardOptIn ? 'rgba(93,202,165,0.25)' : 'rgba(255,255,255,0.08)'}`,
+      borderRadius: 10, marginBottom: 16,
+    }}>
+      <div>
+        <div style={{ fontSize: 13, color: '#d0b898', fontWeight: 600, marginBottom: 2 }}>
+          {leaderboardOptIn ? `✅ ${pet.name} is on the leaderboard` : `Add ${pet.name} to the leaderboard`}
+        </div>
+        <div style={{ fontSize: 11, color: '#6a5040' }}>
+          {leaderboardOptIn ? 'Your pet is visible to other SA pet parents' : 'Opt in to compete with SA pet parents'}
+        </div>
+      </div>
+      <button
+        onClick={async () => {
+          setSavingLeaderboard(true);
+          const supabase = createSupabaseBrowserClient();
+          const newOptIn = !leaderboardOptIn;
+          const displayName = ownerDisplayName || 'SA Pet Parent';
+          await supabase.from('pet_leaderboard').upsert({
+            user_id: userId,
+            pet_id: pet.id,
+            pet_name: pet.name,
+            pet_species: pet.species,
+            pet_breed: pet.breed,
+            owner_display_name: displayName,
+            current_streak: streak,
+            total_hearts: chowHearts,
+            is_public: newOptIn,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'pet_id' });
+          setLeaderboardOptIn(newOptIn);
+          setIsOnLeaderboard(true);
+          setSavingLeaderboard(false);
+          await fetchData();
+        }}
+        disabled={savingLeaderboard}
+        style={{
+          padding: '8px 14px',
+          background: leaderboardOptIn ? 'rgba(239,68,68,0.1)' : '#5dcaa5',
+          color: leaderboardOptIn ? '#f87171' : '#fff',
+          border: leaderboardOptIn ? '1px solid rgba(239,68,68,0.3)' : 'none',
+          borderRadius: 8, fontSize: 12, fontWeight: 700,
+          cursor: 'pointer', fontFamily: 'inherit',
+          flexShrink: 0,
+        }}
+      >
+        {savingLeaderboard ? '...' : leaderboardOptIn ? 'Opt out' : 'Join'}
+      </button>
+    </div>
+
+    {/* Display name input */}
+    {leaderboardOptIn && (
+      <div style={{ marginBottom: 16 }}>
+        <input
+          type="text"
+          value={ownerDisplayName}
+          onChange={e => setOwnerDisplayName(e.target.value)}
+          onBlur={async () => {
+            if (!ownerDisplayName.trim()) return;
+            const supabase = createSupabaseBrowserClient();
+            await supabase.from('pet_leaderboard')
+              .update({ owner_display_name: ownerDisplayName })
+              .eq('pet_id', pet.id);
+          }}
+          placeholder="Your display name (e.g. Cape Town Dog Mom)"
+          style={{
+            width: '100%', padding: '10px 14px',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(196,122,58,0.2)',
+            borderRadius: 10, color: '#f0ebe4',
+            fontSize: 13, fontFamily: 'inherit',
+            boxSizing: 'border-box',
+          }}
+        />
+      </div>
+    )}
+
+    {/* Leaderboard list */}
+    {leaderboard.length === 0 ? (
+      <div style={{ textAlign: 'center', padding: '20px 0' }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}>🏆</div>
+        <p style={{ fontSize: 13, color: '#6a5040', lineHeight: 1.6 }}>
+          No pets on the leaderboard yet.<br />
+          Be the first SA pet to join!
+        </p>
+      </div>
+    ) : (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {leaderboard.map((entry, i) => {
+          const isMe = entry.pet_name === pet.name;
+          const medals = ['🥇', '🥈', '🥉'];
+          const speciesEmoji = entry.pet_species?.toLowerCase().includes('cat') ? '🐈' : '🐕';
+          return (
+            <div key={entry.id} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 14px',
+              background: isMe ? 'rgba(196,122,58,0.1)' : 'rgba(255,255,255,0.03)',
+              border: isMe ? '1px solid rgba(196,122,58,0.3)' : '0.5px solid rgba(255,255,255,0.06)',
+              borderRadius: 10,
+            }}>
+              <div style={{ fontSize: 18, width: 24, textAlign: 'center', flexShrink: 0 }}>
+                {i < 3 ? medals[i] : `${i + 1}.`}
+              </div>
+              <div style={{ fontSize: 18, flexShrink: 0 }}>{speciesEmoji}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: isMe ? '#c47a3a' : '#d0b898', marginBottom: 1 }}>
+                  {entry.pet_name} {isMe ? '(you)' : ''}
+                </div>
+                <div style={{ fontSize: 11, color: '#6a5040' }}>
+                  {entry.owner_display_name || 'SA Pet Parent'}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#c47a3a' }}>🔥 {entry.current_streak}</div>
+                <div style={{ fontSize: 10, color: '#6a5040' }}>day streak</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
 )}
 {/* ── On This Day ── */}
 {activeTab === 'memories' && (() => {
