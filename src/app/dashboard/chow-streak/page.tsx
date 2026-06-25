@@ -22,6 +22,7 @@ interface ChowLog {
   pantry_days_remaining?: number;
   mood_emoji?: string;
   mood_word?: string;
+  water_intake?: string;
 }
 
 // ── Pet reaction quotes ──
@@ -1000,6 +1001,9 @@ const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);
 const [triviaAnswered, setTriviaAnswered] = useState<'correct' | 'wrong' | null>(null);
 const [triviaStreakCount, setTriviaStreakCount] = useState<number>(0);
 const [showTriviaShareCard, setShowTriviaShareCard] = useState<boolean>(false);
+const [showWaterModal, setShowWaterModal] = useState<boolean>(false);
+const [waterIntake, setWaterIntake] = useState<string | null>(null);
+const [waterAlert, setWaterAlert] = useState<boolean>(false);
 const [triviaSelected, setTriviaSelected] = useState<number | null>(null);
 const [leaderboard, setLeaderboard] = useState<Array<{
   id: string;
@@ -1159,6 +1163,13 @@ const { data: triviaLogData } = await supabase
 
 const triviaStreak = calcTriviaStreak(triviaLogData || []);
 setTriviaStreakCount(triviaStreak);
+const recentWaterLogs = (allLogs || [])
+  .slice(0, 7)
+  .map(l => l.water_intake);
+const concerningWater = recentWaterLogs.filter(w => w === 'More than usual' || w === 'Much more than usual');
+if (concerningWater.length >= 7) {
+  setWaterAlert(true);
+}
 
 const todayCheck = new Date().toDateString();
 const answeredToday = localStorage.getItem('trivia_answered_' + petsData.id);
@@ -1290,6 +1301,7 @@ if (answeredToday === todayCheck) {
     .eq('id', lastLoggedId);
   setSavedMoodEmoji(selectedMoodEmoji);
   setShowMoodJournal(false);
+  setShowWaterModal(true);
   setSelectedMoodEmoji(null);
   setSelectedMoodWord('');
   await fetchData();
@@ -1906,6 +1918,79 @@ function handleGenerateStory() {
     </div>
   );
 })()}
+
+{/* ── Water Intake Modal ── */}
+{showWaterModal && pet && (
+  <div style={{
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 1000, padding: '0 24px',
+  }}>
+    <div style={{
+      background: '#1e1e2e', borderRadius: 20, padding: '28px 24px',
+      width: '100%', maxWidth: 400,
+      border: '1px solid rgba(255,255,255,0.08)',
+    }}>
+      <p style={{ fontSize: 16, fontWeight: 700, color: '#e8d5b7', marginBottom: 6 }}>
+        💧 How much did {pet.name} drink today?
+      </p>
+      <p style={{ fontSize: 13, color: '#a08060', marginBottom: 20 }}>
+        Tracking water helps catch early health signs.
+      </p>
+      {['Normal', 'More than usual', 'Much more than usual', 'Barely touched it'].map(option => (
+        <button
+          key={option}
+          onClick={async () => {
+            const supabase = createSupabaseBrowserClient();
+            await supabase.from('chow_logs')
+              .update({ water_intake: option })
+              .eq('id', lastLoggedId);
+            setWaterIntake(option);
+            setShowWaterModal(false);
+          }}
+          style={{
+            width: '100%', padding: '12px 16px', marginBottom: 10,
+            borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
+            background: 'rgba(255,255,255,0.04)', color: '#e8d5b7',
+            fontSize: 14, cursor: 'pointer', textAlign: 'left',
+            fontFamily: 'inherit',
+          }}
+        >
+          {option}
+        </button>
+      ))}
+      <button
+        onClick={() => setShowWaterModal(false)}
+        style={{
+          width: '100%', padding: '10px', borderRadius: 10,
+          border: 'none', background: 'none', color: '#a08060',
+          fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        Skip
+      </button>
+    </div>
+  </div>
+)}
+
+{/* ── Water Alert ── */}
+{activeTab === 'today' && waterAlert && pet && (
+  <div className="cs-card" style={{
+    padding: '20px 24px',
+    border: '1px solid rgba(251,191,36,0.3)',
+    background: 'rgba(251,191,36,0.05)',
+  }}>
+    <p style={{ fontSize: 13, color: '#fbbf24', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+      💧 Heads up
+    </p>
+    <p style={{ fontSize: 14, color: '#e8d5b7', lineHeight: 1.6, marginBottom: 12 }}>
+      {pet.name} has been drinking more than usual for 7 days in a row. This can be an early sign of kidney or thyroid issues — worth mentioning to your vet at your next visit.
+    </p>
+    <p style={{ fontSize: 12, color: '#a08060' }}>
+      This is not a diagnosis — just a helpful pattern VuraPet noticed. 🐾
+    </p>
+  </div>
+)}
 
 {/* ── Trivia Share Card ── */}
 {activeTab === 'today' && showTriviaShareCard && (() => {
