@@ -1906,6 +1906,39 @@ function handleGenerateStory() {
   );
 })()}
 
+{/* ── Trivia Streak Card ── */}
+{activeTab === 'today' && triviaStreakCount > 0 && (
+  <div className="cs-card" style={{ padding: '20px 24px' }}>
+    <p style={{ fontSize: 13, color: '#a08060', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+      🔥 Trivia Streak
+    </p>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      <span style={{ fontSize: 28, fontWeight: 800, color: '#f59e0b' }}>{triviaStreakCount} days</span>
+      {triviaStreakCount >= 30
+        ? <span style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>🎓 Pet Professor</span>
+        : triviaStreakCount >= 7
+        ? <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b' }}>🧠 Pet Genius</span>
+        : <span style={{ fontSize: 13, color: '#a08060' }}>Next badge at 7 days</span>}
+    </div>
+    <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 99, height: 8, overflow: 'hidden' }}>
+      <div style={{
+        height: '100%',
+        borderRadius: 99,
+        background: triviaStreakCount >= 7 ? '#a78bfa' : '#f59e0b',
+        width: `${Math.min((triviaStreakCount / (triviaStreakCount >= 7 ? 30 : 7)) * 100, 100)}%`,
+        transition: 'width 0.4s ease',
+      }} />
+    </div>
+    <p style={{ fontSize: 12, color: '#a08060', marginTop: 8 }}>
+      {triviaStreakCount >= 30
+        ? '🎓 Maximum badge achieved — you\'re a legend!'
+        : triviaStreakCount >= 7
+        ? `${30 - triviaStreakCount} more days to Pet Professor 🎓`
+        : `${7 - triviaStreakCount} more days to Pet Genius 🧠`}
+    </p>
+  </div>
+)}
+
 {/* ── Daily Trivia ── */}
 {activeTab === 'today' && pet && (() => {
   const trivia = getDailyTrivia(pet.species, pet.breed);
