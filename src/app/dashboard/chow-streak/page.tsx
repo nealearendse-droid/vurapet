@@ -999,6 +999,7 @@ const [lastLoggedId, setLastLoggedId] = useState<string | null>(null);
 const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);
 const [triviaAnswered, setTriviaAnswered] = useState<'correct' | 'wrong' | null>(null);
 const [triviaStreakCount, setTriviaStreakCount] = useState<number>(0);
+const [showTriviaShareCard, setShowTriviaShareCard] = useState<boolean>(false);
 const [triviaSelected, setTriviaSelected] = useState<number | null>(null);
 const [leaderboard, setLeaderboard] = useState<Array<{
   id: string;
@@ -1906,6 +1907,45 @@ function handleGenerateStory() {
   );
 })()}
 
+{/* ── Trivia Share Card ── */}
+{activeTab === 'today' && showTriviaShareCard && (() => {
+  const trivia = getDailyTrivia(pet.species, pet.breed);
+  const badge = triviaStreakCount >= 30 ? '🎓 Pet Professor' : triviaStreakCount >= 7 ? '🧠 Pet Genius' : null;
+  return (
+    <div className="cs-card" style={{ padding: '20px 24px', border: '1px solid rgba(93,202,165,0.3)', background: 'rgba(93,202,165,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <p style={{ fontSize: 13, color: '#5dcaa5', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          🎉 Share your win!
+        </p>
+        <button onClick={() => setShowTriviaShareCard(false)} style={{ background: 'none', border: 'none', color: '#a08060', fontSize: 18, cursor: 'pointer' }}>×</button>
+      </div>
+      <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
+        <p style={{ fontSize: 13, color: '#e8d5b7', fontWeight: 600, marginBottom: 6 }}>🧠 {trivia.q}</p>
+        <p style={{ fontSize: 12, color: '#a08060', lineHeight: 1.6 }}>💡 {trivia.fact}</p>
+        {badge && <p style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700, marginTop: 8 }}>{badge} — {triviaStreakCount} day streak!</p>}
+        <p style={{ fontSize: 11, color: '#a08060', marginTop: 8 }}>— {pet.name} & I on VuraPet 🐾</p>
+      </div>
+      <button
+        onClick={async () => {
+          const text = `🧠 Daily Pet Trivia on VuraPet!\n\n"${trivia.q}"\n\n💡 ${trivia.fact}${badge ? `\n\n${badge} — ${triviaStreakCount} day streak!` : ''}\n\n— ${pet.name} & I 🐾\nvurapet.co.za`;
+          if (navigator.share) {
+            await navigator.share({ title: 'VuraPet Trivia', text });
+          } else {
+            await navigator.clipboard.writeText(text);
+            alert('Copied to clipboard!');
+          }
+        }}
+        style={{
+          width: '100%', padding: '12px', borderRadius: 10, border: 'none',
+          background: '#5dcaa5', color: '#1a1a2e', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+        }}
+      >
+        Share 🐾
+      </button>
+    </div>
+  );
+})()}
+
 {/* ── Trivia Streak Card ── */}
 {activeTab === 'today' && triviaStreakCount > 0 && (
   <div className="cs-card" style={{ padding: '20px 24px' }}>
@@ -2007,6 +2047,7 @@ await supabase.from('trivia_logs').insert({
   question_text: trivia.q,
 });                  
 localStorage.setItem('trivia_answered_' + pet.id, new Date().toDateString());
+if (correct) setShowTriviaShareCard(true);
                 }
               }}
               style={{
