@@ -104,26 +104,226 @@ const TRIVIA_BANK: Record<string, { q: string; options: string[]; answer: number
     { q: "What group do Yorkshire Terriers belong to?", options: ["Terrier group", "Toy group", "Hound group", "Working group"], answer: 1, fact: "Despite their terrier heritage, Yorkies are classified in the Toy group due to their small size." },
     { q: "Which famous Yorkie served as a WWII therapy dog?", options: ["Toto", "Smoky", "Tiny", "Pip"], answer: 1, fact: "Smoky the Yorkie served with US troops in WWII, boosting morale and even running communication wire through pipes." },
   ],
+  german_shepherd: [
+    { q: "What were German Shepherds originally bred for?", options: ["Herding sheep", "Guarding estates", "Police work", "Hunting"], answer: 0, fact: "German Shepherds were bred in the 1890s by Max von Stephanitz specifically for herding and working intelligence." },
+    { q: "What is the average lifespan of a German Shepherd?", options: ["7–9 years", "9–13 years", "13–15 years", "15–18 years"], answer: 1, fact: "German Shepherds typically live 9–13 years with good care. They are prone to hip and elbow dysplasia." },
+    { q: "What famous movie dog was a German Shepherd?", options: ["Lassie", "Rin Tin Tin", "Beethoven", "Hachiko"], answer: 1, fact: "Rin Tin Tin was a German Shepherd who starred in 27 Hollywood films and became one of the most famous dogs in history." },
+    { q: "What is a common health issue in German Shepherds?", options: ["Hip dysplasia", "Breathing problems", "Eye issues", "Skin allergies"], answer: 0, fact: "Hip dysplasia affects up to 20% of German Shepherds. It's a genetic condition where the hip joint doesn't fit properly." },
+    { q: "What colour is the most common German Shepherd coat?", options: ["All black", "Tan and black", "White", "Silver"], answer: 1, fact: "Tan with a black saddle is the most recognised colour, though they also come in black, sable, and bi-colour." },
+  ],
+  labrador_retriever: [
+    { q: "What were Labradors originally bred for?", options: ["Bird retrieval", "Herding", "Guarding", "Ratting"], answer: 0, fact: "Labradors were bred in Newfoundland to help fishermen retrieve nets and catch fish." },
+    { q: "How long do Labradors typically live?", options: ["8–10 years", "10–12 years", "12–14 years", "14–16 years"], answer: 1, fact: "Labradors usually live 10–12 years. They are prone to obesity, hip dysplasia, and joint issues." },
+    { q: "What is the most common colour of Labradors?", options: ["Black", "Yellow", "Chocolate", "Silver"], answer: 0, fact: "Black is the most common Labrador colour, followed by yellow and chocolate." },
+    { q: "What makes Labradors natural swimmers?", options: ["Long legs", "Webbed toes and water-resistant coat", "Large lungs", "Dense muscle"], answer: 1, fact: "Labs have webbed toes and a water-resistant double coat — they were born to swim!" },
+    { q: "How long have Labradors been the most popular breed in the US?", options: ["5 years", "10 years", "20 years", "Over 30 years"], answer: 3, fact: "Labradors held the #1 spot in the US for over 30 consecutive years — the longest run of any breed in history." },
+  ],
+  boerboel: [
+    { q: "What is the Boerboel's country of origin?", options: ["South Africa", "Namibia", "Botswana", "Zimbabwe"], answer: 0, fact: "The Boerboel is a South African breed developed by Dutch settlers in the 17th century as a farm guardian." },
+    { q: "What is the Boerboel's primary historical purpose?", options: ["Herding cattle", "Guarding farms", "Hunting lions", "Tracking"], answer: 1, fact: "Boerboels were bred to protect farms from predators like lions, hyenas, and leopards in South Africa." },
+    { q: "How large do Boerboels get?", options: ["20–30 kg", "30–45 kg", "45–60 kg", "60–90 kg"], answer: 3, fact: "Boerboels can weigh up to 90 kg and stand over 70 cm tall at the shoulder — one of the largest breeds." },
+    { q: "What does 'Boerboel' mean in Afrikaans?", options: ["Farm dog", "Farmer's dog", "Big dog", "Guard dog"], answer: 1, fact: "'Boerboel' translates to 'farmer's dog' in Afrikaans, reflecting their role on South African farms." },
+    { q: "What is the Boerboel's average lifespan?", options: ["5–7 years", "8–10 years", "11–13 years", "14–16 years"], answer: 1, fact: "Boerboels typically live 8–10 years. Their large size contributes to a shorter lifespan." },
+  ],
+  french_bulldog: [
+    { q: "What is the French Bulldog's most distinctive feature?", options: ["Long ears", "Bat-like ears", "Curly tail", "Blue eyes"], answer: 1, fact: "French Bulldogs have distinctive bat-like ears that stand upright — a trademark of the breed." },
+    { q: "How much do French Bulldogs typically weigh?", options: ["5–10 kg", "10–15 kg", "15–20 kg", "20–25 kg"], answer: 1, fact: "Frenchies weigh around 10–15 kg, making them sturdy but compact companions." },
+    { q: "What is a common health issue in French Bulldogs?", options: ["Breathing problems", "Hip dysplasia", "Cancer", "Blindness"], answer: 0, fact: "Frenchies are brachycephalic — their flat faces can cause serious breathing difficulties." },
+    { q: "Why were French Bulldogs originally bred?", options: ["Ratting", "Guarding", "Herding", "Companionship"], answer: 0, fact: "French Bulldogs were originally bred in England as smaller bulldogs for ratting before becoming companion dogs in France." },
+    { q: "Why do French Bulldogs often require C-sections?", options: ["They are too small", "Their hips are too narrow", "Puppies are too large", "Health complications"], answer: 1, fact: "Frenchies have narrow hips making natural birth difficult. Litter sizes are usually just 2–4 puppies." },
+  ],
+  poodle: [
+    { q: "What country did Poodles originate from?", options: ["France", "Germany", "England", "Italy"], answer: 1, fact: "Poodles actually originated in Germany as water retrievers, though they are strongly associated with France." },
+    { q: "What size categories do Poodles come in?", options: ["Standard & Miniature", "Toy, Miniature, Standard", "Teacup & Standard", "Small, Medium, Large"], answer: 1, fact: "Poodles come in three sizes: Standard (over 38 cm), Miniature (28–38 cm), and Toy (under 28 cm)." },
+    { q: "What were Poodles originally bred for?", options: ["Show dogs", "Water retrieval", "Herding", "Guarding"], answer: 1, fact: "Poodles were bred as water retrievers to fetch ducks and other waterfowl for hunters." },
+    { q: "Why do Poodles have such distinctive haircuts?", options: ["Fashion", "Protection in water", "Heat regulation", "Breed standard"], answer: 1, fact: "The traditional Poodle clip was designed to keep joints and vital organs warm while swimming." },
+    { q: "How often do Poodles need professional grooming?", options: ["Every 2–3 weeks", "Every 4–6 weeks", "Every 8–10 weeks", "Once a year"], answer: 1, fact: "Poodles have continuously growing hair, not fur, and need professional grooming every 4–6 weeks." },
+  ],
+  rottweiler: [
+    { q: "What were Rottweilers originally bred for?", options: ["Guarding", "Herding cattle", "War dogs", "Tracking"], answer: 1, fact: "Rottweilers were used to drive cattle to market and guard money pouches — one of the oldest herding breeds." },
+    { q: "How much do Rottweilers typically weigh?", options: ["20–35 kg", "35–50 kg", "50–60 kg", "60–80 kg"], answer: 2, fact: "Male Rottweilers can weigh up to 60 kg, making them powerful and muscular working dogs." },
+    { q: "What is a common health issue in Rottweilers?", options: ["Hip dysplasia", "Breathing problems", "Eye issues", "Skin allergies"], answer: 0, fact: "Rottweilers, like many large breeds, are prone to hip and elbow dysplasia." },
+    { q: "What colour is a Rottweiler's coat?", options: ["Tan and black", "Black and tan", "All black", "Grey"], answer: 1, fact: "Rottweilers have a distinct black coat with tan markings on their cheeks, legs, and chest." },
+    { q: "What is the average lifespan of a Rottweiler?", options: ["5–8 years", "8–10 years", "10–12 years", "12–14 years"], answer: 1, fact: "Rottweilers typically live 8–10 years, shorter than smaller breeds due to their size." },
+  ],
+  dachshund: [
+    { q: "What were Dachshunds originally bred for?", options: ["Herding", "Hunting badgers", "Guarding", "Retrieving"], answer: 1, fact: "Dachshund means 'badger dog' in German. Their long bodies let them chase badgers into burrows." },
+    { q: "What size varieties do Dachshunds come in?", options: ["Standard only", "Standard and Miniature", "Toy and Standard", "Mini, Standard, Giant"], answer: 1, fact: "Dachshunds come in Standard and Miniature sizes, and three coat types: smooth, long, and wire-haired." },
+    { q: "What health issue are Dachshunds most prone to?", options: ["Hip dysplasia", "Back problems (IVDD)", "Heart disease", "Blindness"], answer: 1, fact: "Dachshunds are prone to Intervertebral Disc Disease (IVDD) due to their long spines and short legs." },
+    { q: "How long do Dachshunds typically live?", options: ["8–10 years", "10–12 years", "12–16 years", "16–20 years"], answer: 2, fact: "Dachshunds are long-lived dogs, often reaching 12–16 years. One Dachshund named Chanel lived to 21!" },
+    { q: "What is a Dachshund's nickname?", options: ["Sausage dog", "Hot dog", "Wiener dog", "All of the above"], answer: 3, fact: "Dachshunds are affectionately called sausage dogs, hot dogs, and wiener dogs worldwide — all thanks to their iconic shape." },
+  ],
+  golden_retriever: [
+    { q: "Where did Golden Retrievers originate?", options: ["USA", "Canada", "Scotland", "England"], answer: 2, fact: "Golden Retrievers were developed in Scotland in the 1860s by Lord Tweedmouth for retrieving game birds." },
+    { q: "What were Golden Retrievers bred for?", options: ["Herding", "Guarding", "Retrieving game", "Racing"], answer: 2, fact: "Goldens were bred to retrieve shot waterfowl — their soft mouths mean they can carry game without damaging it." },
+    { q: "How long do Golden Retrievers typically live?", options: ["8–10 years", "10–12 years", "12–14 years", "14–16 years"], answer: 1, fact: "Golden Retrievers live 10–12 years on average. They are unfortunately prone to certain cancers." },
+    { q: "What is Golden Retrievers most famous trait?", options: ["Speed", "Their gentle, friendly temperament", "Protective instinct", "Independence"], answer: 1, fact: "Golden Retrievers are consistently ranked among the friendliest breeds. They almost never show aggression." },
+    { q: "What colour can a Golden Retriever's coat be?", options: ["Only golden", "Golden to cream", "Golden to red", "All shades from cream to dark red"], answer: 3, fact: "Golden Retrievers range from pale cream to dark reddish gold. All shades are accepted by kennel clubs." },
+  ],
+  shih_tzu: [
+    { q: "Where did the Shih Tzu originate?", options: ["Japan", "China", "Tibet", "Korea"], answer: 2, fact: "Shih Tzus originated in Tibet and were gifted to Chinese emperors. They lived as royal lap dogs for centuries." },
+    { q: "What does 'Shih Tzu' mean in Chinese?", options: ["Little lion", "Royal dog", "Flower face", "Sacred dog"], answer: 0, fact: "'Shih Tzu' means 'little lion' in Chinese, though they are anything but fierce — they're pure love." },
+    { q: "How long do Shih Tzus typically live?", options: ["8–10 years", "10–12 years", "10–16 years", "16–18 years"], answer: 2, fact: "Shih Tzus are long-lived dogs, often reaching 10–16 years. Some live well into their late teens." },
+    { q: "What is a common health issue in Shih Tzus?", options: ["Hip dysplasia", "Eye problems", "Heart disease", "Joint issues"], answer: 1, fact: "Shih Tzus have large, prominent eyes that are prone to injury and conditions like dry eye and corneal ulcers." },
+    { q: "What group do Shih Tzus belong to?", options: ["Toy group", "Terrier group", "Hound group", "Working group"], answer: 0, fact: "Shih Tzus are classified in the Toy group due to their small size and companion dog history." },
+  ],
+  siberian_husky: [
+    { q: "What were Siberian Huskies originally bred for?", options: ["Guarding", "Sled pulling", "Hunting", "Herding reindeer"], answer: 1, fact: "Huskies were bred by the Chukchi people of Siberia to pull sleds over long distances in extreme cold." },
+    { q: "What is unique about a Husky's eyes?", options: ["They glow in the dark", "They can be two different colours", "They change colour with age", "They have no pupils"], answer: 1, fact: "Huskies can have heterochromia — two different coloured eyes. It's completely normal and not a health issue." },
+    { q: "How cold can Huskies tolerate?", options: ["Down to -10°C", "Down to -30°C", "Down to -50°C", "Down to -60°C"], answer: 2, fact: "Siberian Huskies can withstand temperatures as low as -50°C thanks to their double-layered coat." },
+    { q: "Do Huskies bark a lot?", options: ["Yes, constantly", "No, they howl instead", "They are completely silent", "Only at night"], answer: 1, fact: "Huskies rarely bark but are famous for howling and 'talking' — they are one of the most vocal breeds." },
+    { q: "How long do Siberian Huskies typically live?", options: ["8–10 years", "10–12 years", "12–15 years", "15–18 years"], answer: 2, fact: "Huskies are generally healthy dogs living 12–15 years, partly due to their active working dog heritage." },
+  ],
+  border_collie: [
+    { q: "What are Border Collies most famous for?", options: ["Speed", "Intelligence and herding", "Swimming", "Guarding"], answer: 1, fact: "Border Collies are widely considered the most intelligent dog breed in the world." },
+    { q: "What is the 'eye' in Border Collie herding?", options: ["A training technique", "An intense stare used to control livestock", "A hand signal", "A whistle command"], answer: 1, fact: "Border Collies use a hypnotic intense stare called 'the eye' to control and move livestock without barking." },
+    { q: "How much exercise do Border Collies need daily?", options: ["30 minutes", "1 hour", "2+ hours", "4+ hours"], answer: 2, fact: "Border Collies need at least 2 hours of vigorous exercise daily. Without it they can develop destructive behaviours." },
+    { q: "What is the most words a Border Collie has ever learned?", options: ["100", "500", "1000", "Over 1000"], answer: 3, fact: "A Border Collie named Chaser learned over 1,000 words — the largest vocabulary ever recorded in a non-human animal." },
+    { q: "How long do Border Collies typically live?", options: ["8–10 years", "10–12 years", "12–15 years", "15–17 years"], answer: 2, fact: "Border Collies are healthy, active dogs that typically live 12–15 years." },
+  ],
+  chihuahua: [
+    { q: "What is the Chihuahua's country of origin?", options: ["Mexico", "Spain", "USA", "Brazil"], answer: 0, fact: "Chihuahuas are named after the Mexican state of Chihuahua where they were discovered in the mid-1800s." },
+    { q: "What is the Chihuahua's claim to fame in the dog world?", options: ["Fastest dog", "Smallest dog breed", "Oldest dog breed", "Loudest bark"], answer: 1, fact: "The Chihuahua is the world's smallest dog breed, yet has one of the biggest personalities." },
+    { q: "How long do Chihuahuas typically live?", options: ["8–10 years", "10–12 years", "12–20 years", "20–25 years"], answer: 2, fact: "Chihuahuas are one of the longest-living breeds, often reaching 15–20 years with good care." },
+    { q: "What health issue are Chihuahuas most prone to?", options: ["Hip dysplasia", "Dental problems", "Eye issues", "Heart disease"], answer: 1, fact: "Chihuahuas have tiny mouths that cause overcrowding, making dental disease their #1 health issue." },
+    { q: "What is a 'molera' in Chihuahuas?", options: ["A type of bark", "A soft spot on their skull", "A coat pattern", "A health condition"], answer: 1, fact: "Many Chihuahuas are born with a molera — a soft spot on their skull similar to a human baby's fontanelle." },
+  ],
+  great_dane: [
+    { q: "What country did Great Danes originate from?", options: ["Denmark", "Germany", "France", "England"], answer: 1, fact: "Despite the name, Great Danes originated in Germany where they were bred to hunt wild boar." },
+    { q: "What is the Great Dane's claim to fame?", options: ["Fastest dog", "World's tallest dog breed", "Most intelligent", "Loudest bark"], answer: 1, fact: "Great Danes hold the record for the world's tallest dog. Zeus, a Great Dane, stood 111.8 cm tall." },
+    { q: "How long do Great Danes typically live?", options: ["5–7 years", "7–10 years", "10–12 years", "12–14 years"], answer: 1, fact: "Great Danes have a short lifespan of 7–10 years — their giant size accelerates ageing." },
+    { q: "What health issue are Great Danes most prone to?", options: ["Hip dysplasia", "Bloat (GDV)", "Breathing problems", "Eye issues"], answer: 1, fact: "Bloat (Gastric Dilatation-Volvulus) is the #1 killer of Great Danes. It can be fatal within hours." },
+    { q: "What famous cartoon dog is a Great Dane?", options: ["Pluto", "Goofy", "Scooby-Doo", "Clifford"], answer: 2, fact: "Scooby-Doo is based on a Great Dane! Creator Iwao Takamoto designed him after studying the breed." },
+  ],
+  jack_russell: [
+    { q: "What were Jack Russell Terriers originally bred for?", options: ["Herding", "Fox hunting", "Ratting", "Guarding"], answer: 1, fact: "Jack Russells were bred by Reverend John Russell in the 1800s specifically for fox hunting." },
+    { q: "How much energy do Jack Russells have?", options: ["Very low", "Moderate", "High", "Extremely high"], answer: 3, fact: "Jack Russells have almost boundless energy and need significant daily exercise and mental stimulation." },
+    { q: "How long do Jack Russell Terriers typically live?", options: ["8–10 years", "10–12 years", "13–16 years", "16–20 years"], answer: 2, fact: "Jack Russells are robust little dogs that often live 13–16 years with proper care." },
+    { q: "What is a Jack Russell's most notable trait?", options: ["Gentle nature", "Fearless and tenacious personality", "Love of water", "Quiet disposition"], answer: 1, fact: "Jack Russells are fearless far beyond their size — a trait bred in them to face foxes in their dens." },
+    { q: "What coat types do Jack Russells come in?", options: ["Smooth only", "Rough only", "Smooth, rough, and broken", "Long only"], answer: 2, fact: "Jack Russells come in three coat types: smooth, rough, and broken (a mix of both)." },
+  ],
+  cocker_spaniel: [
+    { q: "What were Cocker Spaniels originally bred for?", options: ["Herding", "Hunting woodcock", "Guarding", "Racing"], answer: 1, fact: "Cocker Spaniels were bred to flush and retrieve woodcock — that's where 'Cocker' comes from." },
+    { q: "What is the Cocker Spaniel most famous for physically?", options: ["Their speed", "Their long, silky ears", "Their size", "Their eyes"], answer: 1, fact: "Cocker Spaniels have beautiful long, silky ears that require regular cleaning to prevent ear infections." },
+    { q: "How long do Cocker Spaniels typically live?", options: ["8–10 years", "10–12 years", "12–15 years", "15–18 years"], answer: 2, fact: "Cocker Spaniels are generally healthy dogs living 12–15 years." },
+    { q: "What health issue are Cocker Spaniels prone to?", options: ["Hip dysplasia", "Ear infections", "Breathing problems", "Joint issues"], answer: 1, fact: "Their long floppy ears trap moisture and debris, making ear infections the most common health issue." },
+    { q: "What famous movie featured two Cocker Spaniels?", options: ["Beethoven", "Lady and the Tramp", "101 Dalmatians", "Lassie"], answer: 1, fact: "Lady in 'Lady and the Tramp' is a Cocker Spaniel — the breed became hugely popular after the 1955 Disney film." },
+  ],
+  boxer: [
+    { q: "What country did Boxers originate from?", options: ["England", "USA", "Germany", "France"], answer: 2, fact: "Boxers were developed in Germany in the late 1800s from the now-extinct Bullenbeisser breed." },
+    { q: "Why are Boxers called 'Boxers'?", options: ["They were used in boxing matches", "They use their front paws like a boxer", "A boxer owned the first one", "It's a German word"], answer: 1, fact: "Boxers use their front paws to play and defend themselves in a way that resembles a boxer's stance." },
+    { q: "What is a common health issue in Boxers?", options: ["Hip dysplasia", "Heart conditions", "Eye problems", "Skin issues"], answer: 1, fact: "Boxers are prone to heart conditions including Arrhythmogenic Right Ventricular Cardiomyopathy (ARVC)." },
+    { q: "How long do Boxers typically live?", options: ["6–8 years", "8–10 years", "10–12 years", "12–14 years"], answer: 2, fact: "Boxers typically live 10–12 years. They are considered puppies until about 3 years old — late developers!" },
+    { q: "What were Boxers originally bred for?", options: ["Herding", "Bull baiting and hunting", "Guarding estates", "Racing"], answer: 1, fact: "Boxers were originally bred for bull baiting and hunting large game like boar and bear." },
+  ],
+  doberman: [
+    { q: "Who created the Doberman breed?", options: ["A German soldier", "Karl Friedrich Louis Dobermann", "A police chief", "A royal family"], answer: 1, fact: "Karl Friedrich Louis Dobermann, a German tax collector who needed protection on his rounds, created the breed in the 1880s." },
+    { q: "What were Dobermans originally bred for?", options: ["Herding", "Personal protection", "Hunting", "Racing"], answer: 1, fact: "Dobermans were bred specifically as personal protection dogs — they are one of the most purpose-bred breeds ever." },
+    { q: "How fast can a Doberman run?", options: ["30 km/h", "40 km/h", "50 km/h", "32 km/h"], answer: 2, fact: "Dobermans can reach speeds of up to 50 km/h, making them one of the fastest dog breeds." },
+    { q: "What health issue are Dobermans most prone to?", options: ["Hip dysplasia", "Dilated Cardiomyopathy (heart disease)", "Breathing problems", "Eye issues"], answer: 1, fact: "Dilated Cardiomyopathy affects up to 58% of Dobermans. Regular cardiac screening is essential." },
+    { q: "How long do Dobermans typically live?", options: ["6–8 years", "10–13 years", "13–15 years", "15–18 years"], answer: 1, fact: "Dobermans typically live 10–13 years. Early cardiac screening can significantly extend their healthy years." },
+  ],
+  maltese: [
+    { q: "Where did the Maltese breed originate?", options: ["Italy", "Malta", "Greece", "Spain"], answer: 1, fact: "The Maltese is one of the oldest toy breeds, originating from Malta over 2,000 years ago." },
+    { q: "What is unique about the Maltese coat?", options: ["It is curly", "It is pure white and silky", "It sheds heavily", "It has two layers"], answer: 1, fact: "Maltese have a pure white, silky single-layer coat that doesn't shed — making them a popular hypoallergenic choice." },
+    { q: "How long do Maltese dogs typically live?", options: ["8–10 years", "10–12 years", "12–15 years", "15–18 years"], answer: 2, fact: "Maltese are long-lived dogs often reaching 12–15 years, with some living well into their late teens." },
+    { q: "What were Maltese dogs historically kept for?", options: ["Ratting", "Herding", "Companionship", "Guarding"], answer: 2, fact: "Maltese were exclusively companion dogs for royalty and aristocracy throughout history." },
+    { q: "How much do Maltese dogs weigh?", options: ["1–2 kg", "2–4 kg", "4–6 kg", "6–8 kg"], answer: 1, fact: "Maltese typically weigh just 2–4 kg, making them one of the smallest dog breeds in the world." },
+  ],
+  boston_terrier: [
+    { q: "What country did the Boston Terrier originate from?", options: ["England", "Canada", "USA", "France"], answer: 2, fact: "The Boston Terrier is one of the few breeds genuinely made in the USA, developed in Boston in the 1870s." },
+    { q: "What is the Boston Terrier's nickname?", options: ["American Gentleman", "City Dog", "Boston Bull", "Tuxedo Dog"], answer: 0, fact: "The Boston Terrier is called the 'American Gentleman' because their markings look like a tuxedo." },
+    { q: "What health issue are Boston Terriers prone to?", options: ["Hip dysplasia", "Breathing problems", "Heart disease", "Joint issues"], answer: 1, fact: "Boston Terriers are brachycephalic (flat-faced) and can struggle with breathing, especially in heat." },
+    { q: "How long do Boston Terriers typically live?", options: ["8–10 years", "11–13 years", "13–15 years", "15–18 years"], answer: 1, fact: "Boston Terriers typically live 11–13 years and are known for their lively, affectionate personalities." },
+    { q: "What two breeds were crossed to create the Boston Terrier?", options: ["Bulldog and Pug", "English Bulldog and White English Terrier", "French Bulldog and Terrier", "Boxer and Terrier"], answer: 1, fact: "Boston Terriers were created by crossing an English Bulldog with a now-extinct White English Terrier." },
+  ],
+  australian_shepherd: [
+    { q: "Despite the name, where did Australian Shepherds actually originate?", options: ["Australia", "USA", "Basque region of Europe", "New Zealand"], answer: 2, fact: "Australian Shepherds were actually developed in the Basque region of Europe before being refined in the USA." },
+    { q: "What are Australian Shepherds bred for?", options: ["Companionship", "Herding livestock", "Guarding", "Hunting"], answer: 1, fact: "Aussies are working herding dogs with extraordinary intelligence and near-limitless energy." },
+    { q: "What is unique about some Australian Shepherds' eyes?", options: ["They are always blue", "They can have marbled or two-coloured eyes", "They glow in the dark", "They change colour"], answer: 1, fact: "Many Aussies have striking marbled (merle) eyes or heterochromia — two different coloured eyes." },
+    { q: "How much exercise do Australian Shepherds need?", options: ["30 minutes", "1 hour", "2 hours", "2+ hours"], answer: 3, fact: "Australian Shepherds need 2+ hours of vigorous exercise daily plus mental stimulation — they are not apartment dogs." },
+    { q: "What is the Australian Shepherd's most valued trait?", options: ["Loyalty", "Speed", "Intelligence and work ethic", "Gentle nature"], answer: 2, fact: "Aussies are ranked among the top 5 most intelligent dog breeds and are happiest when they have a job to do." },
+  ],
+  persian: [
+    { q: "What country did Persian cats originate from?", options: ["Egypt", "Persia (Iran)", "Turkey", "China"], answer: 1, fact: "Persian cats originated in Persia (modern-day Iran) and were brought to Europe in the 1600s." },
+    { q: "What is the Persian cat most known for?", options: ["Speed", "Their long, luxurious coat and flat face", "Intelligence", "Hunting ability"], answer: 1, fact: "Persians are famous for their long, flowing coats and flat (brachycephalic) faces." },
+    { q: "How often do Persian cats need grooming?", options: ["Once a week", "Every 2–3 days", "Daily", "Once a month"], answer: 2, fact: "Persian coats mat easily and require daily brushing to stay tangle-free and healthy." },
+    { q: "What is a common health issue in Persian cats?", options: ["Hip dysplasia", "Breathing and eye problems", "Heart disease", "Joint issues"], answer: 1, fact: "Their flat faces cause breathing difficulties and eye drainage problems that need regular cleaning." },
+    { q: "How long do Persian cats typically live?", options: ["8–10 years", "10–12 years", "12–17 years", "17–20 years"], answer: 2, fact: "Persian cats typically live 12–17 years with proper care and regular veterinary attention." },
+  ],
+  maine_coon: [
+    { q: "Where did the Maine Coon originate?", options: ["Canada", "Maine, USA", "England", "Norway"], answer: 1, fact: "The Maine Coon is native to Maine, USA and is the official state cat of Maine." },
+    { q: "What makes Maine Coons unusual among cats?", options: ["They don't purr", "They love water", "They can't meow", "They are nocturnal"], answer: 1, fact: "Maine Coons are known for their love of water — they'll splash in bowls and even join you in the shower." },
+    { q: "How large do Maine Coons get?", options: ["2–4 kg", "4–6 kg", "6–9 kg", "9–12 kg"], answer: 2, fact: "Maine Coons are one of the largest domestic cat breeds, with males reaching 6–9 kg or more." },
+    { q: "What is unique about a Maine Coon's coat?", options: ["It's naturally oily", "It's water-resistant and multi-layered", "It never sheds", "It changes colour seasonally"], answer: 1, fact: "Maine Coons have a thick, water-resistant multi-layered coat that evolved for harsh New England winters." },
+    { q: "How long do Maine Coons typically live?", options: ["8–10 years", "10–13 years", "12–15 years", "15–20 years"], answer: 2, fact: "Maine Coons are generally healthy cats living 12–15 years. They are prone to HCM (heart condition)." },
+  ],
+  siamese: [
+    { q: "Where did Siamese cats originate?", options: ["China", "Japan", "Thailand (Siam)", "India"], answer: 2, fact: "Siamese cats originated in Thailand, formerly known as Siam, where they were sacred temple cats." },
+    { q: "What is most distinctive about Siamese cats?", options: ["Their size", "Their colour-point coat and blue eyes", "Their silence", "Their independence"], answer: 1, fact: "Siamese have striking colour-point coats (darker ears, face, paws and tail) and vivid blue eyes." },
+    { q: "What are Siamese cats famous for behaviourally?", options: ["Being quiet and aloof", "Being extremely vocal and social", "Being nocturnal", "Being independent"], answer: 1, fact: "Siamese are one of the most vocal cat breeds — they will have full conversations with their owners." },
+    { q: "How long do Siamese cats typically live?", options: ["8–10 years", "10–12 years", "12–20 years", "20+ years"], answer: 2, fact: "Siamese are long-lived cats, often reaching 15–20 years. Some have lived into their mid-20s." },
+    { q: "Why are Siamese kittens born white?", options: ["Genetics", "Temperature-sensitive pigmentation", "They aren't exposed to sunlight yet", "Albinism"], answer: 1, fact: "Siamese colouring is temperature-sensitive. Kittens are born white because the womb is warm — colour develops as they cool." },
+  ],
+  ragdoll: [
+    { q: "Why are Ragdolls called Ragdolls?", options: ["They are floppy when picked up", "They look like ragdolls", "They were found in a ragdoll factory", "Their coat resembles fabric"], answer: 0, fact: "Ragdolls go limp like a ragdoll when picked up — a unique trait that makes them exceptionally gentle and easy to handle." },
+    { q: "What temperament are Ragdolls known for?", options: ["Independent and aloof", "Extremely docile and affectionate", "Energetic and playful", "Nervous and shy"], answer: 1, fact: "Ragdolls are nicknamed 'puppy cats' because they follow their owners around and are extraordinarily gentle." },
+    { q: "How large do Ragdolls get?", options: ["2–4 kg", "4–6 kg", "5–9 kg", "9–12 kg"], answer: 2, fact: "Ragdolls are one of the largest cat breeds, with males reaching 5–9 kg. They take 4 years to fully mature." },
+    { q: "What colour eyes do Ragdolls always have?", options: ["Green", "Yellow", "Blue", "Amber"], answer: 2, fact: "All Ragdolls have stunning blue eyes — it's a breed standard requirement." },
+    { q: "How long do Ragdolls typically live?", options: ["8–10 years", "12–15 years", "15–20 years", "20+ years"], answer: 1, fact: "Ragdolls typically live 12–15 years. They are prone to HCM (hypertrophic cardiomyopathy)." },
+  ],
+  british_shorthair: [
+    { q: "What country did British Shorthairs originate from?", options: ["Scotland", "England", "Ireland", "Wales"], answer: 1, fact: "British Shorthairs are one of England's oldest cat breeds, descended from domestic cats of ancient Rome." },
+    { q: "What is the most famous colour of British Shorthairs?", options: ["White", "Black", "Blue (grey)", "Orange"], answer: 2, fact: "The 'British Blue' — a solid grey-blue coat — is the most iconic and popular British Shorthair colour." },
+    { q: "What famous fictional cat is based on a British Shorthair?", options: ["Tom (Tom & Jerry)", "The Cheshire Cat", "Garfield", "Felix the Cat"], answer: 1, fact: "The Cheshire Cat from Alice in Wonderland is widely believed to be based on a British Shorthair." },
+    { q: "What is the British Shorthair's personality like?", options: ["Very vocal and demanding", "Calm, easygoing and independent", "Hyperactive and playful", "Shy and anxious"], answer: 1, fact: "British Shorthairs are calm, easy-going cats that adapt well to family life without being overly demanding." },
+    { q: "How long do British Shorthairs typically live?", options: ["8–10 years", "12–17 years", "17–20 years", "20+ years"], answer: 1, fact: "British Shorthairs are robust cats that typically live 12–17 years with proper care." },
+  ],
+  sphynx: [
+    { q: "What is most distinctive about the Sphynx cat?", options: ["Their size", "They have no fur", "Their blue eyes", "Their flat face"], answer: 1, fact: "Sphynx cats appear hairless but actually have a fine layer of downy fuzz — like a peach." },
+    { q: "Where did the Sphynx breed originate?", options: ["Egypt", "Canada", "USA", "France"], answer: 1, fact: "Despite the Egyptian name, Sphynx cats originated in Toronto, Canada in 1966 from a natural mutation." },
+    { q: "Why do Sphynx cats need regular baths?", options: ["They smell bad", "Their skin accumulates oils without fur to absorb them", "They sweat excessively", "Vet recommendation"], answer: 1, fact: "Without fur to absorb body oils, Sphynx skin becomes oily and dirty — weekly baths are essential." },
+    { q: "Are Sphynx cats hypoallergenic?", options: ["Yes, completely", "No — allergies are to proteins in saliva not fur", "Yes, because they have no fur", "Only some are"], answer: 1, fact: "Sphynx cats are NOT hypoallergenic. Most cat allergies are caused by the Fel d 1 protein in saliva, not fur." },
+    { q: "What is the Sphynx's body temperature compared to other cats?", options: ["Same", "Slightly cooler", "4 degrees warmer", "Much warmer"], answer: 2, fact: "Sphynx cats run about 4°C warmer than furred cats — they feel like a warm suede hot water bottle!" },
+  ],
   dog: [
     { q: "How many times better is a dog's sense of smell than a human's?", options: ["10 times", "100 times", "10,000 times", "100,000 times"], answer: 3, fact: "Dogs have up to 300 million olfactory receptors — humans have about 6 million. Their smell is extraordinary." },
-    { q: "What is a dog's normal resting heart rate?", options: ["40–60 bpm", "60–80 bpm", "60–140 bpm", "150–200 bpm"], answer: 2, fact: "A healthy dog's resting heart rate ranges from 60–140 bpm depending on their size. Smaller dogs tend to have faster heart rates." },
+    { q: "What is a dog's normal resting heart rate?", options: ["40–60 bpm", "60–80 bpm", "60–140 bpm", "150–200 bpm"], answer: 2, fact: "A healthy dog's resting heart rate ranges from 60–140 bpm depending on their size." },
     { q: "How many teeth does an adult dog have?", options: ["28", "32", "38", "42"], answer: 3, fact: "Adult dogs have 42 permanent teeth. Puppies start with 28 baby teeth that fall out around 3–6 months." },
     { q: "What does it mean when a dog wags its tail to the right?", options: ["They are anxious", "They feel positive", "They want to play", "They are warning you"], answer: 1, fact: "Studies show dogs wag right for positive feelings and left for negative ones. The direction actually matters!" },
-    { q: "What is the most sensitive part of a dog's body?", options: ["Their ears", "Their paws", "Their nose", "Their tail"], answer: 2, fact: "A dog's nose has about 300 million scent receptors and is incredibly sensitive to touch, temperature and moisture." },
-    { q: "At what age are dogs considered seniors?", options: ["3 years", "5 years", "7 years", "10 years"], answer: 2, fact: "Most dogs are considered senior at around 7 years, though larger breeds age faster and may be seniors at 5–6." },
     { q: "How long is a dog's short-term memory?", options: ["30 seconds", "2 minutes", "5 minutes", "10 minutes"], answer: 1, fact: "Dogs have about 2 minutes of short-term memory — but their long-term associative memory is excellent." },
+    { q: "At what age are dogs considered seniors?", options: ["3 years", "5 years", "7 years", "10 years"], answer: 2, fact: "Most dogs are considered senior at around 7 years, though larger breeds age faster." },
+    { q: "Why do dogs tilt their head when you talk to them?", options: ["They are confused", "To hear you better and see your face", "It is a learned behaviour", "They are showing submission"], answer: 1, fact: "Dogs tilt their heads to adjust their ear position for better hearing and to see around their muzzle to read your facial expressions." },
   ],
   cat: [
-    { q: "How many hours a day do cats typically sleep?", options: ["8–10 hours", "10–12 hours", "12–16 hours", "18–20 hours"], answer: 2, fact: "Cats sleep 12–16 hours daily. As obligate carnivores, they conserve energy between hunts — even indoor ones." },
+    { q: "How many hours a day do cats typically sleep?", options: ["8–10 hours", "10–12 hours", "12–16 hours", "18–20 hours"], answer: 2, fact: "Cats sleep 12–16 hours daily. As obligate carnivores, they conserve energy between hunts." },
     { q: "What is a group of cats called?", options: ["A pack", "A clowder", "A pride", "A colony"], answer: 1, fact: "A group of cats is called a clowder. A group of kittens is called a kindle." },
     { q: "How fast can a domestic cat run?", options: ["20 km/h", "30 km/h", "48 km/h", "60 km/h"], answer: 2, fact: "Cats can sprint up to 48 km/h over short distances — faster than Usain Bolt's top speed." },
-    { q: "What frequency does purring occur at?", options: ["5–10 Hz", "25–150 Hz", "200–400 Hz", "500+ Hz"], answer: 1, fact: "Cats purr at 25–150 Hz — a frequency shown to promote bone density and healing in both cats and humans." },
+    { q: "What frequency does purring occur at?", options: ["5–10 Hz", "25–150 Hz", "200–400 Hz", "500+ Hz"], answer: 1, fact: "Cats purr at 25–150 Hz — a frequency shown to promote bone density and healing." },
     { q: "How many bones does a cat have?", options: ["106", "144", "230", "290"], answer: 2, fact: "Cats have 230 bones — 24 more than humans. Many are in their flexible spine and tail." },
-    { q: "What is unique about a cat's collarbone?", options: ["They don't have one", "It's fused to the spine", "It floats freely", "It's made of cartilage"], answer: 2, fact: "A cat's collarbone floats freely, allowing them to fit through any space their head can pass through." },
-    { q: "How do cats drink water?", options: ["They lap it upward", "They scoop it with their tongue", "They curl their tongue to pull water up", "They bite the surface"], answer: 2, fact: "Cats curl their tongue into a J-shape and pull water up in a column, lapping at around 4 times per second." },
+    { q: "How do cats drink water?", options: ["They lap it upward", "They scoop it with their tongue", "They curl their tongue to pull water up", "They bite the surface"], answer: 2, fact: "Cats curl their tongue into a J-shape and pull water up in a column at around 4 times per second." },
+    { q: "Why do cats knead with their paws?", options: ["To sharpen claws", "A comfort behaviour from kittenhood", "To mark territory", "To stretch muscles"], answer: 1, fact: "Kneading is a comfort behaviour that starts in kittenhood when nursing. Adult cats do it when content." },
   ],
 };
 
+function calcTriviaStreak(logs: Array<{ answered_at: string; correct: boolean }>): number {
+  const correctDays = new Set(
+    logs
+      .filter(l => l.correct)
+      .map(l => new Date(l.answered_at).toDateString())
+  );
+  let streak = 0;
+  const today = new Date();
+  while (true) {
+    const dateStr = new Date(today.getFullYear(), today.getMonth(), today.getDate() - streak).toDateString();
+    if (correctDays.has(dateStr)) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
 function getDailyTrivia(species: string, breed: string) {
   const breedKey = breed?.toLowerCase().replace(/\s+/g, '_');
   const speciesKey = species?.toLowerCase().includes('cat') ? 'cat' : 'dog';
@@ -798,6 +998,7 @@ const [selectedMoodWord, setSelectedMoodWord] = useState('');
 const [lastLoggedId, setLastLoggedId] = useState<string | null>(null);
 const [savedMoodEmoji, setSavedMoodEmoji] = useState<string | null>(null);
 const [triviaAnswered, setTriviaAnswered] = useState<'correct' | 'wrong' | null>(null);
+const [triviaStreakCount, setTriviaStreakCount] = useState<number>(0);
 const [triviaSelected, setTriviaSelected] = useState<number | null>(null);
 const [leaderboard, setLeaderboard] = useState<Array<{
   id: string;
@@ -948,7 +1149,21 @@ const { data: challengeData, error: challengeError } = await supabase
   .maybeSingle();
 
 if (challengeData) setChallenge(challengeData);
+const { data: triviaLogData } = await supabase
+  .from('trivia_logs')
+  .select('answered_at, correct')
+  .eq('pet_id', petsData.id)
+  .order('answered_at', { ascending: false })
+  .limit(60);
 
+const triviaStreak = calcTriviaStreak(triviaLogData || []);
+setTriviaStreakCount(triviaStreak);
+
+const todayCheck = new Date().toDateString();
+const answeredToday = localStorage.getItem('trivia_answered_' + petsData.id);
+if (answeredToday === todayCheck) {
+  setTriviaAnswered('correct');
+}
     setLoading(false);
   }, [router]);
 
@@ -1702,9 +1917,14 @@ function handleGenerateStory() {
         <p style={{ fontSize: 13, color: '#a08060', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           🧠 Daily trivia
         </p>
-        {triviaAnswered === 'correct' && (
-          <span style={{ fontSize: 12, color: '#5dcaa5', fontWeight: 700 }}>+1 heart earned!</span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+  {triviaStreakCount >= 30 && <span style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa' }}>🎓 Pet Professor</span>}
+  {triviaStreakCount >= 7 && triviaStreakCount < 30 && <span style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>🧠 Pet Genius</span>}
+  {triviaStreakCount > 0 && <span style={{ fontSize: 12, color: '#a08060' }}>🔥 {triviaStreakCount} day streak</span>}
+  {triviaAnswered === 'correct' && (
+    <span style={{ fontSize: 12, color: '#5dcaa5', fontWeight: 700 }}>+1 heart earned!</span>
+  )}
+</div>
       </div>
 
       <p style={{ fontSize: 15, color: '#f0ebe4', lineHeight: 1.6, marginBottom: 16, fontWeight: 500 }}>
@@ -1747,6 +1967,13 @@ function handleGenerateStory() {
                     updated_at: new Date().toISOString(),
                   }, { onConflict: 'pet_id' });
                   setChowHearts(newHearts);
+await supabase.from('trivia_logs').insert({
+  user_id: userId,
+  pet_id: pet.id,
+  correct,
+  question_text: trivia.q,
+});                  
+localStorage.setItem('trivia_answered_' + pet.id, new Date().toDateString());
                 }
               }}
               style={{
@@ -1771,7 +1998,7 @@ function handleGenerateStory() {
           color: triviaAnswered === 'correct' ? '#5dcaa5' : '#c47a3a',
           lineHeight: 1.6,
         }}>
-          {triviaAnswered === 'correct' ? '✅ Correct! ' : '💡 Fun fact: '}
+          {triviaAnswered === 'correct' ? (triviaSelected === null ? '✅ You already earned your heart today! ' : '✅ Correct! ') : '💡 Fun fact: '}
           {trivia.fact}
         </div>
       )}
