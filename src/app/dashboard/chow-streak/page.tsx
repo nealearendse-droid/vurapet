@@ -1004,6 +1004,11 @@ const [showTriviaShareCard, setShowTriviaShareCard] = useState<boolean>(false);
 const [showWaterModal, setShowWaterModal] = useState<boolean>(false);
 const [waterIntake, setWaterIntake] = useState<string | null>(null);
 const [waterAlert, setWaterAlert] = useState<boolean>(false);
+const [showStoolModal, setShowStoolModal] = useState(false);
+const [stoolQuality, setStoolQuality] = useState<number | null>(null);
+const [stoolLoggedToday, setStoolLoggedToday] = useState(false);
+const [weeklyWaterSummary, setWeeklyWaterSummary] = useState<string | null>(null);
+const [weeklyStoolAvg, setWeeklyStoolAvg] = useState<number | null>(null);
 const [triviaSelected, setTriviaSelected] = useState<number | null>(null);
 const [leaderboard, setLeaderboard] = useState<Array<{
   id: string;
@@ -1112,6 +1117,24 @@ if ('Notification' in window) {
     setTotalLogs(allLogs.length);
     const cleared = allLogs.filter((l: ChowLog) => l.outcome === 'cleared').length;
     setClearCount(cleared);
+// ── Weekly water + stool summary ──
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const last7Logs = allLogs.filter((l: ChowLog) => new Date(l.logged_at) >= sevenDaysAgo);
+
+    const waterAnswers = last7Logs.map((l: any) => l.water_intake).filter(Boolean);
+    if (waterAnswers.length > 0) {
+      const counts: Record<string, number> = {};
+      waterAnswers.forEach((w: string) => { counts[w] = (counts[w] || 0) + 1; });
+      const mostCommon = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+      setWeeklyWaterSummary(mostCommon);
+    }
+
+    const stoolScores = last7Logs.map((l: any) => l.stool_quality).filter((v: any) => v != null);
+    if (stoolScores.length > 0) {
+      const avg = stoolScores.reduce((sum: number, v: number) => sum + v, 0) / stoolScores.length;
+      setWeeklyStoolAvg(Math.round(avg));
+    }
 
     // Fetch chow hearts
     const { data: heartsData } = await supabase
@@ -1947,6 +1970,7 @@ function handleGenerateStory() {
               .eq('id', lastLoggedId);
             setWaterIntake(option);
             setShowWaterModal(false);
+            if (!localStorage.getItem(`stool_logged_${pet.id}_${new Date().toDateString()}`)) { setShowStoolModal(true); }
           }}
           style={{
             width: '100%', padding: '12px 16px', marginBottom: 10,
@@ -1960,7 +1984,7 @@ function handleGenerateStory() {
         </button>
       ))}
       <button
-        onClick={() => setShowWaterModal(false)}
+        onClick={() => { setShowWaterModal(false); if (!localStorage.getItem(`stool_logged_${pet.id}_${new Date().toDateString()}`)) { setShowStoolModal(true); } }}
         style={{
           width: '100%', padding: '10px', borderRadius: 10,
           border: 'none', background: 'none', color: '#a08060',
@@ -1989,6 +2013,72 @@ function handleGenerateStory() {
     <p style={{ fontSize: 12, color: '#a08060' }}>
       This is not a diagnosis — just a helpful pattern VuraPet noticed. 🐾
     </p>
+  </div>
+)}
+
+{/* ── Stool Quality Modal ── */}
+{showStoolModal && pet && (
+  <div style={{
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 1000, padding: '0 24px',
+  }}>
+    <div style={{
+      background: '#1e1e2e', borderRadius: 20, padding: '28px 24px',
+      width: '100%', maxWidth: 400,
+      border: '1px solid rgba(255,255,255,0.08)',
+    }}>
+      <p style={{ fontSize: 16, fontWeight: 700, color: '#e8d5b7', marginBottom: 6 }}>
+        💩 How was {pet.name}'s poop today?
+      </p>
+      <p style={{ fontSize: 13, color: '#a08060', marginBottom: 20 }}>
+        Tap the closest match — this helps spot tummy trouble early.
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+        {[
+          { value: 1, icon: '🪨', label: 'Hard' },
+          { value: 2, icon: '💩', label: 'Firm' },
+          { value: 3, icon: '🍦', label: 'Soft' },
+          { value: 4, icon: '🥣', label: 'Mushy' },
+          { value: 5, icon: '💦', label: 'Watery' },
+        ].map(item => (
+          <button
+            key={item.value}
+            onClick={async () => {
+              const supabase = createSupabaseBrowserClient();
+              await supabase.from('chow_logs')
+                .update({ stool_quality: item.value })
+                .eq('id', lastLoggedId);
+              setStoolQuality(item.value);
+              setStoolLoggedToday(true);
+              localStorage.setItem(`stool_logged_${pet.id}_${new Date().toDateString()}`, 'true');
+              setShowStoolModal(false);
+            }}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 4, padding: '10px 6px', borderRadius: 10,
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.04)', color: '#e8d5b7',
+              fontSize: 24, cursor: 'pointer', fontFamily: 'inherit',
+              flex: 1, marginRight: 6,
+            }}
+          >
+            <span>{item.icon}</span>
+            <span style={{ fontSize: 10, color: '#a08060' }}>{item.label}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => setShowStoolModal(false)}
+        style={{
+          width: '100%', padding: '10px', borderRadius: 10,
+          border: 'none', background: 'none', color: '#a08060',
+          fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        Skip
+      </button>
+    </div>
   </div>
 )}
 
@@ -2258,6 +2348,39 @@ if (correct) setShowTriviaShareCard(true);
           <div style={{ fontSize: 10, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day streak</div>
         </div>
       </div>
+      {(weeklyWaterSummary || weeklyStoolAvg) && (
+        <div style={{
+          marginTop: 16, paddingTop: 14, borderTop: '0.5px solid rgba(255,255,255,0.06)',
+        }}>
+          <p style={{ fontSize: 11, color: '#6a5040', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
+            This Week's Health Check
+          </p>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{
+              flex: 1, textAlign: 'center', padding: '12px 8px',
+              borderRadius: 10, background: 'rgba(255,255,255,0.03)',
+            }}>
+              <div style={{ fontSize: 20 }}>💧</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#e8d5b7', marginTop: 4 }}>
+                {weeklyWaterSummary || 'No data yet'}
+              </div>
+              <div style={{ fontSize: 10, color: '#6a5040', marginTop: 2 }}>Water</div>
+            </div>
+            <div style={{
+              flex: 1, textAlign: 'center', padding: '12px 8px',
+              borderRadius: 10, background: 'rgba(255,255,255,0.03)',
+            }}>
+              <div style={{ fontSize: 20 }}>
+                {weeklyStoolAvg === 1 ? '🪨' : weeklyStoolAvg === 2 ? '💩' : weeklyStoolAvg === 3 ? '🍦' : weeklyStoolAvg === 4 ? '🥣' : weeklyStoolAvg === 5 ? '💦' : '❔'}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#e8d5b7', marginTop: 4 }}>
+                {weeklyStoolAvg === 1 ? 'Hard' : weeklyStoolAvg === 2 ? 'Firm' : weeklyStoolAvg === 3 ? 'Soft' : weeklyStoolAvg === 4 ? 'Mushy' : weeklyStoolAvg === 5 ? 'Watery' : 'No data yet'}
+              </div>
+              <div style={{ fontSize: 10, color: '#6a5040', marginTop: 2 }}>Stool</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 })()}
