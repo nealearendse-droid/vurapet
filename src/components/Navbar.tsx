@@ -28,7 +28,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/dashboard',            label: 'Dashboard',      emoji: '🏠' },
-    { href: '/dashboard/nutrition',  label: 'Nutrition Plan', emoji: '🥗' },
+    { href: '/pets/guardian',        label: 'Guardians',      emoji: '🛡️' },
     { href: '/pets/safe-food',       label: 'Food Checker',   emoji: '🍎' },
   ];
 

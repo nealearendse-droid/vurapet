@@ -596,18 +596,7 @@ function WelcomeModal({ petName, onClose }: { petName: string; onClose: () => vo
           ))}
         </div>
 
-        {/* Trial badge */}
-        <div style={{
-          background: 'rgba(93,202,165,0.08)',
-          border: '1px solid rgba(93,202,165,0.2)',
-          borderRadius: 12, padding: '12px 16px', marginBottom: 24,
-          fontSize: 13, color: '#5dcaa5', lineHeight: 1.6,
-        }}>
-          🎁 You have <strong>30 days of full free access.</strong><br />
-          No credit card needed. No pressure.
-        </div>
-
-        <button
+                <button
           onClick={onClose}
           style={{
             width: '100%', padding: '14px 0',

@@ -570,19 +570,11 @@ export default function Dashboard() {
           <h2 className="vp-section-title" style={{ marginBottom: '1rem' }}>Quick Actions</h2>
           <div className="vp-actions-grid">
 
-            {hasPro ? (
-              <Link href="/dashboard/nutrition" className="vp-action-card">
-                <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>🥗</span></div>
-                <p className="vp-action-label">Nutrition Plan</p>
-                <p className="vp-action-sub">Custom meal plans</p>
-              </Link>
-            ) : (
-              <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
-                <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}><span style={{ fontSize: 22 }}>🥗</span></div>
-                <p className="vp-action-label">Nutrition Plan <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
-                <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
-              </div>
-            )}
+            <Link href="/dashboard/chow-streak" className="vp-action-card">
+  <div className="vp-action-icon" style={{ background: 'rgba(196,122,58,0.15)' }}><span style={{ fontSize: 22 }}>🔥</span></div>
+  <p className="vp-action-label">Chow Streak</p>
+  <p className="vp-action-sub">Feed · Track · Level up</p>
+</Link>
 
             <Link href="/pets/safe-food" className="vp-action-card">
               <div className="vp-action-icon" style={{ background: '#1d9e7522' }}><span style={{ fontSize: 22 }}>🍎</span></div>
@@ -602,19 +594,11 @@ export default function Dashboard() {
               <p className="vp-action-sub">{userPlan === 'free' ? `${currentMemoriesCount}/${maxMemories} memories` : 'Unlimited memories'}</p>
             </Link>
 
-            {hasPro ? (
-              <Link href="/dashboard/breed-intelligence" className="vp-action-card">
-                <div className="vp-action-icon" style={{ background: '#8b6dd422' }}><span style={{ fontSize: 22 }}>🧠</span></div>
-                <p className="vp-action-label">Breed Intelligence</p>
-                <p className="vp-action-sub">Know your breed</p>
-              </Link>
-            ) : (
-              <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
-                <div className="vp-action-icon" style={{ background: '#8b6dd422', opacity: 0.6 }}><span style={{ fontSize: 22 }}>🧠</span></div>
-                <p className="vp-action-label">Breed Intelligence <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
-                <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
-              </div>
-            )}
+            <Link href={`/pets/${pets[0]?.id}/weight-tracker`} className="vp-action-card">
+              <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>⚖️</span></div>
+              <p className="vp-action-label">Weight Tracker</p>
+              <p className="vp-action-sub">Track and analyse trends</p>
+            </Link>
 
             {hasPro ? (
               <Link href={`/pets/${pets[0]?.id}/health-journal`} className="vp-action-card">
@@ -652,11 +636,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            <Link href={`/pets/${pets[0]?.id}/weight-tracker`} className="vp-action-card">
-              <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>⚖️</span></div>
-              <p className="vp-action-label">Weight Tracker</p>
-              <p className="vp-action-sub">Track and analyse trends</p>
-            </Link>
+            
 
             {hasPro ? (
               pets[0] ? (
@@ -693,11 +673,35 @@ export default function Dashboard() {
                 <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
               </div>
             )}
-<Link href="/dashboard/chow-streak" className="vp-action-card">
-  <div className="vp-action-icon" style={{ background: 'rgba(196,122,58,0.15)' }}><span style={{ fontSize: 22 }}>🔥</span></div>
-  <p className="vp-action-label">Chow Streak</p>
-  <p className="vp-action-sub">Feed · Track · Level up</p>
-</Link>
+
+ {hasPro ? (
+  <Link href="/dashboard/nutrition" className="vp-action-card">
+    <div className="vp-action-icon" style={{ background: '#c47a3a22' }}><span style={{ fontSize: 22 }}>🥗</span></div>
+    <p className="vp-action-label">Nutrition Plan</p>
+    <p className="vp-action-sub">Custom meal plans</p>
+  </Link>
+) : (
+  <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
+    <div className="vp-action-icon" style={{ background: '#c47a3a22', opacity: 0.6 }}><span style={{ fontSize: 22 }}>🥗</span></div>
+    <p className="vp-action-label">Nutrition Plan <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
+    <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
+  </div>
+)}
+
+{hasPro ? (
+              <Link href="/dashboard/breed-intelligence" className="vp-action-card">
+                <div className="vp-action-icon" style={{ background: '#8b6dd422' }}><span style={{ fontSize: 22 }}>🧠</span></div>
+                <p className="vp-action-label">Breed Intelligence</p>
+                <p className="vp-action-sub">Know your breed</p>
+              </Link>
+            ) : (
+              <div onClick={() => router.push('/upgrade?plan=pro')} className="vp-action-card" style={{ cursor: 'pointer' }}>
+                <div className="vp-action-icon" style={{ background: '#8b6dd422', opacity: 0.6 }}><span style={{ fontSize: 22 }}>🧠</span></div>
+                <p className="vp-action-label">Breed Intelligence <span style={{ background: '#c47a3a', color: 'white', fontSize: '9px', padding: '2px 6px', borderRadius: '20px', marginLeft: '6px' }}>PRO</span></p>
+                <p className="vp-action-sub" style={{ color: '#c47a3a' }}>Upgrade to unlock →</p>
+              </div>
+            )}
+
           </div>
         </section>
       </div>
