@@ -743,11 +743,12 @@ function CelebrationOverlay({ pet, streak, onClose }: {
   );
 }
 
-function EvolutionRevealModal({ pet, stage, onClose, onShare }: {
+function EvolutionRevealModal({ pet, stage, onClose, onShare, userPlan }: {
   pet: Pet;
   stage: typeof DOG_EVOLUTION[0];
   onClose: () => void;
   onShare: () => void;
+  userPlan: string;
 }) {
   const photoUrl = pet.profile_photo_url || pet.photo_url;
   return (
@@ -810,7 +811,12 @@ function EvolutionRevealModal({ pet, stage, onClose, onShare }: {
           {pet.name} has evolved.<br />
           <em style={{ color: stage.color }}>"{stage.desc}"</em>
         </p>
-        <button
+        {userPlan === 'free' && (
+          <p style={{ fontSize: 12, color: '#6a5040', marginBottom: 14, lineHeight: 1.5 }}>
+            💾 Keep every milestone like this forever with{' '}
+            <span style={{ color: stage.color, fontWeight: 600 }}>Health Journal</span>
+          </p>
+        )}<button
           onClick={onClose}
           style={{
             width: '100%', padding: '14px 0',
@@ -2414,6 +2420,7 @@ if (correct) setShowTriviaShareCard(true);
   <EvolutionRevealModal
     pet={pet}
     stage={newEvolutionStage}
+    userPlan={userPlan}
     onClose={() => { setShowEvolutionReveal(false); setNewEvolutionStage(null); }}
     onShare={() => {
       setShowEvolutionReveal(false);

@@ -424,7 +424,7 @@ export default function Dashboard() {
             </h1>
             <p className="vp-hero-sub">
               {isProtected
-                ? `${guardians.length} guardian${guardians.length > 1 ? 's' : ''} ready to step in if you ever need them.`
+                ? `${guardians.length} guardian${guardians.length > 1 ? 's' : ''} ready to step in — the essentials are covered.`
                 : 'Add a guardian so someone always knows how to care for your pet.'}
             </p>
 
@@ -467,7 +467,7 @@ export default function Dashboard() {
 
         {pets.length > 0 && (
         <div style={{ background: '#333', color: 'white', padding: '8px', marginBottom: '10px', borderRadius: '8px', textAlign: 'center', fontSize: '12px' }}>
-          📋 Plan: {userPlan} {userPlan === 'free' && '🔒 1 pet max • 1 guardian max • 5 memories max'}
+          📋 Plan: {userPlan} {userPlan === 'free' && `🔒 ${pets.length}/1 pets • ${guardians.length}/1 guardians • ${currentMemoriesCount}/${maxMemories} memories used`}
           {userPlan === 'pro' && '✅ 1 pet • 1 guardian • Unlimited memories'}
           {userPlan === 'family' && '✅ 5 pets • Unlimited guardians • Unlimited memories'}
         </div>
