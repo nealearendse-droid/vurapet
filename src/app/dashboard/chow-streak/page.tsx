@@ -1332,17 +1332,23 @@ if (answeredToday === todayCheck) {
 }
     setLogging(false);
   }
-  async function saveMood() {
-  if (!lastLoggedId || !selectedMoodEmoji) return;
+  async function saveMood(emoji?: string, word?: string) {
+  const moodToSave = emoji || selectedMoodEmoji;
+  const wordToSave = word !== undefined ? word : selectedMoodWord;
+  if (!lastLoggedId || !moodToSave) return;
   const supabase = createSupabaseBrowserClient();
-  await supabase.from('chow_logs')
-    .update({ mood_emoji: selectedMoodEmoji, mood_word: selectedMoodWord || null })
-    .eq('id', lastLoggedId);
-  setSavedMoodEmoji(selectedMoodEmoji);
+
+  // ── Show next popup immediately, don't wait for the database ──
+  setSavedMoodEmoji(moodToSave);
   setShowMoodJournal(false);
   setShowWaterModal(true);
   setSelectedMoodEmoji(null);
   setSelectedMoodWord('');
+
+  // ── Save to database quietly in the background ──
+  await supabase.from('chow_logs')
+    .update({ mood_emoji: moodToSave, mood_word: wordToSave || null })
+    .eq('id', lastLoggedId);
   await fetchData();
 }
   async function savePantry() {
@@ -1649,9 +1655,7 @@ function handleGenerateStory() {
   <MoodJournalModal
     petName={pet.name}
     onSave={(emoji, word) => {
-      setSelectedMoodEmoji(emoji);
-      setSelectedMoodWord(word);
-      saveMood();
+      saveMood(emoji, word);
     }}
     onSkip={() => {
       setShowMoodJournal(false);
@@ -1993,14 +1997,17 @@ function handleGenerateStory() {
       {['Normal', 'More than usual', 'Much more than usual', 'Barely touched it'].map(option => (
         <button
           key={option}
-          onClick={async () => {
-            const supabase = createSupabaseBrowserClient();
-            await supabase.from('chow_logs')
-              .update({ water_intake: option })
-              .eq('id', lastLoggedId);
+          onClick={() => {
             setWaterIntake(option);
             setShowWaterModal(false);
             if (!localStorage.getItem(`stool_logged_${pet.id}_${new Date().toDateString()}`)) { setShowStoolModal(true); }
+
+            // ── Save to database quietly in the background ──
+            const supabase = createSupabaseBrowserClient();
+            supabase.from('chow_logs')
+              .update({ water_intake: option })
+              .eq('id', lastLoggedId)
+              .then(() => {});
           }}
           style={{
             width: '100%', padding: '12px 16px', marginBottom: 10,
