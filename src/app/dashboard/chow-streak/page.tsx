@@ -383,21 +383,42 @@ function getEvolutionTitle(hearts: number, species: string, clearPct: number): {
 }
 
 // ── Hunger mood logic ──
-function getHungerMood(lastMealAt: Date | null): {
+function getHungerMood(lastMealAt: Date | null, species?: string): {
   emoji: string;
   label: string;
   color: string;
   bg: string;
   pulse: boolean;
+  vetMessage: string | null;
+  alertLevel: 'none' | 'caution' | 'urgent' | 'emergency';
 } {
+  const isCat = species?.toLowerCase() === 'cat';
+
   if (!lastMealAt) {
-    return { emoji: '😭', label: 'Starving! Feed me NOW', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', pulse: true };
+    return { emoji: '😭', label: 'Starving! Feed me NOW', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', pulse: true, vetMessage: null, alertLevel: 'none' };
   }
+
   const hours = (Date.now() - lastMealAt.getTime()) / 3_600_000;
-  if (hours < 4)  return { emoji: '😊', label: 'Full & Happy',        color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)', pulse: false };
-  if (hours < 8)  return { emoji: '😐', label: 'Getting Peckish',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  pulse: false };
-  if (hours < 12) return { emoji: '🥺', label: 'Really Hungry',       color: '#f97316', bg: 'rgba(249,115,22,0.15)', pulse: true  };
-  return           { emoji: '😭', label: 'Starving! Feed me NOW',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',  pulse: true  };
+
+  // ── Clinical red flag thresholds ──
+  if (isCat && hours >= 24) {
+    return { emoji: '🚨', label: 'Hasn\'t eaten in 24+ hours', color: '#ef4444', bg: 'rgba(239,68,68,0.18)', pulse: true, vetMessage: "Cats that go 24 hours without eating can develop serious health complications quickly. Please contact your vet.", alertLevel: 'urgent' };
+  }
+  if (!isCat && hours >= 72) {
+    return { emoji: '🚨', label: 'Hasn\'t eaten in 72+ hours', color: '#ef4444', bg: 'rgba(239,68,68,0.18)', pulse: true, vetMessage: "This is a medical emergency. Please contact your vet or emergency animal clinic right away.", alertLevel: 'emergency' };
+  }
+  if (!isCat && hours >= 48) {
+    return { emoji: '⚠️', label: 'Hasn\'t eaten in 48+ hours', color: '#f97316', bg: 'rgba(249,115,22,0.18)', pulse: true, vetMessage: "It's been over 48 hours since the last meal. Please contact your vet soon.", alertLevel: 'urgent' };
+  }
+  if (!isCat && hours >= 24) {
+    return { emoji: '⚠️', label: 'Hasn\'t eaten in 24+ hours', color: '#f59e0b', bg: 'rgba(245,158,11,0.16)', pulse: false, vetMessage: "It's been over 24 hours since the last meal. Worth keeping an eye on, and mention it to your vet if it continues.", alertLevel: 'caution' };
+  }
+
+  // ── Normal ranges ──
+  if (hours < 4)  return { emoji: '😊', label: 'Full & Happy',        color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)', pulse: false, vetMessage: null, alertLevel: 'none' };
+  if (hours < 8)  return { emoji: '😐', label: 'Getting Peckish',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  pulse: false, vetMessage: null, alertLevel: 'none' };
+  if (hours < 12) return { emoji: '🥺', label: 'Really Hungry',       color: '#f97316', bg: 'rgba(249,115,22,0.15)', pulse: true,  vetMessage: null, alertLevel: 'none' };
+  return           { emoji: '😭', label: 'Starving! Feed me NOW',      color: '#ef4444', bg: 'rgba(239,68,68,0.15)',  pulse: true,  vetMessage: null, alertLevel: 'none' };
 }
 
 // ── Pet title logic ──
@@ -1213,7 +1234,7 @@ if (answeredToday === todayCheck) {
 
   const streak     = calcStreak(logs);
   const lastLog    = logs[0] ? new Date(logs[0].logged_at) : null;
-  const mood       = getHungerMood(lastLog);
+  const mood       = getHungerMood(lastLog, pet?.species);
   const petTitle   = getPetTitle(streak);
   const ownerBadge = getOwnerBadge(streak);
 
@@ -1781,6 +1802,20 @@ function handleGenerateStory() {
           )}
          {!lastLog && (
             <div style={{ fontSize:12, color:'#7a6050' }}>No meals logged yet — log the first one below!</div>
+          )}
+          {mood.vetMessage && (
+            <div style={{
+              marginTop: 16, padding: '14px 16px', borderRadius: 12,
+              background: 'rgba(0,0,0,0.25)', border: `1px solid ${mood.color}55`,
+              textAlign: 'left', display: 'flex', gap: 10, alignItems: 'flex-start',
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>
+                {mood.alertLevel === 'emergency' ? '🚨' : mood.alertLevel === 'urgent' ? '⚠️' : 'ℹ️'}
+              </span>
+              <p style={{ fontSize: 13, color: '#e8d5b7', lineHeight: 1.5, margin: 0 }}>
+                {mood.vetMessage}
+              </p>
+            </div>
           )}
         </div>
         )}
