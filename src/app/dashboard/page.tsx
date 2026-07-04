@@ -465,21 +465,6 @@ export default function Dashboard() {
       {/* ── Main body ── */}
       <div className="vp-body">
 
-        {!hasPro && pets.length > 0 && (
-          <div className="vp-upgrade-banner">
-            <div className="vp-upgrade-left">
-              <p className="vp-upgrade-tag">🔒 Free Plan</p>
-              <h3 className="vp-upgrade-title">Unlock Full Protection</h3>
-              <p className="vp-upgrade-sub">
-                Vet records · Health journal · Emergency care doc · Vaccine reminders · Custom meal plans
-              </p>
-            </div>
-            <Link href="/upgrade?plan=pro&billing=monthly" className="vp-upgrade-btn">
-              Upgrade to Pro →
-            </Link>
-          </div>
-        )}
-
         {pets.length > 0 && (
         <div style={{ background: '#333', color: 'white', padding: '8px', marginBottom: '10px', borderRadius: '8px', textAlign: 'center', fontSize: '12px' }}>
           📋 Plan: {userPlan} {userPlan === 'free' && '🔒 1 pet max • 1 guardian max • 5 memories max'}
