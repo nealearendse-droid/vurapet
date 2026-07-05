@@ -289,6 +289,43 @@ export default function WeightTracker({ petId, petInfo, onLatestWeightChange }: 
     return weeksNeeded > 0 ? Math.ceil(weeksNeeded) : null;
   }, [goalWeight, latestWeight, sorted]);
 
+  const rapidChangeAlert = useMemo(() => {
+    if (sorted.length < 2 || latestWeight === null) return null;
+    const latestDate = new Date(sorted[sorted.length - 1].recorded_at);
+    const thirtyDaysAgo = new Date(latestDate);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    let closest: WeightEntry | null = null;
+    let closestDiff = Infinity;
+    for (const e of sorted) {
+      const d = new Date(e.recorded_at);
+      if (d <= thirtyDaysAgo) {
+        const diff = thirtyDaysAgo.getTime() - d.getTime();
+        if (diff < closestDiff) {
+          closestDiff = diff;
+          closest = e;
+        }
+      }
+    }
+    if (!closest) return null;
+
+    const pctChange = ((latestWeight - closest.weight_kg) / closest.weight_kg) * 100;
+    if (Math.abs(pctChange) < 5) return null;
+
+    const direction = pctChange > 0 ? 'gained' : 'lost';
+    const absPct = Math.abs(pctChange).toFixed(1);
+    const severity = Math.abs(pctChange) >= 10 ? 'urgent' : 'caution';
+
+    return {
+      severity,
+      message: `${petInfo?.name ?? 'Your pet'} has ${direction} ${absPct}% of body weight in the last 30 days. ${
+        severity === 'urgent'
+          ? 'This is a significant change — please contact your vet.'
+          : 'Worth mentioning at your next vet visit.'
+      }`,
+    };
+  }, [sorted, latestWeight, petInfo]);
+
   if (!mounted) return null;
 
   return (
@@ -350,6 +387,31 @@ export default function WeightTracker({ petId, petInfo, onLatestWeightChange }: 
             </button>
           </div>
         </div>
+
+        {rapidChangeAlert && (
+          <div style={{
+            margin: '0 2rem',
+            marginTop: '1.25rem',
+            padding: '0.9rem 1.1rem',
+            borderRadius: 12,
+            background: rapidChangeAlert.severity === 'urgent' ? 'rgba(248,113,113,0.08)' : 'rgba(251,191,36,0.08)',
+            border: `1px solid ${rapidChangeAlert.severity === 'urgent' ? 'rgba(248,113,113,0.25)' : 'rgba(251,191,36,0.25)'}`,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.6rem',
+          }}>
+            <div style={{ fontSize: '1.1rem', lineHeight: 1 }}>
+              {rapidChangeAlert.severity === 'urgent' ? '🚨' : 'ℹ️'}
+            </div>
+            <div style={{
+              fontSize: '0.82rem',
+              lineHeight: 1.5,
+              color: rapidChangeAlert.severity === 'urgent' ? '#fca5a5' : '#fcd34d',
+            }}>
+              {rapidChangeAlert.message}
+            </div>
+          </div>
+        )}
 
         {!loading && entries.length > 0 && latestWeight !== null && (
           <div className="wt-stats">
