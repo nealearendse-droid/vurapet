@@ -2418,6 +2418,25 @@ if (correct) setShowTriviaShareCard(true);
           </div>
         </div>
       )}
+
+      {pet?.id && (
+        <a href={`/pets/${pet.id}/weight-tracker`} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginTop: 16, padding: '14px 16px',
+          borderRadius: 12, background: 'rgba(255,255,255,0.03)',
+          border: '0.5px solid rgba(255,255,255,0.06)',
+          textDecoration: 'none',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontSize: 20 }}>⚖️</div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#e8d5b7' }}>Weight Tracker</div>
+              <div style={{ fontSize: 10, color: '#6a5040' }}>Track trends & get insights</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 16, color: '#6a5040' }}>→</div>
+        </a>
+      )}
     </div>
   );
 })()}
