@@ -13,7 +13,7 @@ export default async function VetReportPage({
   const report = await getVetReportData(token)
   if (!report) notFound()
 
-  const { pet, period, totalMeals, compliancePct, concerningWaterDays, totalLoggedDays, stoolAvg, weightChangeKg, weightChangePct } = report as any
+  const { pet, period, totalMeals, compliancePct, concerningWaterDays, totalLoggedDays, stoolAvg, weightChangeKg, weightChangePct, feedingAlerts, weightAlert } = report as any
 
   const photoUrl = pet.profile_photo_url || pet.photo_url
   const fromDate = new Date(period.from).toLocaleDateString('en-ZA', { dateStyle: 'medium' })
