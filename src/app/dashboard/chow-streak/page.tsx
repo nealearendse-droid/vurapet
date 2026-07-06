@@ -1079,7 +1079,7 @@ const fetchData = useCallback(async () => {
     if (notStarted) setShowWelcome(true);
     const { data: petsData } = await supabase
       .from('pets')
-      .select('id,name,species,breed,profile_photo_url,photo_url')
+      .select('id,name,species,breed,profile_photo_url,photo_url,vet_report_token')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: true })
       .limit(1)
@@ -1351,7 +1351,32 @@ if (answeredToday === todayCheck) {
     .eq('id', lastLoggedId);
   await fetchData();
 }
-  async function savePantry() {
+  async function handleGenerateVetReport() {
+  if (!pet) return;
+  const supabase = createSupabaseBrowserClient();
+
+  let token = (pet as any).vet_report_token as string | null;
+
+  if (!token) {
+    token = crypto.randomUUID();
+    const { error } = await supabase
+      .from('pets')
+      .update({ vet_report_token: token })
+      .eq('id', pet.id);
+
+    if (error) {
+      console.error('Vet report token save error:', error.message);
+      return;
+    }
+
+    setPet({ ...pet, vet_report_token: token } as any);
+  }
+
+  const url = `${window.location.origin}/vet-report/${token}`;
+  await navigator.clipboard.writeText(url);
+  alert('Vet report link copied to clipboard!');
+}
+async function savePantry() {
     const val = parseInt(pantryInput);
     if (isNaN(val) || val < 0) return;
     setPantryDays(val);
@@ -2436,6 +2461,24 @@ if (correct) setShowTriviaShareCard(true);
           </div>
           <div style={{ fontSize: 16, color: '#6a5040' }}>→</div>
         </a>
+      )}
+      {pet?.id && (
+        <button onClick={handleGenerateVetReport} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          width: '100%', marginTop: 10, padding: '14px 16px',
+          borderRadius: 12, background: 'rgba(255,255,255,0.03)',
+          border: '0.5px solid rgba(255,255,255,0.06)',
+          cursor: 'pointer', textAlign: 'left',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ fontSize: 20 }}>🏥</div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#e8d5b7' }}>Vet Report</div>
+              <div style={{ fontSize: 10, color: '#6a5040' }}>Copy shareable health summary link</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 16, color: '#6a5040' }}>📋</div>
+        </button>
       )}
     </div>
   );
