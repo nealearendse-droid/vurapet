@@ -14,8 +14,10 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
   hasPro: boolean;
 }) {
   const [streak, setStreak] = useState(0);
-  const [mood, setMood] = useState({ emoji: '😊', label: 'Full & Happy', color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)', pulse: false });
+  const [mood, setMood] = useState({ emoji: '😊', img: '/emoji/smiling_face_3d.png', label: 'Full & Happy', color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)', pulse: false });
   const [loaded, setLoaded] = useState(false);
+  const [lastMealHours, setLastMealHours] = useState<number | null>(null);
+  const [weekCompliance, setWeekCompliance] = useState<number | null>(null);
  
   useEffect(() => {
     if (!petId) return;
@@ -44,10 +46,20 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
         // Hunger mood
         const lastLog = logs[0] ? new Date((logs[0] as any).logged_at) : null;
         const hours = lastLog ? (Date.now() - lastLog.getTime()) / 3_600_000 : 99;
-        if (hours < 4)       setMood({ emoji: '😊', label: 'Full & Happy',        color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)',  pulse: false });
-        else if (hours < 8)  setMood({ emoji: '😐', label: 'Getting Peckish',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   pulse: false });
-        else if (hours < 12) setMood({ emoji: '🥺', label: 'Really Hungry',       color: '#f97316', bg: 'rgba(249,115,22,0.15)',   pulse: true  });
-        else                 setMood({ emoji: '😭', label: 'Starving! Feed me NOW',color: '#ef4444', bg: 'rgba(239,68,68,0.15)',    pulse: true  });
+        setLastMealHours(lastLog ? Math.round(hours) : null);
+        if (hours < 4)       setMood({ emoji: '😊', img: '/emoji/smiling_face_3d.png',       label: 'Full & Happy',        color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)',  pulse: false });
+        else if (hours < 8)  setMood({ emoji: '😐', img: '/emoji/neutral_face_3d.png',        label: 'Getting Peckish',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   pulse: false });
+        else if (hours < 12) setMood({ emoji: '🥺', img: '/emoji/pleading_face_3d.png',       label: 'Really Hungry',       color: '#f97316', bg: 'rgba(249,115,22,0.15)',   pulse: true  });
+        else                 setMood({ emoji: '😭', img: '/emoji/loudly_crying_face_3d.png',  label: 'Starving! Feed me NOW',color: '#ef4444', bg: 'rgba(239,68,68,0.15)',    pulse: true  });
+
+        // Week compliance (bowl cleared %)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const weekLogs = logs.filter((l: any) => new Date(l.logged_at) >= sevenDaysAgo);
+        if (weekLogs.length > 0) {
+          const cleared = weekLogs.filter((l: any) => l.outcome === 'cleared').length;
+          setWeekCompliance(Math.round((cleared / weekLogs.length) * 100));
+        }
  
         setLoaded(true);
       });
@@ -57,47 +69,29 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
   if (!loaded) return null;
  
   return (
-    <Link
-      href="/dashboard/chow-streak"
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 10,
-        padding: '9px 16px',
-        background: mood.bg,
-        border: `1px solid ${mood.color}44`,
-        borderRadius: 10,
-        textDecoration: 'none',
-        transition: 'transform 0.2s, opacity 0.2s',
-        whiteSpace: 'nowrap',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
-      onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
-    >
-      {/* Pet photo with mood ring */}
-      <div style={{
-        width: 32, height: 32, borderRadius: '50%',
-        border: `2px solid ${mood.color}`,
-        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 16, background: 'rgba(0,0,0,0.3)', flexShrink: 0,
-      }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ fontSize: 12, fontWeight: 700, color: '#c47a3a', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      🔥 Chow Streak
+    </div>
+    <Link href="/dashboard/chow-streak" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '9px 16px', background: mood.bg, border: `1px solid ${mood.color}44`, borderRadius: 10, textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')} onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
+      <div style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${mood.color}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
         {petPhotoUrl
           ? <img src={petPhotoUrl} alt={petName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : '🐾'}
+          : <img src="/emoji/paw_prints_3d.png" alt="No photo" style={{ width: '70%', height: '70%', objectFit: 'contain' }} />}
       </div>
- 
-      {/* Mood emoji */}
-      <span style={{
-        fontSize: 20,
-        animation: mood.pulse ? 'mood-pulse 1.5s ease-in-out infinite' : 'none',
-      }}>
-        {mood.emoji}
-      </span>
- 
-      {/* Streak */}
+      <img
+        src={mood.img}
+        alt={mood.label}
+        style={{
+          width: 22,
+          height: 22,
+          animation: mood.pulse ? 'mood-pulse 1.5s ease-in-out infinite' : 'none',
+        }}
+      />
       <div>
         <div style={{ fontSize: 13, fontWeight: 700, color: mood.color }}>🔥 {streak} day streak</div>
         <div style={{ fontSize: 10, color: '#7a6050' }}>{mood.label}</div>
       </div>
- 
       <style>{`
         @keyframes mood-pulse {
           0%,100% { transform:scale(1); }
@@ -105,7 +99,12 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
         }
       `}</style>
     </Link>
-  );
+    <div style={{ fontSize: 11, color: '#7a6050' }}>
+      {lastMealHours !== null ? `Last meal: ${lastMealHours}h ago` : 'No meals logged yet'}
+      {weekCompliance !== null ? ` · ${weekCompliance}% bowl cleared this week` : ''}
+    </div>
+  </div>
+);
 }
 
 function EmergencyCardButton({ petId, petName, emergencyToken }: {
