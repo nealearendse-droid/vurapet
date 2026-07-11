@@ -71,7 +71,7 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
   return (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
     <div style={{ fontSize: 12, fontWeight: 700, color: '#c47a3a', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-      🔥 Chow Streak
+      <img src="/emoji/fire_3d.png" alt="Fire" style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 4 }} /> Chow Streak
     </div>
     <Link href="/dashboard/chow-streak" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '9px 16px', background: mood.bg, border: `1px solid ${mood.color}44`, borderRadius: 10, textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s', whiteSpace: 'nowrap' }} onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')} onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
       <div style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${mood.color}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, background: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
@@ -89,7 +89,7 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
         }}
       />
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: mood.color }}>🔥 {streak} day streak</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: mood.color, display: 'flex', alignItems: 'center', gap: 4 }}><img src="/emoji/fire_3d.png" alt="Fire" style={{ width: 14, height: 14 }} /> {streak} day streak</div>
         <div style={{ fontSize: 10, color: '#7a6050' }}>{mood.label}</div>
       </div>
       <style>{`
