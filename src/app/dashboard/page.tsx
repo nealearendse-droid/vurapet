@@ -107,6 +107,118 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
 );
 }
 
+function TodayCard({ petId, petName, memories }: {
+  petId: string;
+  petName: string;
+  memories: any[];
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const [dinnerLogged, setDinnerLogged] = useState(false);
+  const [waterLogged, setWaterLogged] = useState(false);
+  const [stoolLogged, setStoolLogged] = useState(false);
+  const [weightLogged, setWeightLogged] = useState(false);
+  const [waterAlert, setWaterAlert] = useState(false);
+  const [todayMemory, setTodayMemory] = useState<any>(null);
+
+  useEffect(() => {
+    if (!petId) return;
+    const supabase = createSupabaseBrowserClient();
+    const todayStr = new Date().toDateString();
+
+    supabase
+      .from('chow_logs')
+      .select('logged_at, water_intake, stool_quality')
+      .eq('pet_id', petId)
+      .order('logged_at', { ascending: false })
+      .limit(30)
+      .then(({ data }) => {
+        const logs = data || [];
+        const todayLogs = logs.filter((l: any) => new Date(l.logged_at).toDateString() === todayStr);
+        setDinnerLogged(todayLogs.length > 0);
+        setWaterLogged(todayLogs.some((l: any) => l.water_intake));
+        setStoolLogged(todayLogs.some((l: any) => l.stool_quality));
+
+        const concerning = ['More than usual', 'Much more than usual'];
+        const byDay: Record<string, string | null> = {};
+        for (const l of logs) {
+          const day = new Date(l.logged_at).toDateString();
+          if (!byDay[day] && l.water_intake) byDay[day] = l.water_intake;
+        }
+        const last7Days = Object.values(byDay).slice(0, 7);
+        setWaterAlert(last7Days.length === 7 && last7Days.every((v) => v && concerning.includes(v)));
+      });
+
+    const todayISO = new Date().toISOString().slice(0, 10);
+    supabase
+      .from('weight_entries')
+      .select('recorded_at')
+      .eq('pet_id', petId)
+      .eq('recorded_at', todayISO)
+      .then(({ data }) => {
+        setWeightLogged((data || []).length > 0);
+        setLoaded(true);
+      });
+  }, [petId]);
+
+  useEffect(() => {
+    if (!memories?.length) return;
+    const today = new Date();
+    const match = memories.find((m: any) => {
+      const d = new Date(m.date);
+      return d.getMonth() === today.getMonth() && d.getDate() === today.getDate() && d.getFullYear() !== today.getFullYear();
+    });
+    setTodayMemory(match || null);
+  }, [memories]);
+
+  if (!loaded) return null;
+
+  const checklistItems = [
+    { label: 'Log dinner', done: dinnerLogged, href: '/dashboard/chow-streak' },
+    { label: 'Log water intake', done: waterLogged, href: '/dashboard/chow-streak' },
+    { label: 'Log stool quality', done: stoolLogged, href: '/dashboard/chow-streak' },
+    { label: `Check ${petName}'s weight`, done: weightLogged, href: `/pets/${petId}/weight-tracker` },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, background: '#181411', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 22px', marginTop: 16 }}>
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+          📋 Today's Checklist
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {checklistItems.map(item => (
+            <Link key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: item.done ? '#5dcaa5' : '#c47a3a', fontSize: 13 }}>
+              <span>{item.done ? '✅' : '⬜'}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {waterAlert && (
+        <div style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(251,191,36,0.3)', background: 'rgba(251,191,36,0.05)' }}>
+          <p style={{ fontSize: 12, color: '#fbbf24', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>💧 Heads up</p>
+          <p style={{ fontSize: 13, color: '#e8d5b7', lineHeight: 1.5 }}>
+            {petName} has been drinking more than usual for 7 days in a row. Worth mentioning to your vet.
+          </p>
+        </div>
+      )}
+
+      {todayMemory && (
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            💛 On This Day
+          </div>
+          <Link href="/pets/memories" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#f0ebe4', marginBottom: 4 }}>{todayMemory.title}</div>
+            <div style={{ fontSize: 12, color: '#7a6050' }}>{new Date(todayMemory.date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmergencyCardButton({ petId, petName, emergencyToken }: {
   petId: string;
   petName: string;
@@ -428,19 +540,26 @@ export default function Dashboard() {
             </p>
 
             {firstPet && (
-  <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-    <EmergencyCardButton
+  <>
+    <div style={{ marginTop: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+      <EmergencyCardButton
+        petId={firstPet.id}
+        petName={firstPet.name}
+        emergencyToken={firstPet.emergency_token}
+      />
+      <ChowStreakWidget
+        petId={firstPet.id}
+        petName={firstPet.name}
+        petPhotoUrl={firstPet.profile_photo_url || firstPet.photo_url}
+        hasPro={hasPro}
+      />
+    </div>
+    <TodayCard
       petId={firstPet.id}
       petName={firstPet.name}
-      emergencyToken={firstPet.emergency_token}
+      memories={memories}
     />
-    <ChowStreakWidget
-      petId={firstPet.id}
-      petName={firstPet.name}
-      petPhotoUrl={firstPet.profile_photo_url || firstPet.photo_url}
-      hasPro={hasPro}
-    />
-  </div>
+  </>
 )}
           </div>
 
