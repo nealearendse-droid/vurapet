@@ -7,11 +7,12 @@ import Link from 'next/link';
 
 // ── Emergency Card Button ──
  
-function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
+function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro, onStreakChange }: {
   petId: string;
   petName: string;
   petPhotoUrl?: string;
   hasPro: boolean;
+  onStreakChange?: (streak: number) => void;
 }) {
   const [streak, setStreak] = useState(0);
   const [mood, setMood] = useState({ emoji: '😊', img: '/emoji/smiling_face_3d.png', label: 'Full & Happy', color: '#5dcaa5', bg: 'rgba(93,202,165,0.12)', pulse: false });
@@ -42,6 +43,7 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
           else break;
         }
         setStreak(s);
+        onStreakChange?.(s);
  
         // Hunger mood
         const lastLog = logs[0] ? new Date((logs[0] as any).logged_at) : null;
@@ -107,10 +109,40 @@ function ChowStreakWidget({ petId, petName, petPhotoUrl, hasPro }: {
 );
 }
 
-function TodayCard({ petId, petName, memories }: {
+const DOG_EVOLUTION = [
+  { stage: 'hatchling', minHearts: 0, maxHearts: 9, emoji: '🥚', label: 'Hatchling', color: '#a08060' },
+  { stage: 'pup', minHearts: 10, maxHearts: 49, emoji: '🐶', label: 'Hungry Pup', color: '#c47a3a' },
+  { stage: 'companion', minHearts: 50, maxHearts: 199, emoji: '🐕', label: 'Loyal Companion', color: '#5dcaa5' },
+  { stage: 'guardian', minHearts: 200, maxHearts: 499, emoji: '🦮', label: 'Trusted Guardian', color: '#8b5cf6' },
+  { stage: 'legendary', minHearts: 500, maxHearts: Infinity, emoji: '👑', label: 'Legendary', color: '#f59e0b' },
+];
+
+const CAT_EVOLUTION = [
+  { stage: 'egg', minHearts: 0, maxHearts: 9, emoji: '🥚', label: 'Mysterious Egg', color: '#a08060' },
+  { stage: 'kitten', minHearts: 10, maxHearts: 49, emoji: '🐱', label: 'Discerning Kitten', color: '#c47a3a' },
+  { stage: 'companion', minHearts: 50, maxHearts: 199, emoji: '🐈', label: 'Regal Companion', color: '#5dcaa5' },
+  { stage: 'duchess', minHearts: 200, maxHearts: 499, emoji: '🐈‍⬛', label: 'Shadow Duchess', color: '#8b5cf6' },
+  { stage: 'empress', minHearts: 500, maxHearts: Infinity, emoji: '👑', label: 'Eternal Empress', color: '#f59e0b' },
+];
+
+function getPetEvolution(hearts: number, species?: string) {
+  const stages = species?.toLowerCase().includes('cat') ? CAT_EVOLUTION : DOG_EVOLUTION;
+  return stages.find(s => hearts >= s.minHearts && hearts <= s.maxHearts) || stages[0];
+}
+
+function getOwnerBadge(streak: number) {
+  if (streak >= 30) return { badge: 'King Cheetah', emoji: '🐆' };
+  if (streak >= 14) return { badge: 'Honey Badger', emoji: '🦡' };
+  if (streak >= 7) return { badge: 'Cape Fox', emoji: '🦊' };
+  if (streak >= 3) return { badge: 'Mongoose', emoji: '🦦' };
+  return { badge: 'Meerkat', emoji: '🐾' };
+}
+function TodayCard({ petId, petName, memories, petStreak, petSpecies }: {
   petId: string;
   petName: string;
   memories: any[];
+  petStreak: number;
+  petSpecies?: string;
 }) {
   const [loaded, setLoaded] = useState(false);
   const [dinnerLogged, setDinnerLogged] = useState(false);
@@ -119,6 +151,10 @@ function TodayCard({ petId, petName, memories }: {
   const [weightLogged, setWeightLogged] = useState(false);
   const [waterAlert, setWaterAlert] = useState(false);
   const [todayMemory, setTodayMemory] = useState<any>(null);
+  const [totalHearts, setTotalHearts] = useState(0);
+  const [waterValue, setWaterValue] = useState<string | null>(null);
+  const [stoolValue, setStoolValue] = useState<number | null>(null);
+  const [latestWeight, setLatestWeight] = useState<number | null>(null);
 
   useEffect(() => {
     if (!petId) return;
@@ -137,6 +173,18 @@ function TodayCard({ petId, petName, memories }: {
         setDinnerLogged(todayLogs.length > 0);
         setWaterLogged(todayLogs.some((l: any) => l.water_intake));
         setStoolLogged(todayLogs.some((l: any) => l.stool_quality));
+        setWaterValue(todayLogs.find((l: any) => l.water_intake)?.water_intake || null);
+        setStoolValue(todayLogs.find((l: any) => l.stool_quality)?.stool_quality ?? null);
+
+        const supabase2 = createSupabaseBrowserClient();
+        supabase2
+          .from('chow_hearts')
+          .select('total_hearts')
+          .eq('pet_id', petId)
+          .single()
+          .then(({ data: heartsData }) => {
+            setTotalHearts(heartsData?.total_hearts || 0);
+          });
 
         const concerning = ['More than usual', 'Much more than usual'];
         const byDay: Record<string, string | null> = {};
@@ -156,6 +204,16 @@ function TodayCard({ petId, petName, memories }: {
       .eq('recorded_at', todayISO)
       .then(({ data }) => {
         setWeightLogged((data || []).length > 0);
+      });
+
+    supabase
+      .from('weight_entries')
+      .select('weight_kg')
+      .eq('pet_id', petId)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        setLatestWeight(data?.[0]?.weight_kg ?? null);
         setLoaded(true);
       });
   }, [petId]);
@@ -172,6 +230,10 @@ function TodayCard({ petId, petName, memories }: {
 
   if (!loaded) return null;
 
+  const evolution = getPetEvolution(totalHearts, petSpecies);
+  const ownerBadge = getOwnerBadge(petStreak);
+  const stoolLabels: Record<number, string> = { 1: 'Hard', 2: 'Firm', 3: 'Soft', 4: 'Mushy', 5: 'Watery' };
+
   const checklistItems = [
     { label: 'Log dinner', done: dinnerLogged, href: '/dashboard/chow-streak' },
     { label: 'Log water intake', done: waterLogged, href: '/dashboard/chow-streak' },
@@ -181,6 +243,15 @@ function TodayCard({ petId, petName, memories }: {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, background: '#181411', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 22px', marginTop: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', paddingBottom: 14, borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <span style={{ fontSize: 20 }}>{evolution.emoji}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#f0ebe4' }}>{evolution.label}</span>
+        <span style={{ fontSize: 12, color: '#7a6050' }}>❤️ {totalHearts}</span>
+        <span style={{ fontSize: 12, color: '#7a6050' }}>💧 {waterValue || '—'}</span>
+        <span style={{ fontSize: 12, color: '#7a6050' }}>💩 {stoolValue ? stoolLabels[stoolValue] : '—'}</span>
+        <span style={{ fontSize: 12, color: '#7a6050' }}>⚖️ {latestWeight ? `${latestWeight}kg` : '—'}</span>
+        <span style={{ fontSize: 12, color: '#7a6050' }}>{ownerBadge.emoji} {ownerBadge.badge}</span>
+      </div>
       <div>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#a08060', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
           📋 Today's Checklist
@@ -403,6 +474,7 @@ export default function Dashboard() {
   const [userName, setUserName] = useState('');
   const [userPlan, setUserPlan] = useState('free');
   const [isRescueHero, setIsRescueHero] = useState(false);
+  const [petStreak, setPetStreak] = useState(0);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -552,12 +624,15 @@ export default function Dashboard() {
         petName={firstPet.name}
         petPhotoUrl={firstPet.profile_photo_url || firstPet.photo_url}
         hasPro={hasPro}
+        onStreakChange={setPetStreak}
       />
     </div>
     <TodayCard
       petId={firstPet.id}
       petName={firstPet.name}
       memories={memories}
+      petStreak={petStreak}
+      petSpecies={firstPet.species}
     />
   </>
 )}
